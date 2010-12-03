@@ -18,7 +18,7 @@ class Test(unittest.TestCase):
         return 
 
     def test_msec(self):
-        rawstr = "/test/1/2/3 info 2008-04-11T22:13:22.123000 ras@hawaii what's up doc"
+        rawstr = "/test/1/2/3 info 2008-04-11T22:13:22.123000 ras@hawaii v1.0 what's up doc"
         m = Message.decode(rawstr)
         print m
         self.assertTrue(str(m) == rawstr, msg='Messaging, decoding of msec failed')

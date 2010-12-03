@@ -5,7 +5,7 @@
 
 Message('pytroll:/DC/juhu', 'info', 'jhuuuu !!!')
 will be encoded as (at the right time and by the right user at the right host):
-pytroll:/DC/juhu info 2010-12-01T12:21:11.123456 henry@prodsat jhuuuu !!!
+pytroll:/DC/juhu info 2010-12-01T12:21:11.123456 henry@prodsat v1.0 jhuuuu !!!
 """
 import re
 from datetime import datetime
@@ -45,6 +45,8 @@ class Message:
     - It will add add few extra attributes.
     - It will make a Message pickleable."""
 
+    _version = 'v1.0'
+
     def __init__(self, subject='', atype='', data='', empty=False):
         """A Message needs at least a subject and a type ... if not specified as empty.
         """
@@ -69,6 +71,10 @@ class Message:
             return self.sender[self.sender.index('@')+1:]
         except ValueError:
             return ''
+
+    @property
+    def version(self):
+        return self._version
 
     @staticmethod
     def decode(rawstr):
@@ -110,22 +116,28 @@ class Message:
 # Decode / encode
 #
 #-----------------------------------------------------------------------------
+def _is_valid_version(version):
+    return version == Message._version
+
 def _decode(rawstr):
-    a = re.split(r"\s+", rawstr, maxsplit=4)
-    if len(a) < 4:
+    a = re.split(r"\s+", rawstr, maxsplit=5)
+    if len(a) < 5:
         raise MessageError, "Could node decode raw string: '%s ...'"%str(rawstr[:36])
+    version = a[4][:len(Message._version)]
+    if not _is_valid_version(version):
+        raise MessageError, "Invalid Message version: '%s'"%str(version)
     d = dict((('subject', a[0].strip()),
               ('type', a[1].strip()),
               ('time', _strptime(a[2].strip())),
               ('sender', a[3].strip())))
     try:
-        d['data'] = a[4]
+        d['data'] = a[5]
     except IndexError:
         d['data'] = ''
     return d
 
 def _encode(m):
-      rawstr = "%s %s %s %s"%(m.subject, m.type, m.time.isoformat(), m.sender)
+      rawstr = "%s %s %s %s %s"%(m.subject, m.type, m.time.isoformat(), m.sender, m.version)
       if m.data:
           return rawstr + ' ' + m.data
       return rawstr
@@ -150,17 +162,20 @@ if __name__ == '__main__':
     import pickle
     import os
 
+    m = Message('/test/1/2/3/nodata', 'heartbeat')
+    print m
+
     m1 = Message('/test/whatup/doc', 'info', data='not much to say')
     sender = '%s@%s'%(m1.user, m1.host)
     print sender
     if sender != m1.sender:
-        print 'OOPS ... deconding sender failed'
+        print 'OOPS 1 ... deconding sender failed'
     m2 = Message.decode(m1.encode())
     print m2
     if str(m2) != str(m1):
-        print 'OOPS ... decoding/encoding message failed'  
-    rawstr = "/test/what/todo info 2008-04-11T22:13:22.123456 ras@hawaii what's up doc"
+        print 'OOPS 2 ... decoding/encoding message failed'  
+    rawstr = "/test/what/todo info 2008-04-11T22:13:22.123456 ras@hawaii v1.0 what's up doc"
     m = Message.decode(rawstr)
     print m
     if str(m) != rawstr:
-        print 'OOPS ... decoding/encoding message failed'  
+        print 'OOPS 3 ... decoding/encoding message failed'  
