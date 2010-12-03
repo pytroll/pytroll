@@ -39,15 +39,14 @@ def _getsender():
 
 class Message:
 
-  """Wrap a smsg dictonary into a Message class.
+  """A Message.
 
   - Has to be initialized with a 'subject', 'type' and optionally 'data'.
-  - It will forbid rebinding of message specific attributes.
   - It will add a few extra attributes.
   - It will make a Message pickleable."""
 
   def __init__(self, subject='', atype='', data='', empty=False):
-      """A Message needs at least a subject, type and a sender ... if not specified as empty.
+      """A Message needs at least a subject and a type ... if not specified as empty.
       """
       if empty:
           self.subject, self.type, self.time, self.sender, self.data = \
