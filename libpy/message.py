@@ -5,7 +5,7 @@
 
 Message('pytroll:/DC/juhu', 'info', 'jhuuuu !!!')
 will be encoded as (at the right time and by the right user at the right host):
-pytroll:/DC/juhu info 2010-12-01T12:21:11 henry@prodsat jhuuuu !!!
+pytroll:/DC/juhu info 2010-12-01T12:21:11.123456 henry@prodsat jhuuuu !!!
 """
 import re
 from datetime import datetime
@@ -39,78 +39,75 @@ def is_valid_sender(s):
 #
 #-----------------------------------------------------------------------------
 class Message:
+    """A Message.
 
-  """A Message.
+    - Has to be initialized with a 'subject', 'type' and optionally 'data'.
+    - It will add add few extra attributes.
+    - It will make a Message pickleable."""
 
-  - Has to be initialized with a 'subject', 'type' and optionally 'data'.
-  - It will add add few extra attributes.
-  - It will make a Message pickleable."""
+    def __init__(self, subject='', atype='', data='', empty=False):
+        """A Message needs at least a subject and a type ... if not specified as empty.
+        """
+        if not empty:
+            self.subject = subject
+            self.type = atype
+            self.time = datetime.utcnow()
+            self.sender = _getsender()
+            self.data = data
+            self._validate()
 
-  def __init__(self, subject='', atype='', data='', empty=False):
-      """A Message needs at least a subject and a type ... if not specified as empty.
-      """
-      if not empty:
-          self.subject = subject
-          self.type = atype
-          self.time = datetime.utcnow()
-          self.sender = _getsender()
-          self.data = data
-          self._validate()
-
-  @property
-  def user(self):
-      try:
-          return self.sender[:self.sender.index('@')]
-      except ValueError:
-          return ''
+    @property
+    def user(self):
+        try:
+            return self.sender[:self.sender.index('@')]
+        except ValueError:
+            return ''
       
-  @property
-  def host(self):
-      try:
-          return self.sender[self.sender.index('@')+1:]
-      except ValueError:
-          return ''
+    @property
+    def host(self):
+        try:
+            return self.sender[self.sender.index('@')+1:]
+        except ValueError:
+            return ''
 
-  @staticmethod
-  def decode(rawstr):
-      m = Message(empty=True)
-      m.__dict__ = _decode(rawstr)
-      m._validate()
-      return m
+    @staticmethod
+    def decode(rawstr):
+        m = Message(empty=True)
+        m.__dict__ = _decode(rawstr)
+        m._validate()
+        return m
+    
+    def encode(self):
+        self._validate()
+        return _encode(self)
 
-  def encode(self):
-      self._validate()
-      rawstr = "%s %s %s %s"%(self.subject, self.type, self.time.isoformat(), self.sender)
-      return rawstr + ' ' + self.data
+    def __repr__(self):
+        return self.encode()
 
-  def __repr__(self):
-      return self.encode()
+    def __str__(self):
+        return self.encode()
 
-  def __str__(self):
-      return self.encode()
+    def _validate(self):
+        if not is_valid_subject(self.subject):
+            raise MessageError, "Invalid subject: '%s'"%self.subject
+        if not is_valid_subject(self.type):
+            raise MessageError, "Invalid type: '%s'"%self.type
+        if not is_valid_subject(self.sender):
+            raise MessageError, "Invalid sender: '%s'"%self.sender
+        
+    #
+    # Make it pickleable.
+    #
+    def __getstate__(self):
+        return self.encode()
 
-  def _validate(self):
-      if not is_valid_subject(self.subject):
-          raise MessageError, "Invalid subject: '%s'"%self.subject
-      if not is_valid_subject(self.type):
-          raise MessageError, "Invalid type: '%s'"%self.type
-      if not is_valid_subject(self.sender):
-          raise MessageError, "Invalid sender: '%s'"%self.sender
-      
-  #
-  # Make it pickleable.
-  #
-  def __getstate__(self):
-      return self.encode()
-
-  def __setstate__(self, state):
-      self.__dict__.clear()
-      self.__dict__ = _decode(state)
-
+    def __setstate__(self, state):
+        self.__dict__.clear()
+        self.__dict__ = _decode(state)
 
 #-----------------------------------------------------------------------------
 #
-# Small internal helpers.
+# Decode / encode
 #
 #-----------------------------------------------------------------------------
 def _decode(rawstr):
@@ -127,6 +124,17 @@ def _decode(rawstr):
         d['data'] = ''
     return d
 
+def _encode(m):
+      rawstr = "%s %s %s %s"%(m.subject, m.type, m.time.isoformat(), m.sender)
+      if m.data:
+          return rawstr + ' ' + m.data
+      return rawstr
+
+#-----------------------------------------------------------------------------
+#
+# Small internal helpers.
+#
+#-----------------------------------------------------------------------------
 def _strptime(str):
     _isoformat = "%Y-%m-%dT%H:%M:%S.%f"
     return datetime.strptime(str, _isoformat)
@@ -151,7 +159,7 @@ if __name__ == '__main__':
     print m2
     if str(m2) != str(m1):
         print 'OOPS ... decoding/encoding message failed'  
-    rawstr = "/test/what/todo info 2008-04-11T22:13:22.123000 ras@hawaii what's up doc"
+    rawstr = "/test/what/todo info 2008-04-11T22:13:22.123456 ras@hawaii what's up doc"
     m = Message.decode(rawstr)
     print m
     if str(m) != rawstr:
