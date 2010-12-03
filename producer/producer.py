@@ -25,6 +25,7 @@ class DCAddressFetcher(Thread):
         self._addresses = {}
         Thread.__init__(self)
         Thread.start(self)
+        self._stop = False
                     
     def __call__(self):
         now = datetime.now()
@@ -46,16 +47,26 @@ class DCAddressFetcher(Thread):
             self._addresses[adr] = datetime.now()
         finally:
             self._address_lock.release()
-        
+
+    def stop(self):
+        self._stop = True
+
     def run(self):
         BUFSIZE = 1024
         host = '0.0.0.0'
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        s.settimeout(2.0)
         s.bind((host, self._port))
         while True:
-            data, fromaddr = s.recvfrom(BUFSIZE)
+            if self._stop:
+                s.close()
+                break
+            try:
+                data, fromaddr = s.recvfrom(BUFSIZE)
+            except socket.timeout:
+                continue
             m = Message.decode(data)
             if m.type == 'info' and m.subject.lower() == 'pytroll://dc/address':
                 addr = [i.strip() for i in m.data.split(':')]
@@ -99,14 +110,18 @@ class Connections:
     def send(self, msg):
         for c in self():
             print 'sending to', str(c), "'%s'"%`msg`
-            c.send(`msg`)        
+            c.send(`msg`)
+    
+    def stop(self):
+        self.address_fetcher.stop()
+        self.close()
 
     def clear(self):
         self.close()
 
     def close(self):
-        for v in self.addresses.values():
-            v.close()
+        for s in self.addresses.values():
+            s.close()
         self.addresses = {}
 
 
@@ -118,9 +133,13 @@ class Messager:
         return Message('pytroll://test/1/2/3', 'info', "what's up doc #%d"%self.count)
 
 connections = Connections(DCAddressFetcher())
-
 msg = Messager()
 while True:
-    if connections.any():
-        connections.send(msg())
-    time.sleep(1)
+    try:
+        if connections.any():
+            connections.send(msg())
+        time.sleep(1)
+    except (KeyboardInterrupt, SystemExit):
+        print "quitting ..."
+        connections.stop()
+        break
