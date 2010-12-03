@@ -3,7 +3,8 @@ import time
 import zmq
 import threading
 import Queue
-import message
+
+import pytroll.message as message
 
 BROADCAST_PORT = 21200
 MESSAGE_PORT = 21201
@@ -95,8 +96,8 @@ class Receiver(object):
     def stop(self):
         self.loop = False
 
-msg = message.Message("pytroll://dc/adress", "info",
-                      str(get_own_ip()) + ":" + str(BROADCAST_PORT)).encode()
+msg = message.Message("pytroll://dc/address", "info",
+                      str(get_own_ip()) + ":" + str(MESSAGE_PORT)).encode()
 print msg
 broadcaster = Broadcaster(msg, 2, BROADCAST_PORT)
 broadcaster.start()
