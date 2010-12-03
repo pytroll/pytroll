@@ -3,9 +3,9 @@
 """A Message goes like: 
 <subject> <type> <timestamp> <sender> [data]
 
-Message('pytroll:/DC/juhu', 'info', 'jhuuuu !!!')
+Message('pytroll://DC/juhu', 'info', 'jhuuuu !!!')
 will be encoded as (at the right time and by the right user at the right host):
-pytroll:/DC/juhu info 2010-12-01T12:21:11.123456 henry@prodsat v1.0 jhuuuu !!!
+pytroll://DC/juhu info 2010-12-01T12:21:11.123456 henry@prodsat v1.0 jhuuuu !!!
 """
 import re
 from datetime import datetime
