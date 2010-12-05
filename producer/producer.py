@@ -9,12 +9,13 @@ from threading import Thread
 import zmq
 
 from pytroll.message import Message
+from pytroll.bbmcast import MulticastReceiver
 
 broadcast_port = 21200
 
 #
 # Broadcast message:
-# pytroll://DC/address info <YYYY-MM-DDTHH:MM:SS> user@host host:port
+# pytroll://DC/address info user@host <YYYY-MM-DDTHH:MM:SS> host:port
 #
 
 class DCAddressFetcher(Thread):
@@ -25,7 +26,7 @@ class DCAddressFetcher(Thread):
         self._addresses = {}
         Thread.__init__(self)
         Thread.start(self)
-        self._stop = False
+        self._run = True
                     
     def __call__(self):
         now = datetime.now()
@@ -49,31 +50,24 @@ class DCAddressFetcher(Thread):
             self._address_lock.release()
 
     def stop(self):
-        self._stop = True
+        self._run = False
 
     def run(self):
-        BUFSIZE = 1024
-        host = '0.0.0.0'
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        s.settimeout(2.0)
-        s.bind((host, self._port))
-        while True:
-            if self._stop:
-                s.close()
-                break
+        recv = MulticastReceiver(broadcast_port).settimeout(2.0)
+        while self._run:
             try:
-                data, fromaddr = s.recvfrom(BUFSIZE)
+                data, fromaddr = recv()
             except socket.timeout:
                 continue
             m = Message.decode(data)
+            print m
             if m.type == 'info' and m.subject.lower() == 'pytroll://dc/address':
                 addr = [i.strip() for i in m.data.split(':')]
                 addr[1] = int(addr[1])
                 addr = tuple(addr)
                 print 'receiving address', addr
                 self._add(addr)
+        recv.close()
 
 context = zmq.Context()
 def make_connection(addr):
@@ -102,10 +96,6 @@ class Connections:
                     pass
                 del self.addresses[a]
         return self.addresses.values()
-
-    def any(self):
-        return True
-        #return bool(self.addresses)
 
     def send(self, msg):
         for c in self():
@@ -136,8 +126,7 @@ connections = Connections(DCAddressFetcher())
 msg = Messager()
 while True:
     try:
-        if connections.any():
-            connections.send(msg())
+        connections.send(msg())
         time.sleep(1)
     except (KeyboardInterrupt, SystemExit):
         print "quitting ..."
