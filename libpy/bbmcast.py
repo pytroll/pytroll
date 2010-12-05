@@ -33,12 +33,12 @@ class MulticastSender(object):
 # Allow non-object interface
 def mcast_sender(mcgroup=MC_GROUP):
     group = mcgroup
+    s = socket(AF_INET, SOCK_DGRAM)
+    s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     if not mcgroup or gethostbyname(mcgroup) == '255.255.255.255':
         group = '<broadcast>'
-        s = socket(AF_INET, SOCK_DGRAM)
         s.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
     else:
-        s = socket(AF_INET, SOCK_DGRAM)
         ttl = struct.pack('b', TTL_LOCALNET) # Time-to-live
         s.setsockopt(IPPROTO_IP, IP_MULTICAST_TTL, ttl)
     return s, group
