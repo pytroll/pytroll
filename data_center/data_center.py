@@ -5,6 +5,7 @@ import threading
 import Queue
 
 import pytroll.message as message
+from pytroll.bbmcast import MulticastSender
 
 BROADCAST_PORT = 21200
 MESSAGE_PORT = 21201
@@ -23,13 +24,8 @@ class Broadcaster(object):
     """Class to broadcast stuff.
     """
 
-    host = '<broadcast>'
-
     def __init__(self, message, interval, port):
-        self.port = port
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        self.send = MulticastSender(port, broadcast=False)
         self.loop = True
         self.interval = interval
         self.message = message
@@ -38,7 +34,7 @@ class Broadcaster(object):
     def send(self, message):
         """Broadcast a *message*.
         """
-        self.socket.sendto(message, (self.host, self.port))
+        self.send(message)
 
     def loop_send(self):
         """Broadcasts forever.
@@ -47,6 +43,7 @@ class Broadcaster(object):
             print "Advertizing."
             self.send(self.message)
             time.sleep(self.interval)
+        self.send.close()
 
     def start(self):
         """Start the broadcasting.
