@@ -4,6 +4,8 @@
 # This is based on python-examples Demo/sockets/mcast.py
 #
 
+__all__ = ('MulticastSender', 'MulticastReceiver', 'mcast_sender', 'mcast_receiver')
+
 MC_GROUP = '225.0.0.212' # 224.0.0.0 through 224.0.0.255 is reserved administrative tasks
 TTL_LOCALNET = 1 # local network multicast (<32)
 
@@ -32,13 +34,13 @@ class MulticastSender(object):
 
 # Allow non-object interface
 def mcast_sender(mcgroup=MC_GROUP):
-    group = mcgroup
     s = socket(AF_INET, SOCK_DGRAM)
     s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-    if not mcgroup or gethostbyname(mcgroup) == '255.255.255.255':
+    if _is_broadcast_group(mcgroup):
         group = '<broadcast>'
         s.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
     else:
+        group = mcgroup
         ttl = struct.pack('b', TTL_LOCALNET) # Time-to-live
         s.setsockopt(IPPROTO_IP, IP_MULTICAST_TTL, ttl)
     return s, group
@@ -76,9 +78,10 @@ def mcast_receiver(port, mcgroup=MC_GROUP):
     import string
     import struct
 
-    group = mcgroup
-    if not group or gethostbyname(group) == '255.255.255.255':
+    if _is_broadcast_group(mcgroup):
         group = None
+    else:
+        group = mcgroup
 
     # Create a socket
     s = socket(AF_INET, SOCK_DGRAM)
@@ -110,9 +113,17 @@ def mcast_receiver(port, mcgroup=MC_GROUP):
         # Add group membership
         s.setsockopt(IPPROTO_IP, IP_ADD_MEMBERSHIP, mreq)
         
-    if not group:
-        group = '<broadcast>'
-    return s, group
+    return s, group or '<broadcast>'
+
+#-----------------------------------------------------------------------------
+#
+# Small helpers.
+#
+#-----------------------------------------------------------------------------
+def _is_broadcast_group(group):
+    if not group or gethostbyname(group) in ('0.0.0.0', '255.255.255.255'):
+        return True
+    return False
 
 #-----------------------------------------------------------------------------
 #
@@ -145,7 +156,8 @@ if __name__ == '__main__':
         # Loop, printing any data we receive
         while 1:
             data, sender = recv()
-            while data[-1:] == '\0': data = data[:-1] # Strip trailing \0's
+            while data[-1:] == '\0':
+                data = data[:-1] # Strip trailing \0's
             print sender, ':', repr(data)
 
     PORT = 8123
