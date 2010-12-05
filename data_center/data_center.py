@@ -25,8 +25,10 @@ class Broadcaster(object):
     """
 
     def __init__(self, message, interval, port):
-        self.send = MulticastSender(port, mcgroup=None) # None == '<broadcast>'
-        self.loop = True                                # MC_GROUP == default multicast group
+        # mcgroup = None or '<broadcast>' is broadcast
+        # mcgroup = MC_GROUP is default multicast group
+        self.sender = MulticastSender(port, mcgroup=MC_GROUP)
+        self.loop = True
         self.interval = interval
         self.message = message
         self.thread = threading.Thread(target=self.loop_send)
@@ -34,7 +36,7 @@ class Broadcaster(object):
     def send(self, message):
         """Broadcast a *message*.
         """
-        self.send(message)
+        self.sender(message)
 
     def loop_send(self):
         """Broadcasts forever.
@@ -43,7 +45,7 @@ class Broadcaster(object):
             print "Advertizing."
             self.send(self.message)
             time.sleep(self.interval)
-        self.send.close()
+        self.sender.close()
 
     def start(self):
         """Start the broadcasting.
