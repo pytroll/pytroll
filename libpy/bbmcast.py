@@ -77,7 +77,7 @@ def mcast_receiver(port, mcgroup=MC_GROUP):
     import struct
 
     group = mcgroup
-    if group == '<broadcast>':
+    if not group or gethostbyname(group) == '255.255.255.255':
         group = None
 
     # Create a socket
