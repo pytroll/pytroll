@@ -5,7 +5,7 @@ import threading
 import Queue
 
 import pytroll.message as message
-from pytroll.bbmcast import MulticastSender
+from pytroll.bbmcast import MulticastSender, MC_GROUP
 
 BROADCAST_PORT = 21200
 MESSAGE_PORT = 21201
@@ -25,8 +25,8 @@ class Broadcaster(object):
     """
 
     def __init__(self, message, interval, port):
-        self.send = MulticastSender(port, broadcast=False)
-        self.loop = True
+        self.send = MulticastSender(port, mcgroup=None) # None == '<broadcast>'
+        self.loop = True                                # MC_GROUP == default multicast group
         self.interval = interval
         self.message = message
         self.thread = threading.Thread(target=self.loop_send)
