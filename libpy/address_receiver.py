@@ -14,14 +14,13 @@ from pytroll.bbmcast import MulticastReceiver, SocketTimeout
 __all__ = ('AddressReceiver', 'getaddress')
 
 debug = os.environ.get('DEBUG', False)
+broadcast_port = 21200
 
 #-----------------------------------------------------------------------------
 #
 # Generall thread to receive broadcast addresses.
 #
 #-----------------------------------------------------------------------------
-server_ports = {'dc': 21200,}
-
 class AddressReceiver(object):
     def __init__(self, server, max_age=timedelta(hours=1)):
         self._max_age = max_age
@@ -60,7 +59,7 @@ class AddressReceiver(object):
         return ads
 
     def _run(self):
-        port = server_ports[self._server]
+        port = broadcast_port
         subject = '/%s/address'%self._server
         recv = MulticastReceiver(port).settimeout(2.0)
         self._is_running = True
