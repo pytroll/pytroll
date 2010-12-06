@@ -1,7 +1,7 @@
 # -*-python-*- 
 #
-# Broadcast address:
-# /<server>/address info user@host <YYYY-MM-DDTHH:MM:SS> host:port
+# Receive broadcasted addresses in a standard pytroll Message:
+# /<server-name>/address info ... host:port
 #
 import os
 from datetime import datetime, timedelta
