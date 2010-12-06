@@ -95,7 +95,7 @@ class Receiver(object):
     def stop(self):
         self.loop = False
 
-msg = message.Message("pytroll://dc/address", "info",
+msg = message.Message("/dc/address", "info",
                       str(get_own_ip()) + ":" + str(MESSAGE_PORT)).encode()
 print msg
 broadcaster = Broadcaster(msg, 2, BROADCAST_PORT)

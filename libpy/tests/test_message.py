@@ -2,8 +2,18 @@ import os
 import sys
 import unittest
 
-sys.path = [os.path.abspath(os.path.dirname(__file__) + '/..'),] + sys.path
-from message import Message
+home = os.path.dirname(__file__) or '.'
+sys.path = [os.path.abspath(home + '/../..'),] + sys.path
+
+from pytroll.message import Message, _magick
+
+datadir = home + '/data'
+some_metadata = {'timestamp': '2010-12-03T16:28:39',
+                 'satellite': 'metop2',
+                 'uri': 'file://data/my/path/to/hrpt/files/myfile',
+                 'orbit': 1222,
+                 'format': 'hrpt',
+                 'afloat': 1.2345}
 
 class Test(unittest.TestCase):
 
@@ -18,7 +28,8 @@ class Test(unittest.TestCase):
         return 
 
     def test_msec(self):
-        rawstr = "/test/1/2/3 info 2008-04-11T22:13:22.123000 ras@hawaii v1.0 what's up doc"
+        rawstr = _magick + \
+            '/test/1/2/3 info ras@hawaii 2008-04-11T22:13:22.123000 v1.01 application/json "what\'s up doc"'
         m = Message.decode(rawstr)
         print m
         self.assertTrue(str(m) == rawstr, msg='Messaging, decoding of msec failed')
@@ -34,12 +45,29 @@ class Test(unittest.TestCase):
             m2 = pickle.load(f)
             print m2
             f.close()
-            self.assertTrue(str(m1) == str(m2), msg='Messaging, decoding of msec failed')
+            self.assertTrue(str(m1) == str(m2), msg='Messaging, pickle failed')
         finally:
             try:
                 os.remove('pickle.message')
             except OSError:
                 pass
+
+    def test_metadata(self):
+        metadata = some_metadata
+        m = Message.decode(Message('/sat/polar/smb/level1', 'file', data=metadata).encode())
+        print m
+        self.assertTrue(m.data == metadata, msg='Messaging, metadata decoding / encoding failed')
+        
+    def test_serialization(self):
+        import json
+        metadata = some_metadata
+        fp = open(datadir + '/message_metadata.dumps')
+        dump = fp.read()
+        fp.close()
+        # dumps differ ... maybe it's not a problem
+        self.assertTrue(dump == json.dumps(metadata), msg='Messaging, JSON serialization has changed, dumps differ')
+        m = json.loads(dump)
+        self.assertTrue(m == metadata, msg='Messaging, JSON serialization has changed, python objects differ')
 
 if __name__ == '__main__':
     import nose
