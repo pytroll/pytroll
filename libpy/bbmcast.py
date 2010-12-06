@@ -4,7 +4,7 @@
 # This is based on python-examples Demo/sockets/mcast.py
 #
 
-__all__ = ('MulticastSender', 'MulticastReceiver', 'mcast_sender', 'mcast_receiver')
+__all__ = ('MulticastSender', 'MulticastReceiver', 'mcast_sender', 'mcast_receiver', 'SocketTimeout')
 
 MC_GROUP = '225.0.0.212' # 224.0.0.0 through 224.0.0.255 is reserved administrative tasks
 TTL_LOCALNET = 1 # local network multicast (<32)
@@ -13,6 +13,8 @@ import sys
 import time
 import struct
 from socket import *
+
+SocketTimeout = timeout
 
 #-----------------------------------------------------------------------------
 #
