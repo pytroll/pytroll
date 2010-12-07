@@ -5,9 +5,8 @@ import threading
 import Queue
 
 import pytroll.message as message
-from pytroll.bbmcast import MulticastSender, MC_GROUP
+from pytroll.address_broadcaster import sendaddress
 
-BROADCAST_PORT = 21200
 MESSAGE_PORT = 21201
 
 def get_own_ip():
@@ -19,44 +18,6 @@ def get_own_ip():
 
 def process_message(msg):
     print "I'm processing a message: ", msg
-
-class Broadcaster(object):
-    """Class to broadcast stuff.
-    """
-
-    def __init__(self, message, interval, port):
-        # mcgroup = None or '<broadcast>' is broadcast
-        # mcgroup = MC_GROUP is default multicast group
-        self.sender = MulticastSender(port, mcgroup=MC_GROUP)
-        self.loop = True
-        self.interval = interval
-        self.message = message
-        self.thread = threading.Thread(target=self.loop_send)
-        
-    def send(self, message):
-        """Broadcast a *message*.
-        """
-        self.sender(message)
-
-    def loop_send(self):
-        """Broadcasts forever.
-        """
-        while self.loop:
-            print "Advertizing."
-            self.send(self.message)
-            time.sleep(self.interval)
-        self.sender.close()
-
-    def start(self):
-        """Start the broadcasting.
-        """
-        self.thread.start()
-
-    def stop(self):
-        """Stop the broadcasting.
-        """
-        self.loop = False
-
 
 class Receiver(object):
     """Receive messages and process them.
@@ -98,8 +59,7 @@ class Receiver(object):
 msg = message.Message("/dc/address", "info",
                       str(get_own_ip()) + ":" + str(MESSAGE_PORT)).encode()
 print msg
-broadcaster = Broadcaster(msg, 2, BROADCAST_PORT)
-broadcaster.start()
+broadcaster = sendaddress(msg, 2).start()
 
 message_receiver = Receiver(process_message, MESSAGE_PORT)
 message_receiver.start()

@@ -27,9 +27,9 @@ class AddressReceiver(object):
         self._address_lock = thread.allocate_lock()
         self._addresses = {}
         self._server = server
-        self._thread = threading.Thread(target=self._run)        
         self._do_run = False
         self._is_running = False
+        self._thread = threading.Thread(target=self._run)        
 
     def start(self):
         if not self._is_running:
