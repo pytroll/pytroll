@@ -5,6 +5,8 @@ import threading
 import pytroll.message as message
 from pytroll.bbmcast import MulticastSender, MC_GROUP
 
+__all__ = ('MessageBroadcaster', 'AddressBroadcaster', 'sendaddress')
+
 debug = os.environ.get('DEBUG', False)
 broadcast_port = 21200
 
