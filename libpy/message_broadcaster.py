@@ -47,9 +47,6 @@ class MessageBroadcaster(object):
         self._do_run = False
         return self
 
-    def send(self, message):
-        self._sender(message)
-
     def _run(self):
         """Broadcasts forever.
         """
@@ -58,7 +55,7 @@ class MessageBroadcaster(object):
             while self._do_run:
                 if debug:
                     print "Advertizing.", str(self._message)
-                self.send(self._message)
+                self._sender(self._message)
                 time.sleep(self._interval)
         finally:
             self._is_running = False
