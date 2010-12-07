@@ -5,7 +5,7 @@ import threading
 import Queue
 
 import pytroll.message as message
-from pytroll.address_broadcaster import sendaddress
+from pytroll.message_broadcaster import sendaddress
 
 MESSAGE_PORT = 21201
 
@@ -56,11 +56,7 @@ class Receiver(object):
     def stop(self):
         self.loop = False
 
-msg = message.Message("/dc/address", "info",
-                      str(get_own_ip()) + ":" + str(MESSAGE_PORT)).encode()
-print msg
-broadcaster = sendaddress(msg, 2).start()
-
+broadcaster = sendaddress('dc', (get_own_ip(), MESSAGE_PORT), 2).start()
 message_receiver = Receiver(process_message, MESSAGE_PORT)
 message_receiver.start()
 

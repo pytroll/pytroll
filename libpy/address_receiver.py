@@ -22,11 +22,11 @@ broadcast_port = 21200
 #
 #-----------------------------------------------------------------------------
 class AddressReceiver(object):
-    def __init__(self, server, max_age=timedelta(hours=1)):
+    def __init__(self, name, max_age=timedelta(hours=1)):
         self._max_age = max_age
         self._address_lock = thread.allocate_lock()
         self._addresses = {}
-        self._server = server
+        self._subject = '/%s/address'%name
         self._do_run = False
         self._is_running = False
         self._thread = threading.Thread(target=self._run)        
@@ -60,7 +60,6 @@ class AddressReceiver(object):
 
     def _run(self):
         port = broadcast_port
-        subject = '/%s/address'%self._server
         recv = MulticastReceiver(port).settimeout(2.0)
         self._is_running = True
         try:
@@ -70,7 +69,7 @@ class AddressReceiver(object):
                 except SocketTimeout:
                     continue
                 m = Message.decode(data)
-                if m.type == 'info' and m.subject.lower() == subject:
+                if m.type == 'info' and m.subject.lower() == self._subject:
                     addr = [i.strip() for i in m.data.split(':')]
                     addr[1] = int(addr[1])
                     addr = tuple(addr)
