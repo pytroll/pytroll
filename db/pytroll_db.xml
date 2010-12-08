@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF8"?>
+<pgDesigner Version="1.1.1">
+ <PROJECT Name="pytroll_database" PageFormat="" PageOrientation="0" Revision="12/08/2010 11:49:49" Description="Database layout for the pytroll project#0A#DMI &amp; SMHI" Driver="8.4" Author="adybbroe" Display="0"/>
+ <TABLE Name="file_type" X="276" Y="29" ColorBack="230,230,230" ColorText="0,0,0" ColorBackTitle="230,230,230" ColorBackTitleSelected="76,89,166" ColorForeTitle="0,0,0" ColorForeTitleSelected="255,255,255" Option="false" PrimaryKey="file_type_id"/>
+ <TABLEFIELD Name="file_type_id" Table="file_type" Length="0" NullCheck="true" Type1="int" PrimaryKey="true"/>
+ <TABLEFIELD Name="file_type_name" Table="file_type" Length="50" NullCheck="true" Type1="character varying" PrimaryKey="false"/>
+ <TABLEFIELD Name="description" Table="file_type" Length="255" NullCheck="true" Type1="character varying" PrimaryKey="false"/>
+ <TABLE Name="file_format" X="455" Y="62" ColorBack="230,230,230" ColorText="0,0,0" ColorBackTitle="230,230,230" ColorBackTitleSelected="76,89,166" ColorForeTitle="0,0,0" ColorForeTitleSelected="255,255,255" Option="false" PrimaryKey="file_format_id"/>
+ <TABLEFIELD Name="file_format_id" Table="file_format" Length="0" NullCheck="true" Type1="int" PrimaryKey="true"/>
+ <TABLEFIELD Name="file_format_name" Table="file_format" Length="50" NullCheck="true" Type1="character varying" PrimaryKey="false"/>
+ <TABLEFIELD Name="description" Table="file_format" Length="255" NullCheck="true" Type1="character varying" PrimaryKey="false"/>
+ <TABLE Name="file" X="75" Y="260" ColorBack="230,230,230" ColorText="0,0,0" ColorBackTitle="230,230,230" ColorBackTitleSelected="76,89,166" ColorForeTitle="0,0,0" ColorForeTitleSelected="255,255,255" Option="true" PrimaryKey="filename"/>
+ <TABLEFIELD Name="filename" Table="file" Length="255" NullCheck="true" Type1="character varying" PrimaryKey="true"/>
+ <TABLEFIELD Name="file_type_id" Table="file" Length="0" NullCheck="true" Type1="int" PrimaryKey="false"/>
+ <TABLEFIELD Name="file_format_id" Table="file" Length="0" NullCheck="true" Type1="int" PrimaryKey="false"/>
+ <TABLEFIELD Name="is_archived" Table="file" Length="0" NullCheck="true" Type1="bool" PrimaryKey="false"/>
+ <TABLEFIELD Name="created_time" Table="file" Length="0" NullCheck="true" Type1="timestamp" PrimaryKey="false"/>
+ <TABLE Name="parameter" X="502" Y="384" ColorBack="230,230,230" ColorText="0,0,0" ColorBackTitle="230,230,230" ColorBackTitleSelected="76,89,166" ColorForeTitle="0,0,0" ColorForeTitleSelected="255,255,255" Option="true" PrimaryKey="parameter_id"/>
+ <TABLEFIELD Name="parameter_id" Table="parameter" Length="0" NullCheck="true" Type1="int" Type2=" " PrimaryKey="true"/>
+ <TABLEFIELD Name="parameter_type_id" Table="parameter" Length="0" NullCheck="false" Type1="int" Type2=" " PrimaryKey="false"/>
+ <TABLEFIELD Name="parameter_name" Table="parameter" Length="50" NullCheck="true" Type1="character varying" Type2=" " PrimaryKey="false"/>
+ <TABLEFIELD Name="description" Table="parameter" Length="255" NullCheck="true" Type1="character varying" Type2=" " PrimaryKey="false"/>
+ <TABLE Name="parameter_type" X="495" Y="282" ColorBack="230,230,230" ColorText="0,0,0" ColorBackTitle="230,230,230" ColorBackTitleSelected="76,89,166" ColorForeTitle="0,0,0" ColorForeTitleSelected="255,255,255" Option="true" PrimaryKey="parameter_type_id"/>
+ <TABLEFIELD Name="parameter_type_id" Table="parameter_type" Length="0" NullCheck="true" Type1="int" Type2=" " PrimaryKey="true"/>
+ <TABLEFIELD Name="parameter_type_name" Table="parameter_type" Length="50" NullCheck="true" Type1="character varying" Type2=" " PrimaryKey="false"/>
+ <TABLEFIELD Name="parameter_location" Table="parameter_type" Check="(parameter_location = #27#parameter_value#27# or parameter_location = #27#parameter_track#27#)" Length="50" NullCheck="false" Type1="character varying" Type2=" " PrimaryKey="false"/>
+ <TABLE Name="parameter_value" X="23" Y="512" ColorBack="230,230,230" ColorText="0,0,0" ColorBackTitle="230,230,230" ColorBackTitleSelected="76,89,166" ColorForeTitle="0,0,0" ColorForeTitleSelected="255,255,255" Option="true" PrimaryKey="table6_pk"/>
+ <TABLEFIELD Name="filename" Table="parameter_value" Length="255" NullCheck="false" Type1="character varying" Type2=" " PrimaryKey="false"/>
+ <TABLEFIELD Name="parameter_id" Table="parameter_value" Length="0" NullCheck="false" Type1="int" Type2=" " PrimaryKey="false"/>
+ <TABLEFIELD Name="creation_time" Table="parameter_value" Length="0" NullCheck="true" Type1="timestamp" Type2=" " PrimaryKey="false"/>
+ <TABLEFIELD Name="data_value" Table="parameter_value" Length="3000" NullCheck="true" Type1="character varying" Type2=" " PrimaryKey="false"/>
+ <TABLE Name="parameter_track" X="195" Y="518" ColorBack="230,230,230" ColorText="0,0,0" ColorBackTitle="230,230,230" ColorBackTitleSelected="76,89,166" ColorForeTitle="0,0,0" ColorForeTitleSelected="255,255,255" Option="true" PrimaryKey="table17_pk"/>
+ <TABLEFIELD Name="filename" Table="parameter_track" Length="255" NullCheck="false" Type1="character varying" PrimaryKey="false"/>
+ <TABLEFIELD Name="parameter_id" Table="parameter_track" Length="0" NullCheck="false" Type1="int" PrimaryKey="false"/>
+ <TABLEFIELD Name="creation_time" Table="parameter_track" Length="0" NullCheck="true" Type1="timestamp" PrimaryKey="false"/>
+ <TABLEFIELD Name="track" Table="parameter_track" Length="0" NullCheck="true" Type1="#22#unknown#22#" PrimaryKey="false"/>
+ <TABLE Name="boundary" X="662" Y="91" ColorBack="230,230,230" ColorText="0,0,0" ColorBackTitle="230,230,230" ColorBackTitleSelected="76,89,166" ColorForeTitle="0,0,0" ColorForeTitleSelected="255,255,255" Option="true" PrimaryKey="boundary_id"/>
+ <TABLEFIELD Name="boundary_id" Table="boundary" Length="0" NullCheck="true" Type1="int" PrimaryKey="true"/>
+ <TABLEFIELD Name="boundary_name" Table="boundary" Length="255" NullCheck="true" Type1="character varying" PrimaryKey="false"/>
+ <TABLEFIELD Name="creation_time" Table="boundary" Length="0" NullCheck="true" Type1="timestamp" PrimaryKey="false"/>
+ <TABLEFIELD Name="boundary" Table="boundary" Length="0" NullCheck="true" Type1="#22#unknown#22#" PrimaryKey="false"/>
+ <TABLE Name="data_boundary" X="540" Y="194" ColorBack="230,230,230" ColorText="0,0,0" ColorBackTitle="230,230,230" ColorBackTitleSelected="76,89,166" ColorForeTitle="0,0,0" ColorForeTitleSelected="255,255,255" Option="true" PrimaryKey="table19_pk"/>
+ <TABLEFIELD Name="filename" Table="data_boundary" Length="255" NullCheck="false" Type1="character varying" PrimaryKey="false"/>
+ <TABLEFIELD Name="boundary_id" Table="data_boundary" Length="0" NullCheck="false" Type1="int" PrimaryKey="false"/>
+ <TABLEFIELD Name="creation_time" Table="data_boundary" Length="0" NullCheck="true" Type1="timestamp" PrimaryKey="false"/>
+ <TABLE Name="tag" X="805" Y="267" ColorBack="230,230,230" ColorText="0,0,0" ColorBackTitle="230,230,230" ColorBackTitleSelected="76,89,166" ColorForeTitle="0,0,0" ColorForeTitleSelected="255,255,255" Option="true" PrimaryKey="tag_id"/>
+ <TABLEFIELD Name="tag_id" Table="tag" Length="0" NullCheck="true" Type1="int" PrimaryKey="true"/>
+ <TABLEFIELD Name="tag" Table="tag" Length="255" NullCheck="true" Type1="character varying" PrimaryKey="false"/>
+ <TABLE Name="file_type_tag" X="722" Y="384" ColorBack="230,230,230" ColorText="0,0,0" ColorBackTitle="230,230,230" ColorBackTitleSelected="76,89,166" ColorForeTitle="0,0,0" ColorForeTitleSelected="255,255,255" Option="true" PrimaryKey="table21_pk"/>
+ <TABLEFIELD Name="tag_id" Table="file_type_tag" Length="0" NullCheck="false" Type1="int" PrimaryKey="false"/>
+ <TABLEFIELD Name="file_type_id" Table="file_type_tag" Length="0" NullCheck="false" Type1="int" PrimaryKey="false"/>
+ <TABLEFIELD Name="creation_time" Table="file_type_tag" Length="0" NullCheck="true" Type1="timestamp" PrimaryKey="false"/>
+ <TABLE Name="file_tag" X="873" Y="387" ColorBack="230,230,230" ColorText="0,0,0" ColorBackTitle="230,230,230" ColorBackTitleSelected="76,89,166" ColorForeTitle="0,0,0" ColorForeTitleSelected="255,255,255" Option="true" PrimaryKey="table22_pk"/>
+ <TABLEFIELD Name="tag_id" Table="file_tag" Length="0" NullCheck="false" Type1="int" PrimaryKey="false"/>
+ <TABLEFIELD Name="filename" Table="file_tag" Length="255" NullCheck="false" Type1="character varying" PrimaryKey="false"/>
+ <TABLEFIELD Name="creation_time" Table="file_tag" Length="0" NullCheck="true" Type1="timestamp" PrimaryKey="false"/>
+ <TABLE Name="file_uri" X="128" Y="129" ColorBack="230,230,230" ColorText="0,0,0" ColorBackTitle="230,230,230" ColorBackTitleSelected="76,89,166" ColorForeTitle="0,0,0" ColorForeTitleSelected="255,255,255" Option="true" PrimaryKey="table23_pk"/>
+ <TABLEFIELD Name="file_type_id" Table="file_uri" Length="0" NullCheck="false" Type1="int" PrimaryKey="false"/>
+ <TABLEFIELD Name="file_format_id" Table="file_uri" Length="0" NullCheck="false" Type1="int" PrimaryKey="false"/>
+ <TABLEFIELD Name="uri" Table="file_uri" Length="3000" NullCheck="true" Type1="character varying" PrimaryKey="false"/>
+ <TABLE Name="file_type_parameter" X="348" Y="520" ColorBack="230,230,230" ColorText="0,0,0" ColorBackTitle="230,230,230" ColorBackTitleSelected="76,89,166" ColorForeTitle="0,0,0" ColorForeTitleSelected="255,255,255" Option="true" PrimaryKey="table24_pk"/>
+ <TABLEFIELD Name="file_type_id" Table="file_type_parameter" Length="0" NullCheck="false" Type1="int" PrimaryKey="false"/>
+ <TABLEFIELD Name="parameter_id" Table="file_type_parameter" Length="0" NullCheck="false" Type1="int" PrimaryKey="false"/>
+ <RELATION Name="file_fkey1" X1="311" Y1="71" X2="160" Y2="260" ColorLine="192,192,192" ColorLineSelected="255,0,0" ColorStartPoint="255,0,0" ColorMiddlePoint="255,0,0" ColorEndPoint="0,255,0" OnUpdate="RESTRICT" OnDelete="RESTRICT" Table1="file_type" Table2="file"/>
+ <RELATIONFIELD Relation="file_fkey1" Field1="file_type_id" Field2="file_type_id"/>
+ <RELATION Name="file_fkey2" X1="506" Y1="104" X2="245" Y2="260" ColorLine="192,192,192" ColorLineSelected="255,0,0" ColorStartPoint="255,0,0" ColorMiddlePoint="255,0,0" ColorEndPoint="0,255,0" OnUpdate="RESTRICT" OnDelete="RESTRICT" Table1="file_format" Table2="file"/>
+ <RELATIONFIELD Relation="file_fkey2" Field1="file_format_id" Field2="file_format_id"/>
+ <RELATION Name="parameter_fkey1" X1="581" Y1="324" X2="582" Y2="384" ColorLine="192,192,192" ColorLineSelected="255,0,0" ColorStartPoint="255,0,0" ColorMiddlePoint="255,0,0" ColorEndPoint="0,255,0" OnUpdate="RESTRICT" OnDelete="RESTRICT" Table1="parameter_type" Table2="parameter"/>
+ <RELATIONFIELD Relation="parameter_fkey1" Field1="parameter_type_id" Field2="parameter_type_id"/>
+ <RELATION Name="parameter_value_fkey1" X1="542" Y1="426" X2="71" Y2="512" ColorLine="192,192,192" ColorLineSelected="255,0,0" ColorStartPoint="255,0,0" ColorMiddlePoint="255,0,0" ColorEndPoint="0,255,0" OnUpdate="RESTRICT" OnDelete="RESTRICT" Table1="parameter" Table2="parameter_value"/>
+ <RELATIONFIELD Relation="parameter_value_fkey1" Field1="parameter_id" Field2="parameter_id"/>
+ <RELATION Name="parameter_value_fkey2" X1="139" Y1="302" X2="119" Y2="512" ColorLine="192,192,192" ColorLineSelected="255,0,0" ColorStartPoint="255,0,0" ColorMiddlePoint="255,0,0" ColorEndPoint="0,255,0" OnUpdate="RESTRICT" OnDelete="RESTRICT" Table1="file" Table2="parameter_value"/>
+ <RELATIONFIELD Relation="parameter_value_fkey2" Field1="filename" Field2="filename"/>
+ <RELATION Name="parameter_track_fkey1" X1="203" Y1="302" X2="242" Y2="518" ColorLine="192,192,192" ColorLineSelected="255,0,0" ColorStartPoint="255,0,0" ColorMiddlePoint="255,0,0" ColorEndPoint="0,255,0" OnUpdate="RESTRICT" OnDelete="RESTRICT" Table1="file" Table2="parameter_track"/>
+ <RELATIONFIELD Relation="parameter_track_fkey1" Field1="filename" Field2="filename"/>
+ <RELATION Name="parameter_track_fkey2" X1="582" Y1="426" X2="289" Y2="518" ColorLine="192,192,192" ColorLineSelected="255,0,0" ColorStartPoint="255,0,0" ColorMiddlePoint="255,0,0" ColorEndPoint="0,255,0" OnUpdate="RESTRICT" OnDelete="RESTRICT" Table1="parameter" Table2="parameter_track"/>
+ <RELATIONFIELD Relation="parameter_track_fkey2" Field1="parameter_id" Field2="parameter_id"/>
+ <RELATION Name="data_boundary_fkey1" X1="730" Y1="133" X2="583" Y2="194" ColorLine="192,192,192" ColorLineSelected="255,0,0" ColorStartPoint="255,0,0" ColorMiddlePoint="255,0,0" ColorEndPoint="0,255,0" OnUpdate="RESTRICT" OnDelete="RESTRICT" Table1="boundary" Table2="data_boundary"/>
+ <RELATIONFIELD Relation="data_boundary_fkey1" Field1="boundary_id" Field2="boundary_id"/>
+ <RELATION Name="file_type_tag_fkey1" X1="836" Y1="309" X2="781" Y2="384" ColorLine="192,192,192" ColorLineSelected="255,0,0" ColorStartPoint="255,0,0" ColorMiddlePoint="255,0,0" ColorEndPoint="0,255,0" OnUpdate="RESTRICT" OnDelete="RESTRICT" Table1="tag" Table2="file_type_tag"/>
+ <RELATIONFIELD Relation="file_type_tag_fkey1" Field1="tag_id" Field2="tag_id"/>
+ <RELATION Name="file_tag_fkey1" X1="867" Y1="309" X2="914" Y2="387" ColorLine="192,192,192" ColorLineSelected="255,0,0" ColorStartPoint="255,0,0" ColorMiddlePoint="255,0,0" ColorEndPoint="0,255,0" OnUpdate="RESTRICT" OnDelete="RESTRICT" Table1="tag" Table2="file_tag"/>
+ <RELATIONFIELD Relation="file_tag_fkey1" Field1="tag_id" Field2="tag_id"/>
+ <RELATION Name="file_uri_fkey1" X1="557" Y1="104" X2="154" Y2="129" ColorLine="192,192,192" ColorLineSelected="255,0,0" ColorStartPoint="255,0,0" ColorMiddlePoint="255,0,0" ColorEndPoint="0,255,0" OnUpdate="RESTRICT" OnDelete="RESTRICT" Table1="file_format" Table2="file_uri"/>
+ <RELATIONFIELD Relation="file_uri_fkey1" Field1="file_format_id" Field2="file_format_id"/>
+ <RELATION Name="file_uri_fkey2" X1="347" Y1="71" X2="180" Y2="129" ColorLine="192,192,192" ColorLineSelected="255,0,0" ColorStartPoint="255,0,0" ColorMiddlePoint="255,0,0" ColorEndPoint="0,255,0" OnUpdate="RESTRICT" OnDelete="RESTRICT" Table1="file_type" Table2="file_uri"/>
+ <RELATIONFIELD Relation="file_uri_fkey2" Field1="file_type_id" Field2="file_type_id"/>
+ <RELATION Name="file_type_parameter_fkey1" X1="622" Y1="426" X2="403" Y2="520" ColorLine="192,192,192" ColorLineSelected="255,0,0" ColorStartPoint="255,0,0" ColorMiddlePoint="255,0,0" ColorEndPoint="0,255,0" OnUpdate="RESTRICT" OnDelete="RESTRICT" Table1="parameter" Table2="file_type_parameter"/>
+ <RELATIONFIELD Relation="file_type_parameter_fkey1" Field1="parameter_id" Field2="parameter_id"/>
+ <RELATION Name="file_type_parameter_fkey2" X1="382" Y1="71" X2="458" Y2="520" ColorLine="192,192,192" ColorLineSelected="255,0,0" ColorStartPoint="255,0,0" ColorMiddlePoint="255,0,0" ColorEndPoint="0,255,0" OnUpdate="RESTRICT" OnDelete="RESTRICT" Table1="file_type" Table2="file_type_parameter"/>
+ <RELATIONFIELD Relation="file_type_parameter_fkey2" Field1="file_type_id" Field2="file_type_id"/>
+ <RELATION Name="data_boundary_fkey2" X1="267" Y1="302" X2="626" Y2="194" ColorLine="192,192,192" ColorLineSelected="255,0,0" ColorStartPoint="255,0,0" ColorMiddlePoint="255,0,0" ColorEndPoint="0,255,0" OnUpdate="RESTRICT" OnDelete="RESTRICT" Table1="file" Table2="data_boundary"/>
+ <RELATIONFIELD Relation="data_boundary_fkey2" Field1="filename" Field2="filename"/>
+</pgDesigner>
