@@ -121,6 +121,7 @@ except IndexError:
 url = "http://%s:%d"%rpc_address
 
 if cmd:
+    # A single RPC call and the quit.
     try:
         fun = cmdfun[cmd]
     except KeyError:
