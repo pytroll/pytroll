@@ -1,0 +1,43 @@
+Here we keep the Data base design and code.
+
+So far only a first draft database design (xml) done with pgDesigner
+and some example code to verify it.
+
+pgDesigner makes sql code automatically. However, there is (yet) no support for postGIS.
+We need to make a small script that will take the automatically generated sql code
+from pgDesigner and insert the geography specific parameters/tags for postGIS.
+
+So far the automatically generated sql code has been adapted manually to comply with postGIS.
+
+Content:
+
+        * README
+          This file
+
+        * pytroll_db.xml
+          The db-design as done with pgDesigner
+
+        * pytroll_db_ed.sql
+          The slightly modified/edited sql file that was generated automatically from pgDesigner
+
+        * test_pytroll_db_insert.sql
+          Test code to insert some synthetic (made up) values into the database.
+
+        * pytroll_test_query.sql*
+          Test code to illustrate the kind of queries you can do on the database.
+
+        * create_sat_db_tables.sql*
+          The sql code we wrote during the working week (w48 2010) at SMHI.
+
+        * test_insert_into_table.sql
+          The test code (also written during the working week) to insert some synthetic (made up) 
+          values into the database.
+
+        * delete_sat_db_tables.sql*
+          Cleaning up the database (also written during the working week)
+        
+
+Esben & Adam
+2010-12-08
+
+
