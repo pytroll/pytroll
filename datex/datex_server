@@ -6,6 +6,7 @@ import time
 import getopt
 from glob import glob
 from datetime import datetime
+import signal
 
 import rpclite as rpc
 from rpclite.server import ForkingXMLRPCServer as XMLRPCServer
@@ -30,6 +31,23 @@ publish_port_testing = 9666
 datetime_format = '%Y-%m-%dT%H:%M:%S' 
 datatypes = {'pol_L0' :
                  ('/net/prodsat/datadb/sat/polar/smb/level0','*.hrpt.bz2')}
+
+#-----------------------------------------------------------------------------
+#
+# Signals we care about
+#
+#-----------------------------------------------------------------------------
+class HangupInterrupt(Exception):    
+    pass # reload configuration
+def sighup_handler(signum, frame): 
+    raise HangupInterrupt
+signal.signal(signal.SIGHUP, sighup_handler)
+
+class StopInterrupt(Exception):
+    pass  # stop in a nice way
+def sigstop_handler(signum, frame):
+    raise StopInterrupt
+signal.signal(signal.SIGTERM, sigstop_handler)
 
 #-----------------------------------------------------------------------------
 #
@@ -96,7 +114,7 @@ if daemonize:
     if daemonize.is_running_ps("*python*satfile_server*"):
         print >>sys.stderr, "Something like us is already running ... quitting"
         sys.exit(1)        
-    daemon = daemonize.daemonize(stdout='/opt/satfile_server/satfile_server.log')
+    daemon = daemonize.daemonize(stdout='/tmp/datex_server.log')
 
 #-----------------------------------------------------------------------------
 #
@@ -121,6 +139,6 @@ publisher.start()
 #-----------------------------------------------------------------------------
 try:
     rpc_server.serve_forever()
-except (KeyboardInterrupt, SystemExit):
-    publisher.stop()
+except (KeyboardInterrupt, SystemExit, HangupInterrupt, StopInterrupt):
     pass
+publisher.stop()

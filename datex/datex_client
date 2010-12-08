@@ -7,6 +7,7 @@ import time
 import getopt
 import filecmp
 from datetime import datetime, timedelta
+import signal
 
 import rpclite as rpc
 from datex_subscriber import Subscriber
@@ -35,6 +36,23 @@ def usage():
     -T, test mode
     if not arguments it will listing for published files."""
     sys.exit(2)
+
+#-----------------------------------------------------------------------------
+#
+# Signals we care about
+#
+#-----------------------------------------------------------------------------
+class HangupInterrupt(Exception):    
+    pass # reload configuration
+def sighup_handler(signum, frame): 
+    raise HangupInterrupt
+signal.signal(signal.SIGHUP, sighup_handler)
+
+class StopInterrupt(Exception):
+    pass  # stop in a nice way
+def sigstop_handler(signum, frame):
+    raise StopInterrupt
+signal.signal(signal.SIGTERM, sigstop_handler)
 
 #-----------------------------------------------------------------------------
 #
@@ -133,5 +151,5 @@ try:
             # timeout
             pass
         time.sleep(0.0001)
-except (KeyboardInterrupt, SystemExit):
+except (KeyboardInterrupt, SystemExit, HangupInterrupt, StopInterrupt):
     pass
