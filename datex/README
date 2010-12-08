@@ -1,0 +1,14 @@
+= DATEX =
+A `prototype` for a data exchange server and client between DMI and SMHI,
+using rpclite and zmq's publish/subscibe.
+
+It goes like this:
+
+== Server ==
+ * rpclite: register services
+ * zmq: start publisher in a separate process
+ * make sure publisher only run when rpc server is running 
+
+== Client ==
+ * zmq: start subscriber in same process/thread (zmq has it's own threaded queue)
+ * rpclite: for each new subscribe message fetch the corresponding file.

@@ -1,0 +1,137 @@
+#!/usr/bin/python
+#
+import sys
+import os
+import traceback
+import time
+import getopt
+import filecmp
+from datetime import datetime, timedelta
+
+import rpclite as rpc
+from datex_subscriber import Subscriber
+
+# IPSec ports: 9334, 9335, 9336 
+def myip():
+    import socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect((socket.gethostname(), 0))
+    ip = s.getsockname()[0]
+    s.close()
+    return ip
+
+ip = myip()
+rpc_address = '130.226.66.136', 9335 # devsat-lucid.dmi.dk
+rpc_address_testing = ip, 9665
+publish_port = 9336
+publish_port_testing = 9666
+
+datatype = 'pol_L0'
+datetime_format = '%Y-%m-%dT%H:%M:%S' 
+
+def usage():
+    print >>sys.stderr, """datex_client [-T] [-d] [info|list|get]
+    -d, damonize
+    -T, test mode
+    if not arguments it will listing for published files."""
+    sys.exit(2)
+
+#-----------------------------------------------------------------------------
+#
+# Services
+#
+#-----------------------------------------------------------------------------
+def get_file(filename, outdir='.'):
+    rpc_server = rpc.XMLRPCServerProxy(url)
+    print 'getting', url + '/' + datatype + '/' + filename
+    buf = rpc_server.get_file(datatype, filename, timeout=1800)
+    buf = buf.data
+    print 'saving', filename
+    fp = open(filename, 'wb')
+    fp.write(buf)
+    fp.close()
+
+def get_info():
+    rpc_server = rpc.XMLRPCServerProxy(url)
+    print rpc_server.system.whoareyou(), 
+    print 'exporting:' 
+    for method in rpc_server.system.listMethods():
+        print method,
+    print ''
+
+def get_list(latest=False):
+    rpc_server = rpc.XMLRPCServerProxy(url)
+    for f in rpc_server.get_file_list(datatype):
+        print f
+
+def get_latest():
+    rpc_server = rpc.XMLRPCServerProxy(url)
+    time_start = datetime.now() - timedelta(hours=2)
+    for f in rpc_server.get_file_list(datatype, time_start.strftime(datetime_format)):
+        print f
+
+cmdfun = {'info': get_info,
+          'list': get_list,
+          'latest': get_latest,
+          'get': get_file}
+
+#-----------------------------------------------------------------------------
+#
+# Handle options
+#
+#-----------------------------------------------------------------------------
+daemonize = False
+filename = ''
+opts,args = getopt.getopt( sys.argv[1:], 'dTH' )
+for k,v in opts:
+  if k == '-d': 
+      daemonize = True
+  elif k == '-T': 
+      rpc_address = rpc_address_testing
+      publish_port = publish_port_testing
+  elif k == '-H': 
+      usage()
+
+cmd, arg = '', ''
+try:
+    cmd = args[0]
+    if cmd == 'get':
+        arg = args[1]
+except IndexError:
+    pass
+
+url = "http://%s:%d"%rpc_address
+
+if cmd:
+    try:
+        fun = cmdfun[cmd]
+    except KeyError:
+        print >>sys.stderr, "Unkown command '%s'"%cmd
+        sys.exit(1)
+    if arg:
+        fun(arg)
+    else:
+        fun()
+    sys.exit(0)
+
+#-----------------------------------------------------------------------------
+#
+# Subscribe for pol_L0 file messages and run forever.
+#
+#-----------------------------------------------------------------------------
+address = rpc_address[0], publish_port
+subscriber = Subscriber('pytroll://' + datatype + ' file', address) 
+try:
+    for m in subscriber.get(timeout=2.):
+        if m:
+            print m
+            try:
+                get_file(os.path.basename(m.data['uri']))
+            except:
+                traceback.print_exc()                
+        else:
+            # timeout
+            pass
+        time.sleep(0.0001)
+except (KeyboardInterrupt, SystemExit):
+    pass
