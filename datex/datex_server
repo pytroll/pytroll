@@ -12,21 +12,7 @@ import rpclite as rpc
 from rpclite.server import ForkingXMLRPCServer as XMLRPCServer
 
 from datex_publisher import Publisher
-
-# IPSec ports: 9334, 9335, 9336 
-def myip():
-    import socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect((socket.gethostname(), 0))
-    ip = s.getsockname()[0]
-    s.close()
-    return ip
-
-ip = myip()
-rpc_address = ip, 9335
-rpc_address_testing = ip, 9665
-publish_port = 9336
-publish_port_testing = 9666
+from datex_config import read_config
 
 datetime_format = '%Y-%m-%dT%H:%M:%S' 
 datatypes = {'pol_L0' :
@@ -98,13 +84,10 @@ def get_file(data_type, file_name):
 #
 #-----------------------------------------------------------------------------
 daemonize = False
-opts,args = getopt.getopt( sys.argv[1:], 'dT' )
+opts,args = getopt.getopt( sys.argv[1:], 'd' )
 for k,v in opts:
   if k == '-d': 
       daemonize = True
-  if k == '-T': 
-      rpc_address = rpc_address_testing
-      publish_port = publish_port_testing
 
 #
 # Damonize ?
@@ -115,6 +98,9 @@ if daemonize:
         print >>sys.stderr, "Something like us is already running ... quitting"
         sys.exit(1)        
     daemon = daemonize.daemonize(stdout='/tmp/datex_server.log')
+
+host, rpc_port, publish_port = read_config()
+rpc_address = host, rpc_port
 
 #-----------------------------------------------------------------------------
 #

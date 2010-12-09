@@ -11,29 +11,14 @@ import signal
 
 import rpclite as rpc
 from datex_subscriber import Subscriber
-
-# IPSec ports: 9334, 9335, 9336 
-def myip():
-    import socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect((socket.gethostname(), 0))
-    ip = s.getsockname()[0]
-    s.close()
-    return ip
-
-ip = myip()
-rpc_address = '130.226.66.136', 9335 # devsat-lucid.dmi.dk
-rpc_address_testing = ip, 9665
-publish_port = 9336
-publish_port_testing = 9666
+from datex_config import read_config
 
 datatype = 'pol_L0'
 datetime_format = '%Y-%m-%dT%H:%M:%S' 
 
 def usage():
-    print >>sys.stderr, """datex_client [-T] [-d] [info|list|get]
+    print >>sys.stderr, """datex_client [-T] [info|list|get]
     -d, damonize
-    -T, test mode
     if not arguments it will listing for published files."""
     sys.exit(2)
 
@@ -118,6 +103,9 @@ try:
 except IndexError:
     pass
 
+host, rpc_port, publish_port = read_config()
+rpc_address = host, rpc_port
+publish_address = host, publish_port
 url = "http://%s:%d"%rpc_address
 
 if cmd:
@@ -138,8 +126,7 @@ if cmd:
 # Subscribe for pol_L0 file messages and run forever.
 #
 #-----------------------------------------------------------------------------
-address = rpc_address[0], publish_port
-subscriber = Subscriber('pytroll://' + datatype + ' file', address) 
+subscriber = Subscriber('pytroll://' + datatype + ' file', publish_address) 
 try:
     for m in subscriber.get(timeout=2.):
         if m:
