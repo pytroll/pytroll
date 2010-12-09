@@ -3,6 +3,7 @@
 import sys
 import os
 import time
+import logging
 import getopt
 from glob import glob
 from datetime import datetime
@@ -18,6 +19,11 @@ datetime_format = '%Y-%m-%dT%H:%M:%S'
 datatypes = {'pol_L0' :
                  ('/net/prodsat/datadb/sat/polar/smb/level0','*.hrpt.bz2')}
 
+log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+logging.basicConfig(format=log_format, datefmt="%Y-%m-%d %H:%M:%S", 
+                    level=logging.INFO, stream=sys.stderr)
+logger = logging.getLogger('datex-server')
+
 #-----------------------------------------------------------------------------
 #
 # Signals we care about
@@ -29,10 +35,8 @@ def sighup_handler(signum, frame):
     raise HangupInterrupt
 signal.signal(signal.SIGHUP, sighup_handler)
 
-class StopInterrupt(Exception):
-    pass  # stop in a nice way
 def sigstop_handler(signum, frame):
-    raise StopInterrupt
+    raise SystemExit
 signal.signal(signal.SIGTERM, sigstop_handler)
 
 #-----------------------------------------------------------------------------
@@ -42,8 +46,7 @@ signal.signal(signal.SIGTERM, sigstop_handler)
 #-----------------------------------------------------------------------------
 def get_file_list(data_type, time_start=None, time_end=None):
     
-    print >>sys.stderr, datetime.now().strftime(datetime_format), \
-        '... get_data_list(%s, %s, %s)'%(data_type, time_start, time_end)
+    logger.info('... get_data_list(%s, %s, %s)'%(data_type, time_start, time_end))
     if time_start is None:
         time_start = datetime.utcfromtimestamp(0)
     else:
@@ -70,8 +73,7 @@ def get_file_list(data_type, time_start=None, time_end=None):
     return result
 
 def get_file(data_type, file_name):
-    print >>sys.stderr, datetime.now().strftime(datetime_format),\
-        '... get_file(%s, %s)'%(data_type, file_name)
+    logger.info('... get_file(%s, %s)'%(data_type, file_name))
     path = datatypes[data_type][0]
     f = open(os.path.join(path, file_name))
     buf = f.read()
@@ -97,7 +99,7 @@ if daemonize:
     if daemonize.is_running_ps("*python*datex_server*"):
         print >>sys.stderr, "Something like us is already running ... quitting"
         sys.exit(1)        
-    daemon = daemonize.daemonize(stdout='/tmp/datex_server.log')
+    daemon = daemonize.daemonize(stdout='/tmp/datext_server.log')
 
 host, rpc_port, publish_port = read_config()
 rpc_address = host, rpc_port
@@ -107,6 +109,7 @@ rpc_address = host, rpc_port
 # Register services
 #
 #-----------------------------------------------------------------------------
+logger.info('rpc-server starting')
 rpc_server = XMLRPCServer('file_server', rpc_address)    
 rpc_server.register_function(get_file_list, 'get_file_list')
 rpc_server.register_function(get_file, 'get_file')
@@ -123,8 +126,11 @@ publisher = Publisher('/pol_L0', '/tmp/sss', rpc_metadata, publish_port)
 publisher.start()
 
 #-----------------------------------------------------------------------------
-try:
-    rpc_server.serve_forever()
-except (KeyboardInterrupt, SystemExit, HangupInterrupt, StopInterrupt):
-    pass
-publisher.stop()
+while(True):
+    try:
+        rpc_server.serve_forever()
+    except HangupInterrupt:
+        continue
+    except (KeyboardInterrupt, SystemExit):
+        logger.info('rpc-server stopping')
+        break

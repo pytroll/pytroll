@@ -6,9 +6,12 @@
 #
 import sys
 import time
+import logging
 import zmq
 
 from pytroll.message import Message
+
+logger = logging.getLogger('datex_client')
 
 context = zmq.Context() 
 class Subscriber(object):
@@ -17,7 +20,7 @@ class Subscriber(object):
         subscriber.setsockopt(zmq.SUBSCRIBE, subject)
         self.subscriber = subscriber
         self.destination = "tcp://%s:%d"%addr
-        print self.destination
+        logger.info(self.destination)
 
     def __call__(self):
         return self.get()
@@ -37,12 +40,12 @@ class Subscriber(object):
                             m = Message.decode(self.subscriber.recv(zmq.NOBLOCK))
                             yield m
                         else:
-                            print "WHAT THE HECK"
+                            logger.error("WHAT THE HECK")
                     else:
                         # timeout
                         yield None
                 except zmq.ZMQError:
-                    print "zmq error" 
+                    logger.exception('recv failed')
         finally:
             poller.unregister(self.subscriber)
             self.subscriber.close()        

@@ -2,8 +2,8 @@
 #
 import sys
 import os
-import traceback
 import time
+import logging
 import getopt
 import filecmp
 from datetime import datetime, timedelta
@@ -15,6 +15,11 @@ from datex_config import read_config
 
 datatype = 'pol_L0'
 datetime_format = '%Y-%m-%dT%H:%M:%S' 
+
+log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+logging.basicConfig(format=log_format, datefmt="%Y-%m-%d %H:%M:%S", 
+                    level=logging.INFO, stream=sys.stderr)
+logger = logging.getLogger('datex-client')
 
 def usage():
     print >>sys.stderr, """datex_client [-H] [info|list|latest|get filename]
@@ -33,10 +38,8 @@ def sighup_handler(signum, frame):
     raise HangupInterrupt
 signal.signal(signal.SIGHUP, sighup_handler)
 
-class StopInterrupt(Exception):
-    pass  # stop in a nice way
 def sigstop_handler(signum, frame):
-    raise StopInterrupt
+    raise SystemExit
 signal.signal(signal.SIGTERM, sigstop_handler)
 
 #-----------------------------------------------------------------------------
@@ -46,10 +49,10 @@ signal.signal(signal.SIGTERM, sigstop_handler)
 #-----------------------------------------------------------------------------
 def get_file(filename, outdir='.'):
     rpc_server = rpc.XMLRPCServerProxy(url)
-    print 'getting', url + '/' + datatype + '/' + filename
+    logger.info('getting %s', url + '/' + datatype + '/' + filename)
     buf = rpc_server.get_file(datatype, filename, timeout=1800)
     buf = buf.data
-    print 'saving', filename
+    logger.info('saving %s', filename)
     fp = open(filename, 'wb')
     fp.write(buf)
     fp.close()
@@ -102,7 +105,7 @@ publish_address = host, publish_port
 url = "http://%s:%d"%rpc_address
 
 if cmd:
-    # A single RPC call and the quit.
+    # A single RPC call and then quit.
     try:
         fun = cmdfun[cmd]
     except KeyError:
@@ -123,14 +126,18 @@ subscriber = Subscriber('pytroll://' + datatype + ' file', publish_address)
 try:
     for m in subscriber.get(timeout=2.):
         if m:
-            print m
+            logger.info(m)
             try:
                 get_file(os.path.basename(m.data['uri']))
             except:
-                traceback.print_exc()                
+                logger.exception('rpc get_file failed')
         else:
             # timeout
             pass
         time.sleep(0.0001)
-except (KeyboardInterrupt, SystemExit, HangupInterrupt, StopInterrupt):
+except HangupInterrupt:
     pass
+except (KeyboardInterrupt, SystemExit):
+    pass
+logger.info('stopping')
+
