@@ -25,7 +25,7 @@ class Publisher(object):
         self._process.start()
         return self
 
-    def stop(self, wait=True):
+    def stop(self):
         self._process.terminate()
         #self._process.join()
         return self

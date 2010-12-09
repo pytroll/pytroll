@@ -94,7 +94,7 @@ for k,v in opts:
 #
 if daemonize:
     import daemonize
-    if daemonize.is_running_ps("*python*satfile_server*"):
+    if daemonize.is_running_ps("*python*datex_server*"):
         print >>sys.stderr, "Something like us is already running ... quitting"
         sys.exit(1)        
     daemon = daemonize.daemonize(stdout='/tmp/datex_server.log')

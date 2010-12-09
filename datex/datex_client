@@ -17,9 +17,9 @@ datatype = 'pol_L0'
 datetime_format = '%Y-%m-%dT%H:%M:%S' 
 
 def usage():
-    print >>sys.stderr, """datex_client [-T] [info|list|get]
-    -d, damonize
-    if not arguments it will listing for published files."""
+    print >>sys.stderr, """datex_client [-H] [info|list|latest|get filename]
+    -H, this info
+    if not arguments it will listen for published files, and fetch'm."""
     sys.exit(2)
 
 #-----------------------------------------------------------------------------
@@ -83,17 +83,10 @@ cmdfun = {'info': get_info,
 # Handle options
 #
 #-----------------------------------------------------------------------------
-daemonize = False
-filename = ''
-opts,args = getopt.getopt( sys.argv[1:], 'dTH' )
+opts,args = getopt.getopt( sys.argv[1:], 'H' )
 for k,v in opts:
-  if k == '-d': 
-      daemonize = True
-  elif k == '-T': 
-      rpc_address = rpc_address_testing
-      publish_port = publish_port_testing
-  elif k == '-H': 
-      usage()
+    if k == '-H': 
+        usage()
 
 cmd, arg = '', ''
 try:
