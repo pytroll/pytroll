@@ -35,6 +35,9 @@ Content:
 
         * delete_sat_db_tables.sql*
           Cleaning up the database (also written during the working week)
+
+        * postgisify_pytroll_db.py*
+          Creates PostGIS version of pytroll_db create SQL
         
 
 Esben & Adam
