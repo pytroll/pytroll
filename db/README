@@ -1,11 +1,11 @@
 Here we keep the Data base design and code.
 
-So far only a first draft database design (xml) done with pgDesigner
+So far only a first draft database design done with Power Architect
 and some example code to verify it.
 
-pgDesigner makes sql code automatically. However, there is (yet) no support for postGIS.
+Power Architect makes sql code automatically. However, there is (yet) no support for postGIS.
 We need to make a small script that will take the automatically generated sql code
-from pgDesigner and insert the geography specific parameters/tags for postGIS.
+from Power Architect and insert the geography specific parameters/tags for postGIS.
 
 So far the automatically generated sql code has been adapted manually to comply with postGIS.
 
@@ -14,8 +14,8 @@ Content:
         * README
           This file
 
-        * pytroll_db.xml
-          The db-design as done with pgDesigner
+        * pytroll_db.architect
+          The db-design as done with Power Architect
 
         * pytroll_db_ed.sql
           The slightly modified/edited sql file that was generated automatically from pgDesigner
