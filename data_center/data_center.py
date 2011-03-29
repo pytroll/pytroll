@@ -4,10 +4,10 @@ import zmq
 import threading
 import Queue
 
-import pytroll.message as message
-from pytroll.message_broadcaster import sendaddress
+#import pytroll.message as message
+from posttroll.message_broadcaster import sendaddress
 
-MESSAGE_PORT = 21201
+MESSAGE_PORT = 21200
 
 def get_own_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -24,8 +24,8 @@ class Receiver(object):
     """
     def __init__(self, process_fun, port):
         self.fun = process_fun
-        self.recv_thread = self.thread = threading.Thread(target=self.loop_recv)
-        self.fun_thread = self.thread = threading.Thread(target=self.loop_fun)
+        self.recv_thread = threading.Thread(target=self.loop_recv)
+        self.fun_thread = threading.Thread(target=self.loop_fun)
         self.loop = True
         self.port = port
         self.socket = zmq.Context().socket(zmq.PULL)
@@ -34,12 +34,8 @@ class Receiver(object):
         
     def loop_recv(self):
         while self.loop:
-            try:
-                message = self.socket.recv(zmq.NOBLOCK)
-                self.message_queue.put(message)
-            except zmq.ZMQError:
-                pass
-            time.sleep(0.5)
+            message = self.socket.recv()
+            self.message_queue.put(message)
 
     def loop_fun(self):
         while self.loop:
@@ -55,6 +51,10 @@ class Receiver(object):
 
     def stop(self):
         self.loop = False
+        # Send a message to unblock the reciever socket.
+        sock = zmq.Context().socket(zmq.PUSH)
+        sock.connect('tcp://'+get_own_ip()+':'+str(self.port))
+        sock.send("Exiting data center")
 
 broadcaster = sendaddress('dc', (get_own_ip(), MESSAGE_PORT), 2).start()
 message_receiver = Receiver(process_message, MESSAGE_PORT)

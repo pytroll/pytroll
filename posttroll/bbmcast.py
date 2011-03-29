@@ -162,7 +162,7 @@ if __name__ == '__main__':
                 data = data[:-1] # Strip trailing \0's
             print sender, ':', repr(data)
 
-    PORT = 8123
+    PORT = 21200
     mcgroup = MC_GROUP
     opts, args = getopt.getopt(sys.argv[1:], "mb")
     for k, v in opts:

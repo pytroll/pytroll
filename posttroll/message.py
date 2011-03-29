@@ -181,7 +181,7 @@ def _decode(rawstr):
         d['data'] = str(data)
     else:
         raise MessageError, "Unknown mime-type '%s'"%mimetype
-    
+
     return d
 
 def _encode(m, head=False):

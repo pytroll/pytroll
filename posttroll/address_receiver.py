@@ -8,8 +8,8 @@ from datetime import datetime, timedelta
 import thread
 import threading
 
-from pytroll.message import Message
-from pytroll.bbmcast import MulticastReceiver, SocketTimeout
+from posttroll.message import Message
+from posttroll.bbmcast import MulticastReceiver, SocketTimeout
 
 __all__ = ('AddressReceiver', 'getaddress')
 

@@ -2,8 +2,8 @@ import os
 import time
 import threading
 
-import pytroll.message as message
-from pytroll.bbmcast import MulticastSender, MC_GROUP
+import posttroll.message as message
+from posttroll.bbmcast import MulticastSender, MC_GROUP
 
 __all__ = ('MessageBroadcaster', 'AddressBroadcaster', 'sendaddress')
 
@@ -72,7 +72,7 @@ class AddressBroadcaster(MessageBroadcaster):
     def __init__(self, name, address, interval):
         msg = message.Message("/%s/address"%name, "info",
                               "%s:%d"%address).encode()
-        MessageBroadcaster.__init__(self, msg, broadcast_port, interval) 
+        MessageBroadcaster.__init__(self, msg, address[1], interval) 
 #-----------------------------------------------------------------------------
 # default
 sendaddress = AddressBroadcaster
