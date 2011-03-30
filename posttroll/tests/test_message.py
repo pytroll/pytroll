@@ -1,14 +1,42 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010-2011.
+
+# Author(s):
+ 
+#   Lars Ø. Rasmussen <ras@dmi.dk>
+#   Martin Raspaud <martin.raspaud@smhi.se>
+
+# This file is part of pytroll.
+
+# Pytroll is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+
+# Pytroll is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along with
+# pytroll.  If not, see <http://www.gnu.org/licenses/>.
+
+"""Test module for the message class.
+"""
+
 import os
 import sys
 import unittest
 
-home = os.path.dirname(__file__) or '.'
-sys.path = [os.path.abspath(home + '/../..'),] + sys.path
+from posttroll.message import Message, _magick
 
-from pytroll.message import Message, _magick
 
-datadir = home + '/data'
-some_metadata = {'timestamp': '2010-12-03T16:28:39',
+HOME = os.path.dirname(__file__) or '.'
+sys.path = [os.path.abspath(HOME + '/../..'),] + sys.path
+
+
+DATADIR = HOME + '/data'
+SOME_METADATA = {'timestamp': '2010-12-03T16:28:39',
                  'satellite': 'metop2',
                  'uri': 'file://data/my/path/to/hrpt/files/myfile',
                  'orbit': 1222,
@@ -16,36 +44,66 @@ some_metadata = {'timestamp': '2010-12-03T16:28:39',
                  'afloat': 1.2345}
 
 class Test(unittest.TestCase):
+    """Test class.
+    """
+
+    def test_encode_decode(self):
+        """Test the encoding/decoding of the message class.
+        """
+        msg1 = Message('/test/whatup/doc', 'info', data='not much to say')
+        #print msg1.__dict__
+        sender = '%s@%s' % (msg1.user, msg1.host)
+        self.assertTrue(sender == msg1.sender,
+                        msg='Messaging, decoding user, host from sender failed')
+        msg2 = Message.decode(msg1.encode())
+        self.assertTrue(str(msg2) == str(msg1),
+                        msg='Messaging, encoding, decoding failed')
+
 
     def test_decode(self):
-        m1 = Message('/test/whatup/doc', 'info', data='not much to say')
-        sender = '%s@%s'%(m1.user, m1.host)
-        print sender
-        self.assertTrue(sender == m1.sender, msg='Messaging, decoding user, host from sender failed')
-        m2 = Message.decode(m1.encode())
-        print m2
-        self.assertTrue(str(m2) == str(m1), msg='Messaging, encoding, decoding failed')
-        return 
+        """Test the decoding of a message.
+        """
+        rawstr = (_magick + 
+                  '/test/1/2/3 info ras@hawaii 2008-04-11T22:13:22.123000 v1.01'
+                  + ' application/json "what\'s up doc"')
+        msg = Message.decode(rawstr)
+        print msg
+        self.assertTrue(str(msg) == rawstr,
+                        msg='Messaging, decoding of msec failed')
 
-    def test_msec(self):
-        rawstr = _magick + \
-            '/test/1/2/3 info ras@hawaii 2008-04-11T22:13:22.123000 v1.01 application/json "what\'s up doc"'
-        m = Message.decode(rawstr)
-        print m
-        self.assertTrue(str(m) == rawstr, msg='Messaging, decoding of msec failed')
+    def test_encode(self):
+        """Test the encoding of a message.
+        """
+        subject = '/test/whatup/doc'
+        atype = "info"
+        data = 'not much to say'
+        msg1 = Message(subject, atype, data=data)
+        sender = '%s@%s' % (msg1.user, msg1.host)
+        self.assertEquals(_magick +
+                          subject + " " +
+                          atype + " " +
+                          sender + " " +
+                          str(msg1.time.isoformat()) + " " +
+                          Message._version + " "
+                          + 'application/json' + " " +
+                          '"' + data + '"',
+                          msg1.encode())
 
     def test_pickle(self):
+        """Test pickling.
+        """
         import pickle
-        m1 = Message('/test/whatup/doc', 'info', data='not much to say')
+        msg1 = Message('/test/whatup/doc', 'info', data='not much to say')
         try:
-            f = open("pickle.message", 'w')
-            pickle.dump(m1, f)
-            f.close()
-            f = open("pickle.message")
-            m2 = pickle.load(f)
-            print m2
-            f.close()
-            self.assertTrue(str(m1) == str(m2), msg='Messaging, pickle failed')
+            fp_ = open("pickle.message", 'w')
+            pickle.dump(msg1, fp_)
+            fp_.close()
+            fp_ = open("pickle.message")
+            msg2 = pickle.load(fp_)
+            print msg2
+            fp_.close()
+            self.assertTrue(str(msg1) == str(msg2),
+                            msg='Messaging, pickle failed')
         finally:
             try:
                 os.remove('pickle.message')
@@ -53,21 +111,31 @@ class Test(unittest.TestCase):
                 pass
 
     def test_metadata(self):
-        metadata = some_metadata
-        m = Message.decode(Message('/sat/polar/smb/level1', 'file', data=metadata).encode())
-        print m
-        self.assertTrue(m.data == metadata, msg='Messaging, metadata decoding / encoding failed')
+        """Test metadata encoding/decoding.
+        """
+        metadata = SOME_METADATA
+        msg = Message.decode(Message('/sat/polar/smb/level1', 'file',
+                                   data=metadata).encode())
+        print msg
+        self.assertTrue(msg.data == metadata,
+                        msg='Messaging, metadata decoding / encoding failed')
         
     def test_serialization(self):
+        """Test json serialization.
+        """
         import json
-        metadata = some_metadata
-        fp = open(datadir + '/message_metadata.dumps')
-        dump = fp.read()
-        fp.close()
+        metadata = SOME_METADATA
+        fp_ = open(DATADIR + '/message_metadata.dumps')
+        dump = fp_.read()
+        fp_.close()
         # dumps differ ... maybe it's not a problem
-        self.assertTrue(dump == json.dumps(metadata), msg='Messaging, JSON serialization has changed, dumps differ')
-        m = json.loads(dump)
-        self.assertTrue(m == metadata, msg='Messaging, JSON serialization has changed, python objects differ')
+        self.assertTrue(dump == json.dumps(metadata),
+                        msg='Messaging, JSON serialization has changed,'
+                        ' dumps differ')
+        msg = json.loads(dump)
+        self.assertTrue(msg == metadata,
+                        msg='Messaging, JSON serialization'
+                        ' has changed, python objects differ')
 
 if __name__ == '__main__':
     import nose
