@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 import os
 
 class FileWatcher(Thread):
+    """Wait for a file.
+    """
     
     def __init__(self, filename):
         Thread.__init__(self)
@@ -29,7 +31,8 @@ class FileWatcher(Thread):
         self.cond.release()
 
 class Timer(Thread):
-    
+    """Wait for a given time.
+    """
     def __init__(self, time):
         Thread.__init__(self)
         self.time = time
@@ -43,7 +46,7 @@ class Timer(Thread):
             now = datetime.utcnow()
             diff = ((self.time - now).seconds + 
                     (self.time - now).microseconds / 1000000.0)
-            self.cond.wait(min(1, diff))
+            self.cond.wait(diff)
             self.cond.release()
 
     def cancel(self):
@@ -53,7 +56,8 @@ class Timer(Thread):
         self.cond.release()
 
 class Task(Thread):
-    
+    """Run a given function when *triggers* happen.
+    """
     def __init__(self, action, *triggers):
         Thread.__init__(self)
         self.tasks = []
@@ -62,6 +66,8 @@ class Task(Thread):
         self.loop = True
         
     def _trigger(self, *args):
+        """Analyse triggers and add them to the subtask 
+        """
         for obj in args:
             try:
                 (obj.year, obj.month, obj.day, 
@@ -77,6 +83,7 @@ class Task(Thread):
 
     def run(self):
         while self.loop:
+            # Wait until all dependencies are ready, then run.
             start = datetime.utcnow()
             end = start + timedelta(seconds=1)
             for dep in self.tasks:
@@ -92,6 +99,8 @@ class Task(Thread):
                 return
 
     def print_tasks(self, indent=0):
+        """Print subtasks.
+        """
         for task in self.tasks:
             print " "*indent, task
             try:
@@ -101,6 +110,8 @@ class Task(Thread):
                 pass
         
     def cancel(self):
+        """Cancel a task.
+        """
         self.loop = False
         for task in self.tasks:
             if not isinstance(task, Task):
@@ -110,18 +121,24 @@ class Task(Thread):
         
 
 class TaskManager(Task):
-    
+    """One task to rule them all. If forever is False, runs the given tasks and
+    die.
+    """
     def __init__(self, forever=True):
         Task.__init__(self, lambda: [])
         self.forever = forever
         self.cond = Condition()
 
     def add(self, task):
+        """Add a task.
+        """
         if not task.isAlive():
             task.start()
         self.tasks.append(task)
 
     def remove(self, task):
+        """Remove a task.
+        """
         task.cancel()
         self.tasks.remove(task)
 
@@ -135,6 +152,8 @@ class TaskManager(Task):
             Task.run(self)
 
     def quit(self):
+        """End the task manager.
+        """
         self.loop = False
         self.cond.acquire()
         self.cond.notify()
