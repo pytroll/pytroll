@@ -3,9 +3,13 @@ import time
 import zmq
 import threading
 import Queue
+import uuid
+import getpass
 
 #import pytroll.message as message
 from posttroll.message_broadcaster import sendaddress
+
+UID = uuid.uuid5(uuid.NAMESPACE_DNS, getpass.getuser()+"@"+socket.gethostname())
 
 MESSAGE_PORT = 21200
 
