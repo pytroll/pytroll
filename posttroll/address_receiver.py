@@ -41,7 +41,7 @@ broadcast_port = 21200
 
 #-----------------------------------------------------------------------------
 #
-# Generall thread to receive broadcast addresses.
+# General thread to receive broadcast addresses.
 #
 #-----------------------------------------------------------------------------
 class AddressReceiver(object):
@@ -113,5 +113,5 @@ class AddressReceiver(object):
 #-----------------------------------------------------------------------------
 # default
 getaddress = AddressReceiver
-#getaddress = AddressFile
+
 

@@ -35,7 +35,7 @@ broadcast_port = 21200
 
 #-----------------------------------------------------------------------------
 #
-# Generall thread to broadcast messages.
+# General thread to broadcast messages.
 #
 #-----------------------------------------------------------------------------
 class MessageBroadcaster(object):
@@ -86,7 +86,7 @@ class MessageBroadcaster(object):
 
 #-----------------------------------------------------------------------------
 #
-# Generall thread to broadcast addresses.
+# General thread to broadcast addresses.
 #
 #-----------------------------------------------------------------------------
 class AddressBroadcaster(MessageBroadcaster):
@@ -95,7 +95,7 @@ class AddressBroadcaster(MessageBroadcaster):
     def __init__(self, name, address, interval):
         msg = message.Message("/%s/address"%name, "info",
                               "%s:%d"%address).encode()
-        MessageBroadcaster.__init__(self, msg, address[1], interval) 
+        MessageBroadcaster.__init__(self, msg, broadcast_port, interval) 
 #-----------------------------------------------------------------------------
 # default
 sendaddress = AddressBroadcaster

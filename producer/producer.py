@@ -21,14 +21,18 @@
 # You should have received a copy of the GNU General Public License along with
 # pytroll.  If not, see <http://www.gnu.org/licenses/>.
 
+"""A simple producer.
+"""
+
 import time
 import zmq
 
-from pytroll.message import Message
-from pytroll.address_receiver import getaddress
+from posttroll.message import Message
+from posttroll.address_receiver import getaddress
 
 class DCConnections:
-
+    """Datacenter connections manager.
+    """
     _context = zmq.Context()
 
     def __init__(self):
@@ -36,58 +40,68 @@ class DCConnections:
         self._connections = {}
 
     def send(self, msg):
-        for c in self._get_connections():
-            print 'sending to', str(c), "'%s'"%`msg`
-            c.send(`msg`)
+        """Send message *msg* to all known datacenters
+        """
+        for sock in self._get_connections():
+            print 'sending to', str(sock), "'%s'" % str(msg)
+            sock.send(str(msg))
 
     def start(self):
+        """Start datacenter address gathering.
+        """
         self._dc_addresses.start()
         return self
     
     def stop(self):
+        """Stop datacenter address gathering.
+        """
         self._dc_addresses.stop()
-        for s in self._connections.values():
-            s.close()
+        for sock in self._connections.values():
+            sock.close()
         self._connections = {}
 
     def _get_connections(self):
+        """Do the datacenter address gathering.
+        """
         ads = self._dc_addresses.get()
-        for a in ads:
-            if a not in self._connections.keys():
-                self._connections[a] = self._make_connection(a)
+        for addr in ads:
+            if addr not in self._connections.keys():
+                self._connections[addr] = self._make_connection(addr)
         # remove old DC connection
-        for a, c in self._connections.items():
-            if a not in ads:
-                try:
-                    c.close()
-                except:
-                    pass
-                del self._connections[a]
+        for addr, conn in self._connections.items():
+            if addr not in ads:
+                conn.close()
+                del self._connections[addr]
         return self._connections.values()
 
     def _make_connection(self, addr):
-        s = self._context.socket(zmq.PUSH)
-        dest = 'tcp://' + addr[0] + ':%d'%addr[1]
+        """Activate a new connection.
+        """
+        sock = self._context.socket(zmq.PUSH)
+        dest = 'tcp://' + addr[0] + ':%d' % addr[1]
         print 'connecting to', dest
-        s.connect(dest)
-        return s
+        sock.connect(dest)
+        return sock
 
 
 
 class Messager:
+    """Dummy messager class.
+    """
     def __init__(self):
         self.count = 0
     def __call__(self):
         self.count += 1        
         return Message('/test/1/2/3', 'info', "what's up doc #%d"%self.count)
 
-connections = DCConnections().start()
-msg = Messager()
-while True:
-    try:
-        connections.send(msg())
-        time.sleep(1)
-    except (KeyboardInterrupt, SystemExit):
-        print "quitting ..."
-        connections.stop()
-        break
+if __name__ == '__main__':
+    CONNECTIONS = DCConnections().start()
+    MSG = Messager()
+    while True:
+        try:
+            CONNECTIONS.send(MSG())
+            time.sleep(1)
+        except (KeyboardInterrupt, SystemExit):
+            print "quitting ..."
+            CONNECTIONS.stop()
+            break

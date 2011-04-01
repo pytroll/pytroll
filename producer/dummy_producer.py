@@ -20,6 +20,9 @@
 # You should have received a copy of the GNU General Public License along with
 # pytroll.  If not, see <http://www.gnu.org/licenses/>.
 
+"""A very stupid producer.
+"""
+
 from posttroll.address_receiver import AddressReceiver
 from posttroll.message import Message
 

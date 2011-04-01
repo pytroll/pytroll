@@ -27,15 +27,22 @@ Requires that your OS kernel supports IP multicast.
 This is based on python-examples Demo/sockets/mcast.py
 """
 
-__all__ = ('MulticastSender', 'MulticastReceiver', 'mcast_sender', 'mcast_receiver', 'SocketTimeout')
+__all__ = ('MulticastSender', 'MulticastReceiver', 'mcast_sender',
+           'mcast_receiver', 'SocketTimeout')
 
-MC_GROUP = '225.0.0.212' # 224.0.0.0 through 224.0.0.255 is reserved administrative tasks
-TTL_LOCALNET = 1 # local network multicast (<32)
+# 224.0.0.0 through 224.0.0.255 is reserved administrative tasks
+MC_GROUP = '225.0.0.212'
+
+# local network multicast (<32)
+TTL_LOCALNET = 1
 
 import sys
 import time
 import struct
-from socket import *
+from socket import (socket, AF_INET, SOCK_DGRAM, SOL_SOCKET, SO_REUSEADDR,
+                    SO_BROADCAST, IPPROTO_IP, IP_ADD_MEMBERSHIP, INADDR_ANY,
+                    IP_MULTICAST_TTL, IP_MULTICAST_LOOP, SOL_IP, timeout,
+                    gethostbyname, htonl)
 
 SocketTimeout = timeout
 
@@ -64,6 +71,8 @@ def mcast_sender(mcgroup=MC_GROUP):
     if _is_broadcast_group(mcgroup):
         group = '<broadcast>'
         s.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
+    elif((int(mcgroup.split(".")[0]) > 239) or (int(mcgroup.split(".")[0]) < 224)):
+        raise IOError("Invalid multicast address.")
     else:
         group = mcgroup
         ttl = struct.pack('b', TTL_LOCALNET) # Time-to-live
@@ -99,10 +108,6 @@ class MulticastReceiver(object):
 def mcast_receiver(port, mcgroup=MC_GROUP):
     # Open a UDP socket, bind it to a port and select a multicast group
  
-    # Import modules used only here
-    import string
-    import struct
-
     if _is_broadcast_group(mcgroup):
         group = None
     else:
@@ -127,9 +132,10 @@ def mcast_receiver(port, mcgroup=MC_GROUP):
         group = gethostbyname(group)
 
         # Construct binary group address
-        bytes = map(int, string.split(group, "."))
+        bytes_ = map(int, group.split("."))
         grpaddr = 0
-        for byte in bytes: grpaddr = (grpaddr << 8) | byte
+        for byte in bytes_:
+            grpaddr = (grpaddr << 8) | byte
 
         # Construct struct mreq from grpaddr and ifaddr
         ifaddr = INADDR_ANY
