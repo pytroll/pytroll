@@ -180,7 +180,26 @@ class TaskManager(Task):
         self.cond.acquire()
         self.cond.notify()
         self.cond.release()
-            
+
+class TaskTicker(Thread):
+    def __init__(self, tm):
+        Thread.__init__(self)
+        self.tm = tm
+        self.loop = True
+        self.cond = Condition()
+        
+    def run(self):
+        while self.loop:
+            self.tm.add(Task(lambda: foo(datetime.now())))
+            self.cond.acquire()
+            self.cond.wait(1)
+            self.cond.release()
+
+    def stop(self):
+        self.loop = False
+        self.cond.acquire()
+        self.cond.notify()
+        self.cond.release()
 
 def foo(txt="hej"):
     print txt
@@ -213,6 +232,12 @@ if __name__ == "__main__":
     print task2
 
     print tm.tasks
+
+    print "trying the task ticker"
+    tt = TaskTicker(tm)
+    tt.start()
+    sleep(10)
+    tt.stop()
     tm.quit()
 
     
