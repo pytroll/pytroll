@@ -15,25 +15,34 @@ from sqltypes import LINESTRING, POLYGON
 
 Base = declarative_base()
 
-class Boundary(Base):
-    __tablename__ = 'boundary'
+#relation table
+data_boundary = Table('data_boundary', Base.metadata,\
+                      Column('filename', String,\
+                             ForeignKey('file.filename')),\
+                      Column('boundary_id', Integer,\
+                             ForeignKey('boundary.boundary_id')))
 
-    #mapping
-    boundary_id = Column(Integer, primary_key=True)
-    boundary_name = Column(String)
-    boundary = Column(POLYGON())    
-    creation_time = Column(DateTime)
-    
-    #relations
-    #files = relation(File, secondary=DataBoundary)
+#relation table
+file_type_parameter = Table('file_type_parameter', Base.metadata,\
+                      Column('file_type_id', Integer,\
+                             ForeignKey('file_type.file_type_id')),\
+                      Column('parameter_id', Integer,\
+                             ForeignKey('parameter.parameter_id')))
 
-    def __init__(self, boundary_id, boundary_name, boundary, creation_time=None):
-        self.boundary_id = boundary_id
-        self.boundary_name = boundary_name
-        self.boundary = boundary
-        if creation_time is None:
-            creation_time = datetime.datetime.utcnow()
-        self.creation_time = creation_time
+#relation table
+file_tag = Table('file_tag', Base.metadata,\
+                      Column('tag_id', Integer,\
+                             ForeignKey('tag.tag_id')),\
+                      Column('filename', String,\
+                             ForeignKey('file.filename')))
+
+#relation table
+file_type_tag = Table('file_type_tag', Base.metadata,\
+                      Column('tag_id', Integer,\
+                             ForeignKey('tag.tag_id')),\
+                      Column('file_type_id', Integer,\
+                             ForeignKey('file_type.file_type_id')))
+
         
 
 class ParameterType(Base):
@@ -44,8 +53,6 @@ class ParameterType(Base):
     parameter_type_name = Column(String)
     parameter_location = Column(String)
     
-    #relations
-    #parameters = 
 
     def __init__(self, parameter_type_id, parameter_type_name, parameter_location):
         self.parameter_type_id = parameter_type_id
@@ -62,9 +69,6 @@ class Parameter(Base):
     parameter_name = Column(String)
     description = Column(String)
     
-    #relations
-    parameter_type = relation(ParameterType)
-
     def __init__(self, parameter_id, parameter_type_id, parameter_name, description):
         self.parameter_id = parameter_id
         self.parameter_type_id = parameter_type_id
@@ -97,13 +101,7 @@ class FileFormat(Base):
         self.file_format_name = file_format_name
         self.description = description
 
-#relation table
-"""file_type_parameter = Table('file_type_parameter', Base.metadata,\
-                      Column('file_type_id', Integer,\
-                             ForeignKey('file_type.file_type_id')),\
-                      Column('parameter_id', Integer,\
-                             ForeignKey('parameter.parameter_id')))
-"""
+
 
 class FileType(Base):
     __tablename__ = 'file_type'
@@ -113,15 +111,12 @@ class FileType(Base):
     file_type_name = Column(String)
     description = Column(String)
 
-
-    #relations
-    #parameters = relation(Parameter, secondary=file_type_parameter)
-
     def __init__(self, file_type_id, file_type_name, description):
         self.file_type_id = file_type_id
         self.file_type_name = file_type_name
         self.description = description
 
+'''
 class FileTypeParameter(Base):
     __tablename__ = 'file_type_parameter'
 
@@ -130,12 +125,14 @@ class FileTypeParameter(Base):
     parameter_id = Column(Integer, ForeignKey('parameter.parameter_id'), primary_key=True)
 
     #relations
-    file_type = relation(FileType)
-    parameter = relation(Parameter)
+
+    FileTypeParameter.file_type = relation(FileType)
+    FileTypeParameter.parameter = relation(Parameter)
 
     def __init__(self, file_type_id, parameter_id):
         self.file_type_id = file_type_id
         self.parameter_id = parameter_id
+'''
 
 class File(Base):
     __tablename__ = 'file'
@@ -147,10 +144,6 @@ class File(Base):
     is_archived = Column(Boolean)
     creation_time = Column(DateTime)
     
-    #relations
-    file_type = relation(FileType)
-    file_format = relation(FileFormat)
-
     def __init__(self, filename, file_type_id, file_format_id, is_archived, creation_time):
         self.filename = filename
         self.file_type_id = file_type_id
@@ -158,6 +151,25 @@ class File(Base):
         self.is_archived = is_archived
         self.creation_time = creation_time
 
+
+class Boundary(Base):
+    __tablename__ = 'boundary'
+
+    #mapping
+    boundary_id = Column(Integer, primary_key=True)
+    boundary_name = Column(String)
+    boundary = Column(POLYGON())    
+    creation_time = Column(DateTime)
+    
+    def __init__(self, boundary_id, boundary_name, boundary, creation_time=None):
+        self.boundary_id = boundary_id
+        self.boundary_name = boundary_name
+        self.boundary = boundary
+        if creation_time is None:
+            creation_time = datetime.datetime.utcnow()
+        self.creation_time = creation_time
+
+'''
 class DataBoundary(Base):
     __tablename__ = 'data_boundary'
 
@@ -168,14 +180,14 @@ class DataBoundary(Base):
 
 
     #relations
-    file_obj = relation(File)
-    boundary = relation(Boundary)
+    """file_obj = relation(File)
+    boundary = relation(Boundary)"""
 
     def __init__(self, filename, boundary_id, creation_time):
         self.filename = filename
         self.boundary_id = boundary_id
         self.creation_time = creation_time
-
+'''
 
 class ParameterLinestring(Base):
     __tablename__ = 'parameter_linestring'
@@ -185,10 +197,6 @@ class ParameterLinestring(Base):
     parameter_id = Column(Integer, ForeignKey('parameter.parameter_id'), primary_key=True)
     creation_time = Column(DateTime)
     data_value = Column(LINESTRING())
-
-    #relations
-    file_obj = relation(File)
-    parameter = relation(Parameter)
 
     def __init__(self, filename, parameter_id, creation_time, data_value):
         self.filename = filename
@@ -206,16 +214,14 @@ class ParameterValue(Base):
     data_value = Column(String)
     creation_time = Column(DateTime)
 
-    #relations
-    file_obj = relation(File)
-    parameter = relation(Parameter)
-
     def __init__(self, filename, parameter_id, creation_time, data_value):
         self.filename = filename
         self.parameter_id = parameter_id
         self.creation_time = creation_time
         self.data_value = data_value
 
+
+'''
 class FileTag(Base):
     __tablename__ = "file_tag"
 
@@ -232,6 +238,7 @@ class FileTag(Base):
         self.tag_id = tag_id
         self.filename = filename
         self.creation_time = creation_time
+'''
 
 class FileURI(Base):
     __tablename__ = "file_uri"
@@ -242,16 +249,13 @@ class FileURI(Base):
     sequence = Column(Integer, primary_key=True)
     uri = Column(String, primary_key=True)
     
-    #relations
-    file_type = relation(FileType)
-    file_format = relation(FileFormat)
-
     def __init__(self, file_type_id, file_format_id, sequence, uri):
         self.file_type_id = file_type_id
         self.file_format_id = file_format_id
         self.sequence = sequence
         self.uri = uri
 
+'''
 class FileTypeTag(Base):
     __tablename__ = "file_type_tag"
 
@@ -261,13 +265,67 @@ class FileTypeTag(Base):
     creation_time = Column(DateTime)
 
     #relations
-    tag = relation(Tag)
-    file_type = relation(FileType)
+    """tag = relation(Tag)
+    file_type = relation(FileType)"""
 
     def __init__(self, tag_id, file_type_id, creation_time):
         self.tag_id = tag_id
         self.file_type_id = file_type_id
         self.creation_time
+'''
+
+
+
+#
+#relations
+
+#ParameterType
+ParameterType.parameters = relation(Parameter)
+
+#Parameter
+Parameter.parameter_type = relation(ParameterType)
+Parameter.parameter_values = relation(ParameterValue)
+Parameter.parameter_linestrings = relation(ParameterLinestring)
+Parameter.file_types = relation(FileType, secondary=file_type_parameter)
+
+#Tag
+Tag.files = relation(File, secondary=file_tag)
+Tag.file_types = relation(FileType, secondary=file_type_tag)
+
+#FileFormat
+FileFormat.file_uris = relation(FileURI)
+FileFormat.file_objs = relation(File)
+
+#FileType
+FileType.parameters = relation(Parameter, secondary=file_type_parameter)
+FileType.file_uris = relation(FileURI)
+FileType.file_objs = relation(File)
+FileType.file_type_tags = relation(Tag, secondary=file_type_tag)
+
+#Boundary
+Boundary.files = relation(File, secondary=data_boundary)
+
+#File
+File.file_type = relation(FileType)
+File.file_format = relation(FileFormat)
+File.parameter_values = relation(ParameterValue)
+File.parameter_linestrings = relation(ParameterLinestring)
+File.file_tags = relation(Tag, secondary=file_tag)
+
+#ParameterLinestring
+ParameterLinestring.file_obj = relation(File)
+ParameterLinestring.parameter = relation(Parameter)
+
+#ParameterValue
+ParameterValue.file_obj = relation(File)
+ParameterValue.parameter = relation(Parameter)
+
+#FileURI
+FileURI.file_type = relation(FileType)
+FileURI.file_format = relation(FileFormat)
+
+
+
 
 
 class ReportManager(object):
@@ -299,6 +357,7 @@ class ReportManager(object):
         #param_track = ParameterLinestring("hrpt_201012011615_lvl0_smb.l0", 8, datetime.datetime.utcnow(), wkt_o)
         #self._session.add(param_track)
         self._session.commit()
+
 
 if __name__ == '__main__':
     rm = ReportManager('postgresql://iceopr:Hot_Eyes@devsat-lucid:5432/testdb2')
