@@ -2,10 +2,10 @@ import datetime
 
 from sqlalchemy import Column, Integer, String, Boolean, DateTime,\
                        create_engine, ForeignKey, Table
-#from sqlalchemy.dialects.postgresql import BYTEA
+
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relation, backref, sessionmaker
-from sqlalchemy.databases.postgres import PGBinary
+
 
 #from osgeo import ogr
 import shapely.wkb
@@ -98,12 +98,12 @@ class FileFormat(Base):
         self.description = description
 
 #relation table
-val_def_param = Table('file_type_parameter', Base.metadata,\
-                      Column('validation_def_id', Integer,\
-                             ForeignKey('validation_def.validation_def_id')),\
+"""file_type_parameter = Table('file_type_parameter', Base.metadata,\
+                      Column('file_type_id', Integer,\
+                             ForeignKey('file_type.file_type_id')),\
                       Column('parameter_id', Integer,\
                              ForeignKey('parameter.parameter_id')))
-
+"""
 
 class FileType(Base):
     __tablename__ = 'file_type'
@@ -115,14 +115,13 @@ class FileType(Base):
 
 
     #relations
-    parameters = relation(Parameter, secondary=FileTypeParameter)
+    #parameters = relation(Parameter, secondary=file_type_parameter)
 
     def __init__(self, file_type_id, file_type_name, description):
         self.file_type_id = file_type_id
         self.file_type_name = file_type_name
         self.description = description
 
-"""
 class FileTypeParameter(Base):
     __tablename__ = 'file_type_parameter'
 
@@ -137,7 +136,6 @@ class FileTypeParameter(Base):
     def __init__(self, file_type_id, parameter_id):
         self.file_type_id = file_type_id
         self.parameter_id = parameter_id
-"""
 
 class File(Base):
     __tablename__ = 'file'
