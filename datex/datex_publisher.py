@@ -9,7 +9,7 @@ import glob
 from multiprocessing import Process
 import zmq
 
-from pytroll.message import Message
+from posttroll.message import Message
 
 logger = logging.getLogger('datex-publisher')
 #-----------------------------------------------------------------------------

@@ -1,11 +1,33 @@
-# -*-python-*- 
-#
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010-2011.
+
+# Author(s):
+ 
+#   Lars Ø. Rasmussen <ras@dmi.dk>
+#   Martin Raspaud <martin.raspaud@smhi.se>
+
+# This file is part of pytroll.
+
+# Pytroll is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+
+# Pytroll is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along with
+# pytroll.  If not, see <http://www.gnu.org/licenses/>.
+
 """A Message goes like: 
 <subject> <type> <sender> <timestamp> <version> [mime-type data]
 
 Message('/DC/juhu', 'info', 'jhuuuu !!!')
 will be encoded as (at the right time and by the right user at the right host):
-pytroll://DC/juhu info henry@prodsat 2010-12-01T12:21:11.123456 v1.0 application/json "jhuuuu !!!"
+pytroll://DC/juhu info henry@prodsat 2010-12-01T12:21:11.123456 v1.0 \
+application/json "jhuuuu !!!"
 
 Note: It's not optimized for BIG messages.
 """
@@ -181,54 +203,52 @@ def _decode(rawstr):
         d['data'] = str(data)
     else:
         raise MessageError, "Unknown mime-type '%s'"%mimetype
-    
+
     return d
 
 def _encode(m, head=False):
-      rawstr = _magick + \
-          "%s %s %s %s %s"%(m.subject, m.type, m.sender, m.time.isoformat(), m.version)
-      if not head and m.data:
-          return rawstr + ' ' + 'application/json' + ' ' + json.dumps(m.data)
-      return rawstr
+    rawstr = _magick + \
+             "%s %s %s %s %s"%(m.subject, m.type, m.sender, m.time.isoformat(), m.version)
+    if not head and m.data:
+        return rawstr + ' ' + 'application/json' + ' ' + json.dumps(m.data)
+    return rawstr
 
 #-----------------------------------------------------------------------------
 #
 # Small internal helpers.
 #
 #-----------------------------------------------------------------------------
-def _strptime(str):
+def _strptime(strg):
     _isoformat = "%Y-%m-%dT%H:%M:%S.%f"
-    return datetime.strptime(str, _isoformat)
+    return datetime.strptime(strg, _isoformat)
 
 def _getsender():
     import getpass
     import socket
     host = socket.gethostname()
     user = getpass.getuser()
-    return "%s@%s"%(user, host)
+    return "%s@%s" % (user, host)
 
 #-----------------------------------------------------------------------------
 if __name__ == '__main__':
-    import pickle
-    import os
+    MSG = Message('/test/1/2/3/nodata', 'heartbeat')
+    print MSG
 
-    m = Message('/test/1/2/3/nodata', 'heartbeat')
-    print m
-
-    m1 = Message('/test/whatup/doc', 'info', data='not much to say')
-    sender = '%s@%s'%(m1.user, m1.host)
-    print sender
-    if sender != m1.sender:
-        print 'OOPS 1 ... deconding sender failed'
-    m2 = Message.decode(m1.encode())
-    print m2
-    if str(m2) != str(m1):
+    MSG1 = Message('/test/whatup/doc', 'info', data='not much to say')
+    SENDER = '%s@%s' % (MSG1.user, MSG1.host)
+    print SENDER
+    if SENDER != MSG1.sender:
+        print 'OOPS 1 ... deconding SENDER failed'
+    MSG2 = Message.decode(MSG1.encode())
+    print MSG2
+    if str(MSG2) != str(MSG1):
         print 'OOPS 2 ... decoding/encoding message failed'  
 
-    rawstr = _magick + \
-        '/test/what/todo info ras@hawaii 2008-04-11T22:13:22.123456 v1.0 application/json "what\'s up doc"'
-    m = Message.decode(rawstr)
-    print m.head
-    print m
-    if str(m) != rawstr:
+    RAWSTR = _magick + \
+        '/test/what/todo info ras@hawaii 2008-04-11T22:13:22.123456 v1.0 '+\
+        'application/json "what\'s up doc"'
+    MSG = Message.decode(RAWSTR)
+    print MSG.head
+    print MSG
+    if str(MSG) != RAWSTR:
         print 'OOPS 3 ... decoding/encoding message failed'  

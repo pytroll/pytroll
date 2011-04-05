@@ -4,12 +4,10 @@
 # We can do this in the main process and thread, cuz
 # zmq keeps a threaded queue of incomming messages (I hope).
 #
-import sys
-import time
 import logging
 import zmq
 
-from pytroll.message import Message
+from posttroll.message import Message
 
 logger = logging.getLogger('datex_client')
 
