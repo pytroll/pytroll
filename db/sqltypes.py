@@ -54,3 +54,7 @@ class MULTILINESTRING(Geography):
 class MULTIPOLYGON(Geography):
     def __init__(self):
         super(MULTIPOLYGON, self).__init__('MULTIPOLYGON', 2)
+
+class POLYGON(Geography):
+    def __init__(self):
+        super(POLYGON, self).__init__('POLYGON', 2)
