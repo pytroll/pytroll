@@ -30,16 +30,16 @@ insert into file values('hirlam_2010_12_01_1200_areaB.grib', 2, 2, false, timest
 insert into file values('hrpt_201012011715_lvl0_smb.l0', 1, 1, false, '2010-12-01 17:10:00');
 insert into file values('hrpt_201012011815_lvl0_smb.l0', 1, 1, false, '2010-12-01 18:10:00');
 
-insert into parameter_value values('hrpt_201012011615_lvl0_smb.l0', 1, '2010-12-01 16:15:00', '2010-12-01 15:55:00');
+insert into parameter_value values('hrpt_201012011615_lvl0_smb.l0', 1, '2010-12-01 15:55:00', '2010-12-01 16:15:00');
 
-insert into parameter_value values('hrpt_201012011615_lvl0_smb.l0', 2, '2010-12-01 16:15:00', '2010-12-01 16:10:00');
-insert into parameter_value values('hrpt_201012011615_lvl0_smb.l0', 3, '2010-12-01 16:15:00', '2134');
-insert into parameter_value values('hrpt_201012011615_lvl0_smb.l0', 4, '2010-12-01 16:15:00', '19');
-insert into parameter_value values('hirlam_2010_12_01_1200_areaB.grib', 5, '2010-12-01 16:15:00', '2010-12-01 12:00:00');
-insert into parameter_value values('hirlam_2010_12_01_1200_areaB.grib', 6, '2010-12-01 16:15:00', '6');
-insert into parameter_value values('hirlam_2010_12_01_1200_areaB.grib', 7, '2010-12-01 16:15:00', '82');
+insert into parameter_value values('hrpt_201012011615_lvl0_smb.l0', 2, '2010-12-01 16:10:00', '2010-12-01 16:15:00');
+insert into parameter_value values('hrpt_201012011615_lvl0_smb.l0', 3, '2134', '2010-12-01 16:15:00');
+insert into parameter_value values('hrpt_201012011615_lvl0_smb.l0', 4, '19', '2010-12-01 16:15:00');
+insert into parameter_value values('hirlam_2010_12_01_1200_areaB.grib', 5, '2010-12-01 12:00:00', '2010-12-01 16:15:00');
+insert into parameter_value values('hirlam_2010_12_01_1200_areaB.grib', 6, '6', '2010-12-01 16:15:00');
+insert into parameter_value values('hirlam_2010_12_01_1200_areaB.grib', 7, '82', '2010-12-01 16:15:00');
 
-insert into parameter_track values('hrpt_201012011615_lvl0_smb.l0', 8, '2010-12-01 16:10:00', 'LINESTRING(0 47.606, 3 51.5, 5 56, 10 59, 15 66)'::geography);
-insert into parameter_track values('hrpt_201012011715_lvl0_smb.l0', 8, '2010-12-01 16:10:00', 'LINESTRING(-100 1, -101 11, -102 22, -103 33, -104 44)'::geography);
-insert into parameter_track values('hrpt_201012011815_lvl0_smb.l0', 8, '2010-12-01 16:10:00', 'LINESTRING(12 55, 14 44, 16 37, 18 28, 20 9)'::geography);
+insert into parameter_linestring values('hrpt_201012011615_lvl0_smb.l0', 8, 'LINESTRING(0 47.606, 3 51.5, 5 56, 10 59, 15 66)'::geography, '2010-12-01 16:10:00');
+insert into parameter_linestring values('hrpt_201012011715_lvl0_smb.l0', 8, 'LINESTRING(-100 1, -101 11, -102 22, -103 33, -104 44)'::geography, '2010-12-01 16:10:00');
+insert into parameter_linestring values('hrpt_201012011815_lvl0_smb.l0', 8, 'LINESTRING(12 55, 14 44, 16 37, 18 28, 20 9)'::geography, '2010-12-01 16:10:00');
 
