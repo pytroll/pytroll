@@ -15,25 +15,24 @@ class Geography(sqlalchemy.types.TypeEngine):
     def get_col_spec(self):
         return 'GEOGRAPHY'
 
-    def bind_processor(self, dialect):
+    def process_bind_param(self, value, dialect):
         """Convert from Python type to database type."""
-        def process(value):
-            """``value`` is a Python/Shapely geometry object."""
-            if value is None:
-                return None
-            else:
-                return 'SRID=%s;%s' % (self.SRID, value)
-        return process
+        
+        """``value`` is a Python/Shapely geometry object."""
+        if value is None:
+            return None
+        else:
+            return 'SRID=%s;%s' % (self.SRID, value)
+        
 
-    def result_processor(self, dialect):
+    def process_result_value(self, value, dialect):
         """Convert from database type to Python type."""
-        def process(value):
-            """``value`` is a hex-encoded WKB string."""
-            if value is None:
-                return None
-            else:
-                return wkb.loads(value.decode('hex'))
-        return process
+        
+        """``value`` is a hex-encoded WKB string."""
+        if value is None:
+            return None
+        else:
+            return wkb.loads(value.decode('hex'))
 
 
 class POINT(Geography):
