@@ -311,6 +311,7 @@ File.file_format = relation(FileFormat)
 File.parameter_values = relation(ParameterValue)
 File.parameter_linestrings = relation(ParameterLinestring)
 File.file_tags = relation(Tag, secondary=file_tag)
+File.boundary = relation(Boundary, secondary=data_boundary)
 
 #ParameterLinestring
 ParameterLinestring.file_obj = relation(File)
@@ -361,12 +362,16 @@ class ReportManager(object):
 
 if __name__ == '__main__':
     rm = ReportManager('postgresql://iceopr:Hot_Eyes@devsat-lucid:5432/testdb2')
-    pt = rm.get_param_track()
-    res = pt.first()
+    f = rm.get_file()
+    pl = f.parameter_linestrings[0]
+    print type(pl.data_value)
+    print pl.data_value.wkt
+    #pt = rm.get_param_track()
+    #res = pt.first()
     #print type(res.data_value)
     #t_geo = ogr.CreateGeometryFromWkb(res.track.decode('hex'))
     #t_geo = shapely.wkb.loads(res.data_value.decode('hex')).wkt
-    t_geo = res.data_value.wkt    
+    #t_geo = res.data_value.wkt    
 
     #print res.filename, res.parameter_id, res.creation_time, t_geo
     
