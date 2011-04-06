@@ -6,7 +6,6 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime,\
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relation, backref, sessionmaker
 
-
 #from osgeo import ogr
 import shapely.wkb
 import shapely.wkt
@@ -46,13 +45,14 @@ file_type_tag = Table('file_type_tag', Base.metadata,\
         
 
 class ParameterType(Base):
+    """Mapping the DB-table parameter_type to a python object
+    """ 
     __tablename__ = 'parameter_type'
 
     #mapping
     parameter_type_id = Column(Integer, primary_key=True)
     parameter_type_name = Column(String)
-    parameter_location = Column(String)
-    
+    parameter_location = Column(String)    
 
     def __init__(self, parameter_type, parameter_type_name, parameter_location):
         self.parameter_type = parameter_type
@@ -116,23 +116,6 @@ class FileType(Base):
         self.file_type_name = file_type_name
         self.description = description
 
-'''
-class FileTypeParameter(Base):
-    __tablename__ = 'file_type_parameter'
-
-    #mapping
-    file_type_id = Column(Integer, ForeignKey('file_type.file_type_id'), primary_key=True)
-    parameter_id = Column(Integer, ForeignKey('parameter.parameter_id'), primary_key=True)
-
-    #relations
-
-    FileTypeParameter.file_type = relation(FileType)
-    FileTypeParameter.parameter = relation(Parameter)
-
-    def __init__(self, file_type_id, parameter_id):
-        self.file_type_id = file_type_id
-        self.parameter_id = parameter_id
-'''
 
 class File(Base):
     __tablename__ = 'file'
@@ -169,25 +152,6 @@ class Boundary(Base):
             creation_time = datetime.datetime.utcnow()
         self.creation_time = creation_time
 
-'''
-class DataBoundary(Base):
-    __tablename__ = 'data_boundary'
-
-    #mapping
-    filename = Column(String, ForeignKey('file.filename'), primary_key=True)
-    boundary_id = Column(Integer, ForeignKey('boundary.boundary_id'), primary_key=True)
-    creation_time = Column(DateTime)
-
-
-    #relations
-    """file_obj = relation(File)
-    boundary = relation(Boundary)"""
-
-    def __init__(self, filename, boundary_id, creation_time):
-        self.filename = filename
-        self.boundary_id = boundary_id
-        self.creation_time = creation_time
-'''
 
 class ParameterLinestring(Base):
     __tablename__ = 'parameter_linestring'
@@ -198,7 +162,7 @@ class ParameterLinestring(Base):
     creation_time = Column(DateTime)
     data_value = Column(LINESTRING())
 
-    def __init__(self, file_obj, parameter, creation_time, data_value):
+    def __init__(self, file_obj, parameter, data_value, creation_time):
         self.file_obj = file_obj
         self.parameter = parameter
         self.creation_time = creation_time
@@ -221,25 +185,6 @@ class ParameterValue(Base):
         self.data_value = data_value
 
 
-'''
-class FileTag(Base):
-    __tablename__ = "file_tag"
-
-    #mapping
-    tag_id = Column(Integer, ForeignKey('tag.tag_id'), primary_key=True)
-    filename = Column(String, ForeignKey('file.filename'), primary_key=True)
-    creation_time = Column(DateTime)
-
-    #relations
-    tag = relation(Tag)
-    file_obj = relation(File)
-
-    def __init__(self, tag_id, filename, creation_time):
-        self.tag_id = tag_id
-        self.filename = filename
-        self.creation_time = creation_time
-'''
-
 class FileURI(Base):
     __tablename__ = "file_uri"
 
@@ -254,26 +199,6 @@ class FileURI(Base):
         self.file_format = file_format
         self.sequence = sequence
         self.uri = uri
-
-'''
-class FileTypeTag(Base):
-    __tablename__ = "file_type_tag"
-
-    #mapping
-    tag_id = Column(Integer, ForeignKey('tag.tag_id'), primary_key=True)
-    file_type_id = Column(Integer, ForeignKey('file_type.file_type_id'), primary_key=True)
-    creation_time = Column(DateTime)
-
-    #relations
-    """tag = relation(Tag)
-    file_type = relation(FileType)"""
-
-    def __init__(self, tag_id, file_type_id, creation_time):
-        self.tag_id = tag_id
-        self.file_type_id = file_type_id
-        self.creation_time
-'''
-
 
 
 #
@@ -413,61 +338,12 @@ class DCManager(object):
         return self._session.query(Parameter).\
                filter(Parameter.parameter_name == parameter_name).one()
 
-
-class ReportManager(object):
-
-    def __init__(self, connection_string):
-        engine = create_engine(connection_string)
-        self._engine = engine
-        Session = sessionmaker(bind=engine)
-        self._session = Session()
-
-    def get_file(self):
-        return self._session.query(File).first()
-
-    def get_param_track(self):
-        #query = 'select filename, parameter_id from parameter_track';
-        #data_proxy = self._engine.execute(query)
-        #print data_proxy.fetchall()
-        return  self._session.query(ParameterLinestring)
-
-    def add_param_track(self):
-        line_s = 'LINESTRING (3 1, 4 4, 5 5, 5 6)'
-        wkt_o = shapely.wkt.loads(line_s)
-        print wkt_o
-        wkb_o = wkt_o.wkb #shapely.wkb.dumps(wkt_o)
-        
-
-        #print type(wkb_o)
-        #param_track = ParameterLinestring("hrpt_201012011615_lvl0_smb.l0", 8, datetime.datetime.utcnow(), wkb_o.encode('hex'))
-        #param_track = ParameterLinestring("hrpt_201012011615_lvl0_smb.l0", 8, datetime.datetime.utcnow(), wkt_o)
-        #self._session.add(param_track)
-        self._session.commit()
-
-
 if __name__ == '__main__':
-    rm = ReportManager('postgresql://iceopr:Hot_Eyes@devsat-lucid:5432/testdb2')
+    rm = DCManager('postgresql://iceopr:Hot_Eyes@devsat-lucid:5432/testdb2')
+    #rm = DCManager('postgresql://a000680:@localhost.localdomain:5432/sat_db')
+
     f = rm.get_file()
     pl = f.parameter_linestrings[0]
     print type(pl.data_value)
     print pl.data_value.wkt
-    #pt = rm.get_param_track()
-    #res = pt.first()
-    #print type(res.data_value)
-    #t_geo = ogr.CreateGeometryFromWkb(res.track.decode('hex'))
-    #t_geo = shapely.wkb.loads(res.data_value.decode('hex')).wkt
-    #t_geo = res.data_value.wkt    
-
-    #print res.filename, res.parameter_id, res.creation_time, t_geo
     
-    # insert into database
-    #rm.add_param_track()
-    #pt = rm.get_param_track()
-    #res = pt.first()
-    
-    
-
-
-
-
-
