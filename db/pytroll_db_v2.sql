@@ -1,5 +1,3 @@
-
-
 CREATE TABLE public.boundary (
                 boundary_id INTEGER NOT NULL,
                 boundary_name VARCHAR(255) NOT NULL,
@@ -9,6 +7,10 @@ CREATE TABLE public.boundary (
 );
 
 
+CREATE UNIQUE INDEX boundary_idx
+ ON public.boundary
+ ( boundary_name );
+
 CREATE TABLE public.parameter_type (
                 parameter_type_id INTEGER NOT NULL,
                 parameter_type_name VARCHAR(50) NOT NULL,
@@ -16,6 +18,10 @@ CREATE TABLE public.parameter_type (
                 CONSTRAINT parameter_type_pk PRIMARY KEY (parameter_type_id)
 );
 
+
+CREATE UNIQUE INDEX parameter_type_idx
+ ON public.parameter_type
+ ( parameter_type_name );
 
 CREATE TABLE public.parameter (
                 parameter_id INTEGER NOT NULL,
@@ -26,12 +32,20 @@ CREATE TABLE public.parameter (
 );
 
 
+CREATE UNIQUE INDEX parameter_idx
+ ON public.parameter
+ ( parameter_name );
+
 CREATE TABLE public.tag (
                 tag_id INTEGER NOT NULL,
                 tag VARCHAR(255) NOT NULL,
                 CONSTRAINT tag_pk PRIMARY KEY (tag_id)
 );
 
+
+CREATE UNIQUE INDEX tag_idx
+ ON public.tag
+ ( tag );
 
 CREATE TABLE public.file_format (
                 file_format_id INTEGER NOT NULL,
@@ -41,6 +55,10 @@ CREATE TABLE public.file_format (
 );
 
 
+CREATE UNIQUE INDEX file_format_idx
+ ON public.file_format
+ ( file_format_name );
+
 CREATE TABLE public.file_type (
                 file_type_id INTEGER NOT NULL,
                 file_type_name VARCHAR(50) NOT NULL,
@@ -48,6 +66,10 @@ CREATE TABLE public.file_type (
                 CONSTRAINT file_type_pk PRIMARY KEY (file_type_id)
 );
 
+
+CREATE UNIQUE INDEX file_type_idx
+ ON public.file_type
+ ( file_type_name );
 
 CREATE TABLE public.file_type_parameter (
                 file_type_id INTEGER NOT NULL,
@@ -73,8 +95,7 @@ CREATE INDEX file_idx
 CREATE TABLE public.data_boundary (
                 filename VARCHAR(255) NOT NULL,
                 boundary_id INTEGER NOT NULL,
-                creation_time TIMESTAMP NOT NULL,
-                CONSTRAINT data_boundary_pk PRIMARY KEY (filename, boundary_id)
+                CONSTRAINT data_boundary_pk PRIMARY KEY (filename)
 );
 
 
@@ -99,7 +120,6 @@ CREATE TABLE public.parameter_value (
 CREATE TABLE public.file_tag (
                 tag_id INTEGER NOT NULL,
                 filename VARCHAR(255) NOT NULL,
-                creation_time TIMESTAMP NOT NULL,
                 CONSTRAINT file_tag_pk PRIMARY KEY (tag_id, filename)
 );
 
@@ -116,7 +136,6 @@ CREATE TABLE public.file_uri (
 CREATE TABLE public.file_type_tag (
                 tag_id INTEGER NOT NULL,
                 file_type_id INTEGER NOT NULL,
-                creation_time TIMESTAMP NOT NULL,
                 CONSTRAINT file_type_tag_pk PRIMARY KEY (tag_id, file_type_id)
 );
 
