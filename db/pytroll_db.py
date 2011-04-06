@@ -54,8 +54,8 @@ class ParameterType(Base):
     parameter_location = Column(String)
     
 
-    def __init__(self, parameter_type_id, parameter_type_name, parameter_location):
-        self.parameter_type_id = parameter_type_id
+    def __init__(self, parameter_type, parameter_type_name, parameter_location):
+        self.parameter_type = parameter_type
         self.parameter_type_name = parameter_type_name
         self.parameter_location = parameter_location
 
@@ -144,10 +144,10 @@ class File(Base):
     is_archived = Column(Boolean)
     creation_time = Column(DateTime)
     
-    def __init__(self, filename, file_type_id, file_format_id, is_archived, creation_time):
+    def __init__(self, filename, file_type, file_format, is_archived, creation_time):
         self.filename = filename
-        self.file_type_id = file_type_id
-        self.file_format_id = file_format_id
+        self.file_type = file_type
+        self.file_format = file_format
         self.is_archived = is_archived
         self.creation_time = creation_time
 
@@ -198,9 +198,9 @@ class ParameterLinestring(Base):
     creation_time = Column(DateTime)
     data_value = Column(LINESTRING())
 
-    def __init__(self, filename, parameter_id, creation_time, data_value):
-        self.filename = filename
-        self.parameter_id = parameter_id
+    def __init__(self, file_obj, parameter, creation_time, data_value):
+        self.file_obj = file_obj
+        self.parameter = parameter
         self.creation_time = creation_time
         self.data_value = data_value
 
@@ -214,9 +214,9 @@ class ParameterValue(Base):
     data_value = Column(String)
     creation_time = Column(DateTime)
 
-    def __init__(self, filename, parameter_id, creation_time, data_value):
-        self.filename = filename
-        self.parameter_id = parameter_id
+    def __init__(self, file_obj, parameter, creation_time, data_value):
+        self.file_obj = file_obj
+        self.parameter = parameter
         self.creation_time = creation_time
         self.data_value = data_value
 
@@ -249,9 +249,9 @@ class FileURI(Base):
     sequence = Column(Integer, primary_key=True)
     uri = Column(String, primary_key=True)
     
-    def __init__(self, file_type_id, file_format_id, sequence, uri):
-        self.file_type_id = file_type_id
-        self.file_format_id = file_format_id
+    def __init__(self, file_type, file_format, sequence, uri):
+        self.file_type = file_type
+        self.file_format = file_format
         self.sequence = sequence
         self.uri = uri
 
@@ -326,8 +326,80 @@ FileURI.file_type = relation(FileType)
 FileURI.file_format = relation(FileFormat)
 
 
+class DCManager(object):
+    """Data Center Manager
+    """
 
+    def __init__(self, connection_string):
+        engine = create_engine(connection_string)
+        self._engine = engine
+        Session = sessionmaker(bind=engine)
+        self._session = Session()
 
+    def save(self):
+        try:
+            self._session.commit()
+        except Exception:
+            self._session.rollback()
+            raise
+
+    def create_file_type(self, file_type_id, file_type_name, description):
+        file_type = FileType(file_type_id, file_type_name, description)
+        self._session.add(file_type)
+        return file_type
+
+    def create_file_format(self, file_format_id, file_format_name, description):
+        file_format = FileFormat(file_format_id, file_format_name, description)
+        self._session.add(file_format)
+        return file_format
+
+    def create_file_uri(self, file_type, file_format, URI, sequence=1):
+        file_uri = FileURI(file_type, file_format, URI, sequence)
+        self._session.add(file_uri)
+        return file_uri
+
+    def create_file(self, filename, file_type, file_format, is_archived=False, creation_time=None):
+        if creation_time is None:
+            creation_time = datetime.datetime.utcnow()            
+        file_obj = File(filename, file_type.file_type_id, file_format.file_format_id, is_archived, creation_time)
+        self._session.add(file_obj)
+        return file_obj
+
+    def create_parameter_type(self, parameter_type_id, parameter_type_name, parameter_location):
+        parameter_type = ParameterType(parameter_type_id, parameter_type_name, parameter_location)
+        self._session.add(parameter_type)
+        return parameter_type
+
+    def create_parameter(self, parameter_id, parameter_type, parameter_name, description):
+        parameter = Parameter(parameter_id, parameter_type, parameter_name, description)
+        self._session.add(parameter)
+        return parameter
+
+    def create_parameter_value(self, file_obj, parameter, data_value, creation_time=None):
+        if creation_time is None:
+            creation_time = datetime.datetime.utcnow()
+        parameter_value = ParameterValue(file_obj, parameter, data_value, creation_time)         
+        self._session.add(parameter_value)
+        return parameter_value
+
+    def create_parameter_linestring(self, file_obj, parameter, data_value, creation_time=None):
+        if creation_time is None:
+            creation_time = datetime.datetime.utcnow()
+        parameter_linestring = ParameterLinestring(file_obj, parameter, data_value, creation_time)         
+        self._session.add(parameter_linestring)
+        return parameter_linestring
+
+    def create_boundary(self, boundary_id, boundary_name, boundary, creation_time=None):
+        if creation_time is None:
+            creation_time = datetime.datetime.utcnow()
+        boundary_obj = Boundary(boundary_id, boundary_name, boundary, creation_time)         
+        self._session.add(boundary_obj)
+        return boundary_obj
+
+    def create_tag(self, tag_id, tag):
+        tag_obj = Tag(tag_id, tag)
+        self._session.add(tag_obj)
+        return tag_obj
 
 class ReportManager(object):
 
