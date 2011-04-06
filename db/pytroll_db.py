@@ -214,7 +214,7 @@ class ParameterValue(Base):
     data_value = Column(String)
     creation_time = Column(DateTime)
 
-    def __init__(self, file_obj, parameter, creation_time, data_value):
+    def __init__(self, file_obj, parameter, data_value, creation_time):
         self.file_obj = file_obj
         self.parameter = parameter
         self.creation_time = creation_time
@@ -361,7 +361,7 @@ class DCManager(object):
     def create_file(self, filename, file_type, file_format, is_archived=False, creation_time=None):
         if creation_time is None:
             creation_time = datetime.datetime.utcnow()            
-        file_obj = File(filename, file_type.file_type_id, file_format.file_format_id, is_archived, creation_time)
+        file_obj = File(filename, file_type, file_format, is_archived, creation_time)
         self._session.add(file_obj)
         return file_obj
 
@@ -400,6 +400,19 @@ class DCManager(object):
         tag_obj = Tag(tag_id, tag)
         self._session.add(tag_obj)
         return tag_obj
+
+    def get_file_type(self, file_type_name):
+        return self._session.query(FileType).\
+               filter(FileType.file_type_name == file_type_name).one()
+
+    def get_file_format(self, file_format_name):
+        return self._session.query(FileFormat).\
+               filter(FileFormat.file_format_name == file_format_name).one()
+
+    def get_parameter(self, parameter_name):
+        return self._session.query(Parameter).\
+               filter(Parameter.parameter_name == parameter_name).one()
+
 
 class ReportManager(object):
 
