@@ -2,26 +2,21 @@
 #
 import sys
 import os
-import time
 import logging
 import getopt
 from glob import glob
 from datetime import datetime
 import signal
+import hashlib
 
 import rpclite as rpc
 from rpclite.server import ForkingXMLRPCServer as XMLRPCServer
 
-from datex_publisher import Publisher
-from datex_config import read_config
+from datex import datetime_format, datex_config
+from datex.config import DatexConfig
+from datex.publisher import Publisher
+from datex.services import get_file_list, get_file, get_file_chunk, get_file_md5
 
-datetime_format = '%Y-%m-%dT%H:%M:%S' 
-datatypes = {'pol_L0' :
-                 ('/net/prodsat/datadb/sat/polar/smb/level0','*.hrpt.bz2')}
-
-log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-logging.basicConfig(format=log_format, datefmt="%Y-%m-%d %H:%M:%S", 
-                    level=logging.INFO, stream=sys.stderr)
 logger = logging.getLogger('datex-server')
 
 #-----------------------------------------------------------------------------
@@ -38,47 +33,6 @@ signal.signal(signal.SIGHUP, sighup_handler)
 def sigstop_handler(signum, frame):
     raise SystemExit
 signal.signal(signal.SIGTERM, sigstop_handler)
-
-#-----------------------------------------------------------------------------
-#
-# Services
-#
-#-----------------------------------------------------------------------------
-def get_file_list(data_type, time_start=None, time_end=None):
-    
-    logger.info('... get_data_list(%s, %s, %s)'%(data_type, time_start, time_end))
-    if time_start is None:
-        time_start = datetime.utcfromtimestamp(0)
-    else:
-        time_start = datetime.strptime(time_start, datetime_format)
-    if time_end is None:
-        time_end = datetime.utcnow()
-    else:
-        time_end = datetime.strptime(time_end, datetime_format)
-        
-    path = datatypes[data_type][0]
-    file_glob = datatypes[data_type][1]
-    file_list = glob(os.path.join(path, file_glob))
-    result = []
-    for f in file_list:
-        if not os.path.isfile(f):
-            continue
-        mtime = os.stat(f).st_mtime
-        dt = datetime.utcfromtimestamp(mtime)        
-        if time_start < dt < time_end:
-            result.append((os.path.basename(f),
-                           dt.strftime(datetime_format)))
-
-    result = sorted(result, lambda x,y: cmp(x[1], y[1]))
-    return result
-
-def get_file(data_type, file_name):
-    logger.info('... get_file(%s, %s)'%(data_type, file_name))
-    path = datatypes[data_type][0]
-    f = open(os.path.join(path, file_name))
-    buf = f.read()
-    f.close()
-    return rpc.Binary(buf)
 
 #-----------------------------------------------------------------------------
 #
@@ -101,7 +55,7 @@ if daemonize:
         sys.exit(1)        
     daemon = daemonize.daemonize(stdout='/tmp/datext_server.log')
 
-host, rpc_port, publish_port = read_config()
+host, rpc_port, publish_port = datex_config.get_server()
 rpc_address = host, rpc_port
 
 #-----------------------------------------------------------------------------
@@ -113,17 +67,21 @@ logger.info('rpc-server starting')
 rpc_server = XMLRPCServer('file_server', rpc_address)    
 rpc_server.register_function(get_file_list, 'get_file_list')
 rpc_server.register_function(get_file, 'get_file')
+rpc_server.register_function(get_file_chunk, 'get_file_chunk')
+rpc_server.register_function(get_file_md5, 'get_file_md5')
 
 #-----------------------------------------------------------------------------
 #
 # Publish pol_L0 files
 #
 #-----------------------------------------------------------------------------
-rpc_metadata = {'format': 'hrpt',
-                'compressed': 'yes',
-                'uri': 'datexrpc://%s:%d/pol_L0/'%rpc_address}
-publisher = Publisher('/pol_L0', '/tmp/sss', rpc_metadata, publish_port)
-publisher.start()
+Publisher.bind(publish_port)
+for dt in datex_config.get_datatypes():
+    metadata = {}
+    metadata['format'], metadata['compressed'] = datex_config.get_metadata(dt)
+    metadata['uri'] = 'datexrpc://%s:%d/%s/'%(rpc_address[0], rpc_address[1], dt)
+    logger.info('starting %s', dt)    
+    Publisher(dt, metadata).start()
 
 #-----------------------------------------------------------------------------
 while(True):

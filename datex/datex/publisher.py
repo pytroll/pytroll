@@ -3,15 +3,22 @@
 #
 import os
 import time
+from datetime import datetime, timedelta
 import logging
 import copy
 import glob
-from multiprocessing import Process
+#from multiprocessing import Process
+from threading import Thread
 import zmq
 
 from posttroll.message import Message
 
-logger = logging.getLogger('datex-publisher')
+from datex import logger, datetime_format, datex_config
+from datex.services import _get_file_list
+from datex.config import DatexLastStamp
+
+time_wakeup = 15
+time_epsilon = timedelta(microseconds=10)
 #-----------------------------------------------------------------------------
 #
 # Process manager for the Publisher.
@@ -19,7 +26,19 @@ logger = logging.getLogger('datex-publisher')
 #-----------------------------------------------------------------------------
 class Publisher(object):
     def __init__(self, *args):
-        self._process = Process(target=check_and_publish, args=args)
+        try:
+            self.publish
+        except AttributeError:
+            raise AttributeError, "You need to bind Publisher class before instantiating"
+        self._process = Thread(target=check_and_publish, args=args+(self.publish,))
+
+    @classmethod
+    def bind(cls, port):
+        cls.destination = "tcp://eth0:%d"%port
+        logger.info(cls.destination)
+        cls.context = zmq.Context()
+        cls.publish = cls.context.socket(zmq.PUB)
+        cls.publish.bind(cls.destination)
     
     def start(self):        
         self._process.daemon = True # terminate when parent terminate
@@ -39,47 +58,34 @@ class Publisher(object):
 # In the child process.
 #
 #-----------------------------------------------------------------------------
-def check_and_publish(subject, signal_dir, rpc_metadata, port):
+def check_and_publish(datatype, rpc_metadata, publish):
 
-    def signal_files(handle_one=False):
-        # Get signal files
-        for sfile in glob.glob(signal_dir + '/*.signal'):
-            try:
-                fp = open(sfile)
-                try:
-                    signal = fp.readline().strip()
-                    yield signal
-                    if handle_one:
-                        return
-                finally:
-                    fp.close()
-                    os.unlink(sfile)
-            except IOError:
-                logger.exception('open signal file failed')
-                continue                    
+    stamp_config = DatexLastStamp(datatype)
 
-    destination = "tcp://eth0:%d"%port
-    logger.info(destination)
-    context = zmq.Context()
-    publish = context.socket(zmq.PUB)
-    publish.bind(destination)
+    def younger_than_stamp_files():
+        fdir, fglob = datex_config.get_path(datatype)
+        fstamp = stamp_config.get_last_stamp()
+        for f, t in _get_file_list(datatype, time_start=fstamp + time_epsilon):
+            if datex_config.distribute(datatype):
+                yield os.path.join(fdir, f)
+            stamp_config.update_last_stamp(t)
 
     # give the publisher a little time to initialize (reconnections from subscribers)
     time.sleep(1)
     logger.info('publisher starting')
     try:
         while(True):
-            for f in signal_files():
+            for f in younger_than_stamp_files():
                 # Publish new files
                 data = copy.copy(rpc_metadata)
                 data['uri'] += os.path.basename(f)
-                m = Message(subject, 'file', data)
+                m = Message('/' + datatype, 'file', data)
                 logger.info('sending: ' + `m`)
                 try:
                     publish.send(`m`)
                 except zmq.ZMQError:
                     logger.exception('publish failed')
-            time.sleep(5)
+            time.sleep(time_wakeup)
     except (KeyboardInterrupt, SystemExit):
         pass
     finally:

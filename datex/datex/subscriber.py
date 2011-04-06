@@ -8,8 +8,7 @@ import logging
 import zmq
 
 from posttroll.message import Message
-
-logger = logging.getLogger('datex_client')
+from datex import logger
 
 context = zmq.Context() 
 class Subscriber(object):
