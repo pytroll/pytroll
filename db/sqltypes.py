@@ -3,17 +3,6 @@ import sqlalchemy
 from shapely import geometry, wkb
 
 
-class GeographyMetaClass(type):
-    def __new__(meta, classname, bases, classDict):
-        sqla_version = sqlalchemy.__version__
-        if float(sqla_version.rsplit('.', 1)[0]) < 0.6:
-            classDict['bind_processor'] = bind_processor
-            classDict['result_processor'] = result_processor  
-        else:
-            classDict['process_bind_param'] = process_bind_param
-            classDict['process_result_value'] = process_result_value 
-        return type.__new__(meta, classname, bases, classDict)
-
 def bind_processor(self, dialect):
     """Convert from Python type to database type."""
     def process(value):
@@ -56,18 +45,24 @@ def process_result_value(self, value, dialect):
 
 class Geography(sqlalchemy.types.TypeEngine):
     """PostGIS Geometry Type."""
-    __metaclass__ = GeographyMetaClass
+    #__metaclass__ = GeographyMetaClass
     def __init__(self, type_, dimension):
         super(Geography, self).__init__()
         self.SRID = 4326
         self.type = type_.upper()
         self.dimension = dimension
-
+        
+    
     def get_col_spec(self):
         return 'GEOGRAPHY'
 
-
-        
+sqla_version = sqlalchemy.__version__
+if float(sqla_version.rsplit('.', 1)[0]) < 0.6:
+    Geography.bind_processor = bind_processor
+    Geography.result_processor = result_processor  
+else:
+    Geography.process_bind_param = process_bind_param
+    Geography.process_result_value = process_result_value 
 
     
 class POINT(Geography):
