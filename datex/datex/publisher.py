@@ -35,10 +35,10 @@ class Publisher(object):
                                args=args+(self.publish,))
 
     @classmethod
-    def bind(cls, port):
+    def bind(cls, destination):
         """Bind the publisher class to a port.
         """
-        cls.destination = "tcp://eth0:%d" % port
+        cls.destination = destination
         logger.info(cls.destination)
         cls.context = zmq.Context()
         cls.publish = cls.context.socket(zmq.PUB)

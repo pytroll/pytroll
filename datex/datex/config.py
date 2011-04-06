@@ -46,13 +46,12 @@ class DatexLastStamp(_LockedConfigFile):
         if not filename:
             filename = os.path.join(os.environ['DATEX_CONFIG_DIR'], 'stamp_%s.cfg'%datatype)        
         _LockedConfigFile.__init__(self, filename)
-        print "FILENAME", filename
         if not os.path.isfile(filename):
             self.update_last_stamp(datetime.utcnow() - timedelta(hours=3))
 
     def get_last_stamp(self):
         self._read()
-        return datetime.strptime(str(self.cfg.get(self.section, 'last_stamp')), datetime_format)
+        return datetime.strptime(self.cfg.get(self.section, 'last_stamp'), datetime_format)
 
     def update_last_stamp(self, last_stamp):
         try:
@@ -77,22 +76,24 @@ class DatexConfig(_LockedConfigFile):
 
     def get_server(self):
         self._read()
-        host = _eval(self.cfg.get('server', 'host'))
-        rpc_port = _eval(self.cfg.get('server', 'rpc_port'))
-        publish_port = _eval(self.cfg.get('server', 'publish_port'))
-        return host, rpc_port, publish_port
+        rpc_address = self.cfg.get('server', 'rpc_address')
+        rpc_host, rpc_port = rpc_address.split(':')
+        rpc_port = int(rpc_port)
+        publish_destination = self.cfg.get('server', 'publish_destination')
+        return (rpc_host, rpc_port), publish_destination
 
     def get_client(self):
         self._read()
-        host = _eval(self.cfg.get('client', 'host'))
-        rpc_port = _eval(self.cfg.get('client', 'rpc_port'))
-        publish_port = _eval(self.cfg.get('client', 'publish_port'))
-        return host, rpc_port, publish_port        
+        rpc_address = self.cfg.get('client', 'rpc_address')
+        rpc_host, rpc_port = rpc_address.split(':')
+        rpc_port = int(rpc_port)
+        publish_address = self.cfg.get('client', 'publish_address')
+        return (rpc_host, rpc_port), publish_address
 
     def distribute(self, datatype):
         self._read()
         try:
-            return bool(_eval(self.cfg.get(self.datatype_prefix + datatype, 'distribute')))
+            return bool(eval(self.cfg.get(self.datatype_prefix + datatype, 'distribute')))
         except NoOptionError:
             return True
 
@@ -120,10 +121,3 @@ class DatexConfig(_LockedConfigFile):
             if s.startswith(self.datatype_prefix):
                 ss.append(s[len(self.datatype_prefix):])
         return ss
-
-def _eval(s):
-    try:
-        s = eval(s)
-    except NameError:
-        s = str(s)
-    return s

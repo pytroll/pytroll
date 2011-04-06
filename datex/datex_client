@@ -130,9 +130,7 @@ if karg.get('check_md5', None) and cmd not in ('get', ''):
     print >>sys.stderr, "Invalid option '-c'"
     sys.exit(2)
 
-host, rpc_port, publish_port = datex_config.get_client()
-rpc_address = host, rpc_port
-publish_address = host, publish_port
+rpc_address, publish_address = datex_config.get_client()
 url = "http://%s:%d"%rpc_address
 
 if cmd:

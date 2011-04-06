@@ -34,29 +34,7 @@ def sigstop_handler(signum, frame):
     raise SystemExit
 signal.signal(signal.SIGTERM, sigstop_handler)
 
-#-----------------------------------------------------------------------------
-#
-# Handle options
-#
-#-----------------------------------------------------------------------------
-daemonize = False
-opts,args = getopt.getopt( sys.argv[1:], 'd' )
-for k,v in opts:
-  if k == '-d': 
-      daemonize = True
-
-#
-# Damonize ?
-#
-if daemonize:
-    import daemonize
-    if daemonize.is_running_ps("*python*datex_server*"):
-        print >>sys.stderr, "Something like us is already running ... quitting"
-        sys.exit(1)        
-    daemon = daemonize.daemonize(stdout='/tmp/datext_server.log')
-
-host, rpc_port, publish_port = datex_config.get_server()
-rpc_address = host, rpc_port
+rpc_address, publish_destination = datex_config.get_server()
 
 #-----------------------------------------------------------------------------
 #
@@ -75,7 +53,7 @@ rpc_server.register_function(get_file_md5, 'get_file_md5')
 # Publish pol_L0 files
 #
 #-----------------------------------------------------------------------------
-Publisher.bind(publish_port)
+Publisher.bind(publish_destination)
 for dt in datex_config.get_datatypes():
     metadata = {}
     metadata['format'], metadata['compressed'] = datex_config.get_metadata(dt)
