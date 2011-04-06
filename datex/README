@@ -12,3 +12,35 @@ It goes like this:
 == Client ==
  * zmq: start subscriber in same process/thread (zmq has it's own threaded queue)
  * rpclite: for each new subscribe message fetch the corresponding file.
+
+
+The configuration of the client and server is defined in the etc/datex.cfg
+file. It has to contain the "server" and "client" sections, defining the
+variables "host", "rpc_port", and "publish_port". Moreover, if you want the
+server to serve anything, it can be good to add datatype sections, for
+example::
+
+ [datatype-pol_L0]
+ distribute = True
+ glob = *.hrpt.bz2
+ dir = /net/prodsat/datadb/sat/polar/smb/level0
+ format = hrpt
+ compressed = 'yes'
+
+The "distribute" flag tells if the given datatype needs to be distributed by
+the publisher, the "glob" variable describes the filename pattern, the "dir"
+variable is self describing, the "format" gives the format of the file, while
+the compressed flag tells if the data is compressed or not.
+
+Once everything is defined, you just need to start the client and the
+server. Here is the usage of the client::
+
+  datex_client -d<datatype> [-c] [-H] [info|list|latest|get filename]
+      -c, md5 check of received file
+      -H, this info
+      if not arguments it will listen for published files, and fetch'm.
+
+and here is the usage of the server::
+
+  datex_server [-D]
+      -D, run as daemon

@@ -8,16 +8,15 @@ import logging
 import zmq
 
 from posttroll.message import Message
-
-logger = logging.getLogger('datex_client')
+from datex import logger
 
 context = zmq.Context() 
 class Subscriber(object):
-    def __init__(self, subject, addr):
+    def __init__(self, subject, address):
         subscriber = context.socket(zmq.SUB)
         subscriber.setsockopt(zmq.SUBSCRIBE, subject)
         self.subscriber = subscriber
-        self.destination = "tcp://%s:%d"%addr
+        self.destination = address
         logger.info(self.destination)
 
     def __call__(self):
