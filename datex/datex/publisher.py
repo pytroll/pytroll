@@ -1,56 +1,64 @@
 #
 # A proccess to check for new pol_L0 files and publish.
 #
-import os
-import time
-from datetime import datetime, timedelta
-import logging
 import copy
-import glob
-#from multiprocessing import Process
+import os
+from datetime import timedelta
 from threading import Thread
-import zmq
 
+import time
+import zmq
+from datex.config import DatexLastStamp
+from datex.services import _get_file_list
+
+from datex import logger, datex_config
 from posttroll.message import Message
 
-from datex import logger, datetime_format, datex_config
-from datex.services import _get_file_list
-from datex.config import DatexLastStamp
 
-time_wakeup = 15
-time_epsilon = timedelta(microseconds=10)
+TIME_WAKEUP = 15
+TIME_EPSILON = timedelta(microseconds=10)
 #-----------------------------------------------------------------------------
 #
 # Process manager for the Publisher.
 #
 #-----------------------------------------------------------------------------
 class Publisher(object):
+    """The publisher class.
+    """
     def __init__(self, *args):
         try:
             self.publish
         except AttributeError:
-            raise AttributeError, "You need to bind Publisher class before instantiating"
-        self._process = Thread(target=check_and_publish, args=args+(self.publish,))
+            raise AttributeError, ("You need to bind Publisher class before "
+                                   "instantiating")
+        self._process = Thread(target=check_and_publish,
+                               args=args+(self.publish,))
 
     @classmethod
     def bind(cls, port):
-        cls.destination = "tcp://eth0:%d"%port
+        """Bind the publisher class to a port.
+        """
+        cls.destination = "tcp://eth0:%d" % port
         logger.info(cls.destination)
         cls.context = zmq.Context()
         cls.publish = cls.context.socket(zmq.PUB)
         cls.publish.bind(cls.destination)
     
-    def start(self):        
+    def start(self):
+        """Start the publisher.
+        """
         self._process.daemon = True # terminate when parent terminate
         self._process.start()
         return self
 
     def stop(self):
-        #self._process.terminate()
-        #self._process.join()
+        """Stop the publisher (actually a dummy function.
+        """
         return self
 
     def is_running(self):
+        """Says if the publisher is running.
+        """
         return self._process.is_alive()
 
 #-----------------------------------------------------------------------------
@@ -59,33 +67,44 @@ class Publisher(object):
 #
 #-----------------------------------------------------------------------------
 def check_and_publish(datatype, rpc_metadata, publish):
-
+    """Check for new files of type *datatype*, with the given *rpc_metadata*
+    and publish them through *publish*.
+    """
     stamp_config = DatexLastStamp(datatype)
 
     def younger_than_stamp_files():
+        """Uses glob polling to get new files.
+        """
         fdir, fglob = datex_config.get_path(datatype)
+        del fglob
         fstamp = stamp_config.get_last_stamp()
-        for f, t in _get_file_list(datatype, time_start=fstamp + time_epsilon):
+        for fil, tim in _get_file_list(datatype,
+                                       time_start=fstamp + TIME_EPSILON):
             if datex_config.distribute(datatype):
-                yield os.path.join(fdir, f)
-            stamp_config.update_last_stamp(t)
+                yield os.path.join(fdir, fil)
+            stamp_config.update_last_stamp(tim)
 
-    # give the publisher a little time to initialize (reconnections from subscribers)
+#    def from_datacenter():
+#        fstamp = stamp_config.get_last_stamp()
+#        get_files_from_datacenter_younger_than(fstamp)
+
+    # give the publisher a little time to initialize (reconnections from
+    # subscribers)
     time.sleep(1)
     logger.info('publisher starting')
     try:
         while(True):
-            for f in younger_than_stamp_files():
+            for filedesc in younger_than_stamp_files():
                 # Publish new files
                 data = copy.copy(rpc_metadata)
-                data['uri'] += os.path.basename(f)
-                m = Message('/' + datatype, 'file', data)
-                logger.info('sending: ' + `m`)
+                data['uri'] += os.path.basename(filedesc)
+                msg = Message('/' + datatype, 'file', data)
+                logger.info('sending: ' + str(msg))
                 try:
-                    publish.send(`m`)
+                    publish.send(str(msg))
                 except zmq.ZMQError:
                     logger.exception('publish failed')
-            time.sleep(time_wakeup)
+            time.sleep(TIME_WAKEUP)
     except (KeyboardInterrupt, SystemExit):
         pass
     finally:
