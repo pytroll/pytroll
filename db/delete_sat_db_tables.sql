@@ -1,6 +1,6 @@
 drop table file_URI;
 drop table parameter_value;
-drop table parameter_track;
+drop table parameter_linestring;
 drop table file_type_parameter;
 drop table data_boundary;
 drop table file_type_tag;

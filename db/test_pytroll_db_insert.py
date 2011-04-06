@@ -1,3 +1,19 @@
+#!/usr/bin/env python
+#
+#
+#
+# 
+
+import datetime
+import pytroll_db as db 
+
+"""Insert test values into database through SQLAlchemy interface """
+
+
+DataCenterManager
+
+
+
 
 insert into file_type values(1, 'HRPT', 'HRPT level 0 data');
 insert into file_type values(2, 'smhi_hirlam', 'HIRLAM data');

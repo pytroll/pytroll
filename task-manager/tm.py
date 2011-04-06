@@ -20,21 +20,24 @@
 # You should have received a copy of the GNU General Public License along with
 # pytroll.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Mini task manager.
+"""
+
 from time import sleep
 from threading import Thread, Condition
 from datetime import datetime, timedelta
 import os
 
-class FileWatcher(Thread):
+class FileTrigger(Thread):
     """Wait for a file.
     """
-    
     def __init__(self, filename):
         Thread.__init__(self)
         self.filename = filename
         self.loop = True
         self.cond = Condition()
         self.start()
+        self.exit_status = 0
 
     def run(self):
         while self.loop:
@@ -48,11 +51,15 @@ class FileWatcher(Thread):
 
     def cancel(self):
         self.loop = False
+        self.exit_status = 1
         self.cond.acquire()
         self.cond.notify()
         self.cond.release()
 
-class Timer(Thread):
+    def __repr__(self):
+        return "File trigger " + self.filename
+
+class TimeTrigger(Thread):
     """Wait for a given time.
     """
     def __init__(self, time):
@@ -61,6 +68,7 @@ class Timer(Thread):
         self.loop = True
         self.cond = Condition()
         self.start()
+        self.exit_status = 0
 
     def run(self):
         while self.loop and self.time > datetime.utcnow():
@@ -73,20 +81,34 @@ class Timer(Thread):
 
     def cancel(self):
         self.loop = False
+        self.exit_status = 1
         self.cond.acquire()
         self.cond.notify()
         self.cond.release()
 
+    def __repr__(self):
+        return "Time trigger "+str(self.time)
+
 class Task(Thread):
     """Run a given function when *triggers* happen.
     """
-    def __init__(self, action, *triggers):
+    def __init__(self, action, *triggers, **kwargs):
         Thread.__init__(self)
         self.tasks = []
+        self.label = ""
+        if "label" in kwargs:
+            self.label = kwargs["label"]
         self.action = action
         self._trigger(*triggers)
         self.loop = True
-        
+        self.exit_status = 0
+
+    def start(self):
+        for task in self.tasks:
+            if not task.isAlive():
+                task.start()
+        Thread.start(self)
+
     def _trigger(self, *args):
         """Analyse triggers and add them to the subtask 
         """
@@ -94,29 +116,33 @@ class Task(Thread):
             try:
                 (obj.year, obj.month, obj.day, 
                  obj.hour, obj.minute, obj.second)
-                self.tasks.append(Timer(obj))
+                self.tasks.append(TimeTrigger(obj))
                 continue
             except AttributeError:
                 pass
             if isinstance(obj, Task):
                 self.tasks.append(obj)
             else:
-                self.tasks.append(FileWatcher(obj))
+                self.tasks.append(FileTrigger(obj))
 
     def run(self):
         while self.loop:
             # Wait until all dependencies are ready, then run.
             start = datetime.utcnow()
             end = start + timedelta(seconds=1)
+            dep_status = 0
             for dep in self.tasks:
                 now = datetime.utcnow()
                 if now < end:
                     diff = ((end - now).seconds + 
                             (end - now).microseconds / 1000000.0)
                     dep.join(min(1, diff))
+                    dep_status += dep.exit_status
                 else:
                     break
-            if datetime.utcnow() < end:
+            # If all dependencies where ready and had a clean exit code, run
+            # the action.
+            if datetime.utcnow() < end and dep_status == 0:
                 self.action()
                 return
 
@@ -130,15 +156,20 @@ class Task(Thread):
                     task.print_tasks(indent+2)
             except AttributeError:
                 pass
+    def __str__(self):
+        if self.label:
+            return self.label
+        else:
+            return Thread.__str__(self)
         
     def cancel(self):
         """Cancel a task.
         """
         self.loop = False
-        for task in self.tasks:
-            if not isinstance(task, Task):
-                task.cancel()
-                self.tasks.remove(task)
+        self.exit_status = 1
+        for task in reversed(self.tasks):
+            task.cancel()
+            self.tasks.remove(task)
 
         
 
@@ -172,6 +203,7 @@ class TaskManager(Task):
                 self.cond.release()
         else:
             Task.run(self)
+        self.cancel()
 
     def quit(self):
         """End the task manager.
@@ -181,30 +213,13 @@ class TaskManager(Task):
         self.cond.notify()
         self.cond.release()
 
-class TaskTicker(Thread):
-    def __init__(self, tm):
-        Thread.__init__(self)
-        self.tm = tm
-        self.loop = True
-        self.cond = Condition()
-        
-    def run(self):
-        while self.loop:
-            self.tm.add(Task(lambda: foo(datetime.now())))
-            self.cond.acquire()
-            self.cond.wait(1)
-            self.cond.release()
 
-    def stop(self):
-        self.loop = False
-        self.cond.acquire()
-        self.cond.notify()
-        self.cond.release()
-
-def foo(txt="hej"):
-    print txt
 
 if __name__ == "__main__":
+    def foo(txt="hej"):
+        print txt
+        
+    from generators import TaskTicker
     tm = TaskManager()
     tm.start()
     tm.add(Task(foo, datetime.utcnow() + timedelta(seconds=3)))
@@ -233,11 +248,6 @@ if __name__ == "__main__":
 
     print tm.tasks
 
-    print "trying the task ticker"
-    tt = TaskTicker(tm)
-    tt.start()
-    sleep(10)
-    tt.stop()
     tm.quit()
 
     
