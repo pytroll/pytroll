@@ -16,9 +16,9 @@ It goes like this:
 
 The configuration of the client and server is defined in the etc/datex.cfg
 file. It has to contain the "server" and "client" sections, defining the
-variables "host", "rpc_port", and "publish_port". Moreover, if you want the
-server to serve anything, it can be good to add datatype sections, for
-example::
+variables "rpc_address" and "publish_address"/"publish_destination". Moreover,
+if you want the server to serve anything, it can be good to add datatype
+sections, for example::
 
  [datatype-pol_L0]
  distribute = True
@@ -41,6 +41,5 @@ server. Here is the usage of the client::
       if not arguments it will listen for published files, and fetch'm.
 
 and here is the usage of the server::
-
-  datex_server [-D]
-      -D, run as daemon
+    
+  datex_server
