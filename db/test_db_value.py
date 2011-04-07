@@ -1,7 +1,7 @@
 import pytroll_db
 
-#dcm = pytroll_db.DCManager('postgresql://iceopr:Hot_Eyes@devsat-lucid:5432/testdb2')
-dcm = pytroll_db.DCManager('postgresql://a000680:@localhost.localdomain:5432/sat_db')
+dcm = pytroll_db.DCManager('postgresql://iceopr:Hot_Eyes@devsat-lucid:5432/testdb2')
+#dcm = pytroll_db.DCManager('postgresql://a000680:@localhost.localdomain:5432/sat_db')
 
 ft = dcm.get_file_type('HRPT')
 ff = dcm.get_file_format('hrpt level 0')
