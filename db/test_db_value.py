@@ -1,15 +1,15 @@
 import pytroll_db
 
-dcm = pytroll_db.DCManager('postgresql://iceopr:<passwd>@devsat-lucid:5432/testdb2')
+dcm = pytroll_db.DCManager('postgresql://iceopr@devsat-lucid:5432/testdb2')
 #dcm = pytroll_db.DCManager('postgresql://a000680:@localhost.localdomain:5432/sat_db')
 
-#ft = dcm.get_file_type('HRPT')
-#ff = dcm.get_file_format('HRPT')
+ft = dcm.get_file_type('HRPT')
+ff = dcm.get_file_format('hrpt level 0')
 
-#nf = dcm.create_file('test2', ft, ff)
+nf = dcm.create_file('test2', file_type=ft, file_format=ff)
 
 
-nf = dcm.create_new_file('test3', 'HRPT', 'HRPT')
+nf1 = dcm.create_file('test3', file_type_name='HRPT', file_format_name='hrpt level 0')
 print nf
 p = dcm.get_parameter('orbit_number')
 

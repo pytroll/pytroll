@@ -205,50 +205,50 @@ class FileURI(Base):
 #relations
 
 #ParameterType
-ParameterType.parameters = relation(Parameter)
+ParameterType.parameters = relation(Parameter, backref='parameter_type')
 
 #Parameter
-Parameter.parameter_type = relation(ParameterType)
-Parameter.parameter_values = relation(ParameterValue)
-Parameter.parameter_linestrings = relation(ParameterLinestring)
-Parameter.file_types = relation(FileType, secondary=file_type_parameter)
+#Parameter.parameter_type = relation(ParameterType)
+Parameter.parameter_values = relation(ParameterValue, backref='parameter')
+Parameter.parameter_linestrings = relation(ParameterLinestring, backref='parameter')
+#Parameter.file_types = relation(FileType, secondary=file_type_parameter)
 
 #Tag
-Tag.files = relation(File, secondary=file_tag)
-Tag.file_types = relation(FileType, secondary=file_type_tag)
+#Tag.files = relation(File, secondary=file_tag)
+#Tag.file_types = relation(FileType, secondary=file_type_tag)
 
 #FileFormat
-FileFormat.file_uris = relation(FileURI)
-FileFormat.file_objs = relation(File)
+FileFormat.file_uris = relation(FileURI, backref='file_format')
+FileFormat.file_objs = relation(File, backref='file_format')
 
 #FileType
-FileType.parameters = relation(Parameter, secondary=file_type_parameter)
-FileType.file_uris = relation(FileURI)
-FileType.file_objs = relation(File)
-FileType.file_type_tags = relation(Tag, secondary=file_type_tag)
+FileType.parameters = relation(Parameter, secondary=file_type_parameter, backref='file_types')
+FileType.file_uris = relation(FileURI, backref='file_type')
+FileType.file_objs = relation(File, backref='file_type')
+FileType.file_type_tags = relation(Tag, secondary=file_type_tag, backref='file_types')
 
 #Boundary
-Boundary.files = relation(File, secondary=data_boundary)
+#Boundary.files = relation(File, secondary=data_boundary)
 
 #File
-File.file_type = relation(FileType)
-File.file_format = relation(FileFormat)
-File.parameter_values = relation(ParameterValue)
-File.parameter_linestrings = relation(ParameterLinestring)
-File.file_tags = relation(Tag, secondary=file_tag)
-File.boundary = relation(Boundary, secondary=data_boundary)
+#File.file_type = relation(FileType)
+#File.file_format = relation(FileFormat)
+File.parameter_values = relation(ParameterValue, backref='file_obj')
+File.parameter_linestrings = relation(ParameterLinestring, backref='file_obj')
+File.file_tags = relation(Tag, secondary=file_tag, backref='file_objs')
+File.boundary = relation(Boundary, secondary=data_boundary, backref='file_objs')
 
 #ParameterLinestring
-ParameterLinestring.file_obj = relation(File)
-ParameterLinestring.parameter = relation(Parameter)
+#ParameterLinestring.file_obj = relation(File)
+#ParameterLinestring.parameter = relation(Parameter)
 
 #ParameterValue
-ParameterValue.file_obj = relation(File)
-ParameterValue.parameter = relation(Parameter)
+#ParameterValue.file_obj = relation(File)
+#ParameterValue.parameter = relation(Parameter)
 
 #FileURI
-FileURI.file_type = relation(FileType)
-FileURI.file_format = relation(FileFormat)
+#FileURI.file_type = relation(FileType)
+#FileURI.file_format = relation(FileFormat)
 
 
 class DCManager(object):
@@ -353,17 +353,46 @@ class DCManager(object):
         return self._session.query(File).\
                filter(File.filename == filename).one()
 
-    def create_new_file(self, filename, file_type_name, file_format_name):
-        file_obj = self._session.query(File).\
-                    filter(FileType.file_type_name == file_type_name).\
-                    filter(File.file_type_id == FileType.file_type_id).\
-                    filter(FileFormat.file_format_name == file_format_name).\
-                    filter(File.file_format_id == FileFormat.file_format_id).all()
+    def create_file(self, filename, **args):
+
+        is_archived = False
+        if 'is_archived' in args:
+            is_archived = args['is_archived']
+
+        creation_time = datetime.datetime.utcnow()
+        if 'creation_time' in args:
+            creation_time = args['creation_time']
+        
+        if 'file_type' in args:
+            file_type = args['file_type']
+        elif 'file_type_id' in args:
+            file_type = self._session.query(FileType).\
+                filter(FileType.file_type_id == args['file_type_id']).one()
+        elif 'file_type_name' in args:
+            file_type = self._session.query(FileType).\
+                filter(FileType.file_type_name == args['file_type_name']).one()
+        else:
+            raise TypeError("file_type not defined") 
+
+        if 'file_format' in args:
+            file_format = args['file_format']
+        elif 'file_format_id' in args:
+            file_format = self._session.query(FileFormat).\
+                filter(FileFormat.file_format_id == args['file_format_id']).one()
+        elif 'file_format_name' in args:
+            file_format = self._session.query(FileFormat).\
+                filter(FileFormat.file_format_name == args['file_format_name']).one()
+        else:
+            raise TypeError("file_format not defined") 
+
+        file_obj = File(filename,file_type, file_format, is_archived, creation_time)
+        
+        self._session.add(file_obj)
         return file_obj
 
 
 if __name__ == '__main__':
-    rm = DCManager('postgresql://iceopr:Hot_Eyes@devsat-lucid:5432/testdb2')
+    rm = DCManager('postgresql://iceopr@devsat-lucid:5432/testdb2')
     #rm = DCManager('postgresql://a000680:@localhost.localdomain:5432/sat_db')
 
     f = rm.get_file()
