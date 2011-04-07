@@ -363,7 +363,7 @@ class DCManager(object):
 
 
 if __name__ == '__main__':
-    rm = DCManager('postgresql://iceopr:Hot_Eyes@devsat-lucid:5432/testdb2')
+    rm = DCManager('postgresql://iceopr:<passwd>@devsat-lucid:5432/testdb2')
     #rm = DCManager('postgresql://a000680:@localhost.localdomain:5432/sat_db')
 
     f = rm.get_file()
