@@ -355,8 +355,10 @@ class DCManager(object):
 
     def create_new_file(self, filename, file_type_name, file_format_name):
         file_obj = self._session.query(File).\
-                    filter(File.file_type_name == file_type_name).\
-                    filter(File.file_format_name == file_format_name).all()
+                    filter(FileType.file_type_name == file_type_name).\
+                    filter(File.file_type_id == FileType.file_type_id).\
+                    filter(FileFormat.file_format_name == file_format_name).\
+                    filter(File.file_format_id == FileFormat.file_format_id).all()
         return file_obj
 
 
