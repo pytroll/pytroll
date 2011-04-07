@@ -336,12 +336,23 @@ class DCManager(object):
         Session = sessionmaker(bind=engine)
         self._session = Session()
 
+    @property
+    def engine(self):
+        return self._engine 
+
+    @property
+    def session(self):
+        return self._session
+
     def save(self):
         try:
             self._session.commit()
         except Exception:
             self._session.rollback()
             raise
+
+    def rollback(self):
+        self._session.rollback()
 
     def create_file_type(self, file_type_id, file_type_name, description):
         file_type = FileType(file_type_id, file_type_name, description)
@@ -413,6 +424,15 @@ class DCManager(object):
         return self._session.query(Parameter).\
                filter(Parameter.parameter_name == parameter_name).one()
 
+    def get_file(self, filename):
+        return self._session.query(File).\
+               filter(File.filename == filename).one()
+
+    def create_new_file(self, filename, file_type_name, file_format_name):
+        file_obj = self._session.query(File).\
+                    filter(File.file_type_name == file_type_name).\
+                    filter(File.file_format_name == file_format_name).all()
+        return file_obj
 
 class ReportManager(object):
 
