@@ -12,6 +12,3 @@ drop table parameter;
 drop table parameter_type;
 drop table boundary;
 drop table tag;
-
-
-
