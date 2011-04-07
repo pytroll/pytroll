@@ -19,11 +19,8 @@ from datex.services import get_file_list, get_file, get_file_chunk, get_file_md5
 
 logger = logging.getLogger('datex-server')
 
-#
 # time.strptime not thread-safe (Issue 7980), work around
-#
-tmp = datetime.strptime("1956", "%Y")
-del tmp
+datetime.strptime("1956", "%Y")
 
 #-----------------------------------------------------------------------------
 #

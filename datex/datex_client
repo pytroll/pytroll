@@ -25,11 +25,8 @@ def usage():
     if not arguments it will listen for published files, and fetch'm."""
     sys.exit(2)
 
-#
 # time.strptime not thread-safe (Issue 7980), work around
-#
-tmp = datetime.strptime("1956", "%Y")
-del tmp
+datetime.strptime("1956", "%Y")
 
 #-----------------------------------------------------------------------------
 #
