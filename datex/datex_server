@@ -1,5 +1,22 @@
 #!/usr/bin/python
 #
+# Author(s): 
+#   Lars Orum Rasmussen
+#   Martin Raspaud
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
 import sys
 import os
 import logging
@@ -15,7 +32,7 @@ from rpclite.server import ForkingXMLRPCServer as XMLRPCServer
 from datex import datetime_format, datex_config
 from datex.config import DatexConfig
 from datex.publisher import Publisher
-from datex.services import get_file_list, get_file, get_file_chunk, get_file_md5
+from datex.services import get_datatype_list, get_file_list, get_file, get_file_chunk, get_file_md5
 
 logger = logging.getLogger('datex-server')
 
@@ -46,6 +63,7 @@ rpc_address, publish_destination = datex_config.get_server()
 #-----------------------------------------------------------------------------
 logger.info('rpc-server starting')
 rpc_server = XMLRPCServer('file_server', rpc_address)    
+rpc_server.register_function(get_datatype_list, 'get_datatype_list')
 rpc_server.register_function(get_file_list, 'get_file_list')
 rpc_server.register_function(get_file, 'get_file')
 rpc_server.register_function(get_file_chunk, 'get_file_chunk')
