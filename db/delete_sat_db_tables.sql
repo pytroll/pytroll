@@ -1,4 +1,5 @@
-drop table file_URI;
+drop table file_access_uri;
+drop table file_uri;
 drop table parameter_value;
 drop table parameter_linestring;
 drop table file_type_parameter;

@@ -1,3 +1,4 @@
+
 CREATE TABLE public.boundary (
                 boundary_id INTEGER NOT NULL,
                 boundary_name VARCHAR(255) NOT NULL,
@@ -92,6 +93,13 @@ CREATE INDEX file_idx
  ON public.file
  ( file_type_id, file_format_id );
 
+CREATE TABLE public.file_uri (
+                filename VARCHAR(255) NOT NULL,
+                uri VARCHAR(255) NOT NULL,
+                CONSTRAINT file_uri_pk PRIMARY KEY (filename, uri)
+);
+
+
 CREATE TABLE public.data_boundary (
                 filename VARCHAR(255) NOT NULL,
                 boundary_id INTEGER NOT NULL,
@@ -124,12 +132,12 @@ CREATE TABLE public.file_tag (
 );
 
 
-CREATE TABLE public.file_uri (
+CREATE TABLE public.file_access_uri (
                 file_type_id INTEGER NOT NULL,
                 file_format_id INTEGER NOT NULL,
                 sequence INTEGER DEFAULT 1 NOT NULL,
-                uri VARCHAR(3000) NOT NULL,
-                CONSTRAINT file_uri_pk PRIMARY KEY (file_type_id, file_format_id, sequence)
+                uri VARCHAR(255) NOT NULL,
+                CONSTRAINT file_access_uri_pk PRIMARY KEY (file_type_id, file_format_id, sequence)
 );
 
 
@@ -189,7 +197,7 @@ ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.file_uri ADD CONSTRAINT file_format_file_uri_fk
+ALTER TABLE public.file_access_uri ADD CONSTRAINT file_format_file_uri_fk
 FOREIGN KEY (file_format_id)
 REFERENCES public.file_format (file_format_id)
 ON DELETE NO ACTION
@@ -210,7 +218,7 @@ ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.file_uri ADD CONSTRAINT file_type_file_uri_fk
+ALTER TABLE public.file_access_uri ADD CONSTRAINT file_type_file_uri_fk
 FOREIGN KEY (file_type_id)
 REFERENCES public.file_type (file_type_id)
 ON DELETE NO ACTION
@@ -259,6 +267,12 @@ ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
+ALTER TABLE public.file_uri ADD CONSTRAINT file_file_uri_fk
+FOREIGN KEY (filename)
+REFERENCES public.file (filename)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
 
 CREATE INDEX track_gix ON parameter_linestring USING GIST (data_value);
 CREATE INDEX boundary_gix ON boundary USING GIST (boundary);

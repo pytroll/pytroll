@@ -185,8 +185,8 @@ class ParameterValue(Base):
         self.data_value = data_value
 
 
-class FileURI(Base):
-    __tablename__ = "file_uri"
+class FileAccessURI(Base):
+    __tablename__ = "file_access_uri"
 
     #mapping
     file_type_id = Column(Integer, ForeignKey('file_type.file_type_id'), primary_key=True)
@@ -198,6 +198,17 @@ class FileURI(Base):
         self.file_type = file_type
         self.file_format = file_format
         self.sequence = sequence
+        self.uri = uri
+
+class FileURI(Base):
+    __tablename__ = "file_uri"
+
+    #mapping
+    filename = Column(String, ForeignKey('file.filename'), primary_key=True)
+    uri = Column(String, primary_key=True)
+    
+    def __init__(self, filename, uri):
+        self.filename = filename
         self.uri = uri
 
 
@@ -212,12 +223,12 @@ Parameter.parameter_values = relation(ParameterValue, backref='parameter')
 Parameter.parameter_linestrings = relation(ParameterLinestring, backref='parameter')
 
 #FileFormat
-FileFormat.file_uris = relation(FileURI, backref='file_format')
+FileFormat.file_uris = relation(FileAccessURI, backref='file_format')
 FileFormat.file_objs = relation(File, backref='file_format')
 
 #FileType
 FileType.parameters = relation(Parameter, secondary=file_type_parameter, backref='file_types')
-FileType.file_uris = relation(FileURI, backref='file_type')
+FileType.file_uris = relation(FileAccessURI, backref='file_type')
 FileType.file_objs = relation(File, backref='file_type')
 FileType.file_type_tags = relation(Tag, secondary=file_type_tag, backref='file_types')
 
@@ -227,6 +238,9 @@ File.parameter_values = relation(ParameterValue, backref='file_obj')
 File.parameter_linestrings = relation(ParameterLinestring, backref='file_obj')
 File.file_tags = relation(Tag, secondary=file_tag, backref='file_objs')
 File.boundary = relation(Boundary, secondary=data_boundary, backref='file_objs')
+
+#FileURI
+FileURI.file_obj = relation(File, backref='uris')
 
 
 class DCManager(object):
