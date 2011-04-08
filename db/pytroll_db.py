@@ -54,8 +54,8 @@ class ParameterType(Base):
     parameter_type_name = Column(String)
     parameter_location = Column(String)    
 
-    def __init__(self, parameter_type, parameter_type_name, parameter_location):
-        self.parameter_type = parameter_type
+    def __init__(self, parameter_type_id, parameter_type_name, parameter_location):
+        self.parameter_type_id = parameter_type_id
         self.parameter_type_name = parameter_type_name
         self.parameter_location = parameter_location
 
