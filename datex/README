@@ -6,8 +6,7 @@ It goes like this:
 
 == Server ==
  * rpclite: register services
- * zmq: start publisher in a separate process
- * make sure publisher only run when rpc server is running 
+ * zmq: start publisher in a separate thread
 
 == Client ==
  * zmq: start subscriber in same process/thread (zmq has it's own threaded queue)
@@ -25,7 +24,9 @@ sections, for example::
  glob = *.hrpt.bz2
  dir = /net/prodsat/datadb/sat/polar/smb/level0
  format = hrpt
- compressed = 'yes'
+ compressed = bzip
+
+The config file's location is given by the DATEX_CONFIG_DIR environment variable.
 
 The "distribute" flag tells if the given datatype needs to be distributed by
 the publisher, the "glob" variable describes the filename pattern, the "dir"
@@ -35,7 +36,7 @@ the compressed flag tells if the data is compressed or not.
 Once everything is defined, you just need to start the client and the
 server. Here is the usage of the client::
 
-  datex_client -d<datatype> [-c] [-H] [info|list|latest|get filename]
+  datex_client -d<datatype> [-c] [-H] [info|filelist|latest|datatypelist|get filename]
       -c, md5 check of received file
       -H, this info
       if not arguments it will listen for published files, and fetch'm.

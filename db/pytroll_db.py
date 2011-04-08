@@ -185,8 +185,8 @@ class ParameterValue(Base):
         self.data_value = data_value
 
 
-class FileURI(Base):
-    __tablename__ = "file_uri"
+class FileAccessURI(Base):
+    __tablename__ = "file_access_uri"
 
     #mapping
     file_type_id = Column(Integer, ForeignKey('file_type.file_type_id'), primary_key=True)
@@ -198,6 +198,17 @@ class FileURI(Base):
         self.file_type = file_type
         self.file_format = file_format
         self.sequence = sequence
+        self.uri = uri
+
+class FileURI(Base):
+    __tablename__ = "file_uri"
+
+    #mapping
+    filename = Column(String, ForeignKey('file.filename'), primary_key=True)
+    uri = Column(String, primary_key=True)
+    
+    def __init__(self, filename, uri):
+        self.filename = filename
         self.uri = uri
 
 
@@ -212,12 +223,12 @@ Parameter.parameter_values = relation(ParameterValue, backref='parameter')
 Parameter.parameter_linestrings = relation(ParameterLinestring, backref='parameter')
 
 #FileFormat
-FileFormat.file_uris = relation(FileURI, backref='file_format')
+FileFormat.file_uris = relation(FileAccessURI, backref='file_format')
 FileFormat.file_objs = relation(File, backref='file_format')
 
 #FileType
 FileType.parameters = relation(Parameter, secondary=file_type_parameter, backref='file_types')
-FileType.file_uris = relation(FileURI, backref='file_type')
+FileType.file_uris = relation(FileAccessURI, backref='file_type')
 FileType.file_objs = relation(File, backref='file_type')
 FileType.file_type_tags = relation(Tag, secondary=file_type_tag, backref='file_types')
 
@@ -227,6 +238,9 @@ File.parameter_values = relation(ParameterValue, backref='file_obj')
 File.parameter_linestrings = relation(ParameterLinestring, backref='file_obj')
 File.file_tags = relation(Tag, secondary=file_tag, backref='file_objs')
 File.boundary = relation(Boundary, secondary=data_boundary, backref='file_objs')
+
+#FileURI
+FileURI.file_obj = relation(File, backref='uris')
 
 
 class DCManager(object):
@@ -282,7 +296,10 @@ class DCManager(object):
         self._session.add(parameter)
         return parameter
 
-    def create_file_type_parameter(self, **kwargs):
+    def create_file_type_parameter(self, file_type=None, 
+            file_type_name=None, 
+            parameters=None, 
+            parameter_names=None):
         """ Creates a relation between a filetype and a parameter
 
             Parameters : 
@@ -302,18 +319,17 @@ class DCManager(object):
             Either parameters or parameter_names must be provided
         """
 
-        if 'file_type' in kwargs:
-            file_type = kwargs['file_type']
-        elif 'file_type_name' in kwargs:
-            file_type = self.get_file_type(kwargs['file_type_name'])
-        else:
-            raise TypeError("No FileType reference defined")
+        if not file_type:
+            if file_type_name:
+                file_type = self.get_file_type(file_type_name)
+            else:
+                raise TypeError("No FileType reference defined")
         
-        if 'parameters' in kwargs:
-            for param in kwargs['parameters']:
+        if parameters:
+            for param in parameters:
                 file_type.parameters.append(param)
-        elif 'parameter_names' in kwargs:
-            for parameter_name in kwargs['parameter_names']:
+        elif parameter_names:
+            for parameter_name in parameter_names:
                 parameter = self.get_parameter(parameter_name)
                 file_type.parameters.append(parameter)
         else:
@@ -321,7 +337,12 @@ class DCManager(object):
         
         return file_type
 
-    def create_parameter_value(self, data_value, **kwargs):
+    def create_parameter_value(self, data_value,
+            file_obj=None,
+            filename=None,
+            parameter=None,
+            parameter_name=None,
+            creation_time=None):
         """Creates a ParameterValue object from a data value and File and
         Parameter references.
 
@@ -346,29 +367,31 @@ class DCManager(object):
 
         """
         
-        creation_time = datetime.datetime.utcnow()
-        if 'creation_time' in kwargs:
-            creation_time = kwargs['creation_time']
+        if not creation_time:
+            creation_time = datetime.datetime.utcnow()
 
-        if 'file_obj' in kwargs:
-            file_obj = kwargs['file_obj']
-        elif 'filename' in kwargs:
-            file_obj = self.get_file(kwargs['filename'])
-        else:
-            raise TypeError("No file reference defined")
+        if not file_obj:
+            if filename:
+                file_obj = self.get_file(filename)
+            else:
+                raise TypeError("No file reference defined")
 
-        if 'parameter' in kwargs:
-            parameter = kwargs['parameter']
-        elif 'parameter_name' in kwargs:
-            parameter = self.get_parameter(kwargs['parameter_name'])
-        else:
-            raise TypeError("No parameter reference defined")
+        if not parameter:
+            if parameter_name:
+                parameter = self.get_parameter(parameter_name)
+            else:
+                raise TypeError("No parameter reference defined")
 
         parameter_value = ParameterValue(file_obj, parameter, data_value, creation_time)         
         self._session.add(parameter_value)
         return parameter_value
 
-    def create_parameter_linestring(self, linestring, **kwargs):
+    def create_parameter_linestring(self, linestring, 
+            file_obj=None, 
+            filename=None,
+            parameter=None,
+            parameter_name=None,
+            creation_time=None):
         """Creates a ParameterLinestring object from a linestring and File and
         Parameter references.
 
@@ -391,24 +414,21 @@ class DCManager(object):
             Either parameter or parameter_name must be provided
 
         """
-        
-        creation_time = datetime.datetime.utcnow()
-        if 'creation_time' in kwargs:
-            creation_time = kwargs['creation_time']
+       
+        if not creation_time:
+            creation_time = datetime.datetime.utcnow()
 
-        if 'file_obj' in kwargs:
-            file_obj = kwargs['file_obj']
-        elif 'filename' in kwargs:
-            file_obj = self.get_file(kwargs['filename'])
-        else:
-            raise TypeError("No file reference defined")
+        if not file_obj:
+            if filename:
+                file_obj = self.get_file(filename)
+            else:
+                raise TypeError("No file reference defined")
 
-        if 'parameter' in kwargs:
-            parameter = kwargs['parameter']
-        elif 'parameter_name' in kwargs:
-            parameter = self.get_parameter(kwargs['parameter_name'])
-        else:
-            raise TypeError("No parameter reference defined")
+        if not parameter:
+            if parameter_name:
+                parameter = self.get_parameter(parameter_name)
+            else:
+                raise TypeError("No parameter reference defined")
 
         parameter_linestring = ParameterLinestring(file_obj, parameter, linestring, creation_time)         
         self._session.add(parameter_linestring)
@@ -442,13 +462,19 @@ class DCManager(object):
         return self._session.query(File).\
                filter(File.filename == filename).one()
 
-    def create_file(self, filename, **kwargs):
+    def create_file(self, filename,
+                    is_archived=False,
+                    creation_time=datetime.datetime.utcnow(),
+                    file_type=None,
+                    file_type_id=None,
+                    file_type_name=None,
+                    file_format=None,
+                    file_format_id=None,
+                    file_format_name=None):
         """Creates a File object from a file name and FileType and
         FileFormat references.
 
             Parameters:
-                data_value :
-                    data value corresponding to parameter type
                 file_type : FileType object
                 file_type_id : int
                     FileType object id
@@ -473,40 +499,28 @@ class DCManager(object):
 
         """
         
+        if not file_type:
+            if file_type_id:
+                file_type = self._session.query(FileType).\
+                            filter(FileType.file_type_id == file_type_id).one()
+            elif file_type_name:
+                file_type = self.get_file_type(file_type_name)
+            else:
+                raise TypeError("file_type not defined") 
 
-        is_archived = False
-        if 'is_archived' in kwargs:
-            is_archived = kwargs['is_archived']
-
-        creation_time = datetime.datetime.utcnow()
-        if 'creation_time' in kwargs:
-            creation_time = kwargs['creation_time']
-        
-        if 'file_type' in kwargs:
-            file_type = kwargs['file_type']
-        elif 'file_type_id' in kwargs:
-            file_type = self._session.query(FileType).\
-                filter(FileType.file_type_id == kwargs['file_type_id']).one()
-        elif 'file_type_name' in kwargs:
-            file_type = self.get_file_type(kwargs['file_type_name']) 
-        else:
-            raise TypeError("file_type not defined") 
-
-        if 'file_format' in kwargs:
-            file_format = kwargs['file_format']
-        elif 'file_format_id' in kwargs:
-            file_format = self._session.query(FileFormat).\
-                filter(FileFormat.file_format_id == kwargs['file_format_id']).one()
-        elif 'file_format_name' in kwargs:
-            file_format = self.get_file_format(kwargs['file_format_name'])
-        else:
-            raise TypeError("file_format not defined") 
+        if not file_format:
+            if file_format_id:
+                file_format = self._session.query(FileType).\
+                            filter(FileFormat.file_format_id == file_format_id).one()
+            elif file_format_name:
+                file_format = self.get_file_format(file_format_name)
+            else:
+                raise TypeError("file_format not defined") 
 
         file_obj = File(filename,file_type, file_format, is_archived, creation_time)
         
         self._session.add(file_obj)
         return file_obj
-
 
 
 if __name__ == '__main__':
