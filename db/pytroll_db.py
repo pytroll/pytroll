@@ -286,13 +286,6 @@ class DCManager(object):
         self._session.add(file_uri)
         return file_uri
 
-    def create_file(self, filename, file_type, file_format, is_archived=False, creation_time=None):
-        if creation_time is None:
-            creation_time = datetime.datetime.utcnow()            
-        file_obj = File(filename, file_type, file_format, is_archived, creation_time)
-        self._session.add(file_obj)
-        return file_obj
-
     def create_parameter_type(self, parameter_type_id, parameter_type_name, parameter_location):
         parameter_type = ParameterType(parameter_type_id, parameter_type_name, parameter_location)
         self._session.add(parameter_type)
@@ -425,13 +418,19 @@ class DCManager(object):
         return self._session.query(File).\
                filter(File.filename == filename).one()
 
-    def create_file(self, filename, **args):
+    def create_file(self, filename,
+                    is_archived=False,
+                    creation_time=datetime.datetime.utcnow(),
+                    file_type=None,
+                    file_type_id=None,
+                    file_type_name=None,
+                    file_format=None,
+                    file_format_id=None,
+                    file_format_name=None):
         """Creates a File object from a file name and FileType and
         FileFormat references.
 
             Parameters:
-                data_value :
-                    data value corresponding to parameter type
                 file_type : FileType object
                 file_type_id : int
                     FileType object id
@@ -457,33 +456,23 @@ class DCManager(object):
         """
         
 
-        is_archived = False
-        if 'is_archived' in args:
-            is_archived = args['is_archived']
+        if not file_type:
+            if file_type_id:
+                file_type = self._session.query(FileType).\
+                            filter(FileType.file_type_id == file_type_id).one()
+            elif file_type_name:
+                file_type = self.get_file_type(file_type_name)
+            else:
+                raise TypeError("file_type not defined") 
 
-        creation_time = datetime.datetime.utcnow()
-        if 'creation_time' in args:
-            creation_time = args['creation_time']
-        
-        if 'file_type' in args:
-            file_type = args['file_type']
-        elif 'file_type_id' in args:
-            file_type = self._session.query(FileType).\
-                filter(FileType.file_type_id == args['file_type_id']).one()
-        elif 'file_type_name' in args:
-            file_type = self.get_file_type(args['file_type_name']) 
-        else:
-            raise TypeError("file_type not defined") 
-
-        if 'file_format' in args:
-            file_format = args['file_format']
-        elif 'file_format_id' in args:
-            file_format = self._session.query(FileFormat).\
-                filter(FileFormat.file_format_id == args['file_format_id']).one()
-        elif 'file_format_name' in args:
-            file_format = self.get_file_format(args['file_format_name'])
-        else:
-            raise TypeError("file_format not defined") 
+        if not file_format:
+            if file_format_id:
+                file_format = self._session.query(FileType).\
+                            filter(FileFormat.file_format_id == file_format_id).one()
+            elif file_format_name:
+                file_format = self.get_file_format(file_format_name)
+            else:
+                raise TypeError("file_format not defined") 
 
         file_obj = File(filename,file_type, file_format, is_archived, creation_time)
         
