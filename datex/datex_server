@@ -71,7 +71,7 @@ rpc_server.register_function(get_file_md5, 'get_file_md5')
 
 #-----------------------------------------------------------------------------
 #
-# Publish pol_L0 files
+# Publish files
 #
 #-----------------------------------------------------------------------------
 Publisher.bind(publish_destination)
