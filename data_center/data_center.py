@@ -34,9 +34,12 @@ import getpass
 
 from posttroll.message_broadcaster import sendaddress
 
+from dc.publisher import Publisher
+
 UID = uuid.uuid5(uuid.NAMESPACE_DNS, getpass.getuser()+"@"+socket.gethostname())
 
 MESSAGE_PORT = 21201
+PUBLISHER_PORT = 21202
 
 def get_own_ip():
     """Get the host's ip number.
@@ -47,10 +50,13 @@ def get_own_ip():
     sock.close()
     return ip_
 
+publisher = Publisher("tcp://eth0:%d"%PUBLISHER_PORT)
+
 def process_message(msg):
     """Dummy processing function.
     """
     print "I'm processing a message: ", msg
+    publisher.send(msg)
 
 class Receiver(object):
     """Receive messages and process them.

@@ -79,6 +79,8 @@ class AddressReceiver(object):
                     del self._addresses[a]
         finally:
             self._address_lock.release()
+        if debug:
+            print 'return address', ads
         return ads
 
     def _run(self):
