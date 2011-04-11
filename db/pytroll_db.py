@@ -15,31 +15,31 @@ from sqltypes import LINESTRING, POLYGON
 Base = declarative_base()
 
 #relation table
-data_boundary = Table('data_boundary', Base.metadata,\
-                      Column('filename', String,\
-                             ForeignKey('file.filename')),\
-                      Column('boundary_id', Integer,\
+data_boundary = Table('data_boundary', Base.metadata,
+                      Column('filename', String,
+                             ForeignKey('file.filename')),
+                      Column('boundary_id', Integer,
                              ForeignKey('boundary.boundary_id')))
 
 #relation table
-file_type_parameter = Table('file_type_parameter', Base.metadata,\
-                      Column('file_type_id', Integer,\
-                             ForeignKey('file_type.file_type_id')),\
-                      Column('parameter_id', Integer,\
-                             ForeignKey('parameter.parameter_id')))
+file_type_parameter = Table('file_type_parameter', Base.metadata,
+                            Column('file_type_id', Integer,
+                                   ForeignKey('file_type.file_type_id')),
+                            Column('parameter_id', Integer,
+                                   ForeignKey('parameter.parameter_id')))
 
 #relation table
-file_tag = Table('file_tag', Base.metadata,\
-                      Column('tag_id', Integer,\
-                             ForeignKey('tag.tag_id')),\
-                      Column('filename', String,\
-                             ForeignKey('file.filename')))
+file_tag = Table('file_tag', Base.metadata,
+                 Column('tag_id', Integer,
+                        ForeignKey('tag.tag_id')),
+                 Column('filename', String,
+                        ForeignKey('file.filename')))
 
 #relation table
-file_type_tag = Table('file_type_tag', Base.metadata,\
-                      Column('tag_id', Integer,\
-                             ForeignKey('tag.tag_id')),\
-                      Column('file_type_id', Integer,\
+file_type_tag = Table('file_type_tag', Base.metadata,
+                      Column('tag_id', Integer,
+                             ForeignKey('tag.tag_id')),
+                      Column('file_type_id', Integer,
                              ForeignKey('file_type.file_type_id')))
 
         
@@ -281,8 +281,8 @@ class DCManager(object):
         self._session.add(file_format)
         return file_format
 
-    def create_file_uri(self, file_type, file_format, URI, sequence=1):
-        file_uri = FileURI(file_type, file_format, URI, sequence)
+    def create_file_uri(self, filename, URI):
+        file_uri = FileURI(filename, URI)
         self._session.add(file_uri)
         return file_uri
 
