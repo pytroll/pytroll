@@ -5,8 +5,8 @@
 # 
 """Insert test values into database through SQLAlchemy interface """
 
-from datetime import datetime
-
+from datetime import datetime, timedelta
+import shapely
 import pytroll_db as db 
 dcm = db.DCManager('postgresql://a001673:@localhost.localdomain:5432/sat_db')
 dcm.create_parameter_type(1, 'dummy', 'parameter_value')
@@ -14,7 +14,7 @@ dcm.create_parameter_type(1, 'dummy', 'parameter_value')
 
 hrpt = dcm.create_file_type(1, 'HRPT', 'HRPT level 0 data')
 hirlam = dcm.create_file_type(2, 'smhi_hirlam', 'HIRLAM data')
-#dcm.create_file_type(3, "HRIT", "met 9 hrit data")
+hrit = dcm.create_file_type(3, "HRIT", "met 9 hrit data")
 
 
 hrpt_L0 = dcm.create_file_format(1, 'hrpt level 0', '')
@@ -67,16 +67,57 @@ dcm.create_parameter_value(filename='hrpt_201012011615_lvl0_smb.l0',
                            parameter_name="time_of_last_scanline",
                            data_value=datetime(2010, 12, 1, 16,10),
                            creation_time=datetime(2010, 12, 1, 16, 15))
-"""
-dcm.create_parameter_value('hrpt_201012011615_lvl0_smb.l0', 3, '2134', '2010-12-01 16:15:00')
-dcm.create_parameter_value('hrpt_201012011615_lvl0_smb.l0', 4, '19', '2010-12-01 16:15:00')
-dcm.create_parameter_value('hirlam_2010_12_01_1200_areaB.grib', 5, '2010-12-01 12:00:00', '2010-12-01 16:15:00')
-dcm.create_parameter_value('hirlam_2010_12_01_1200_areaB.grib', 6, '6', '2010-12-01 16:15:00')
-dcm.create_parameter_value('hirlam_2010_12_01_1200_areaB.grib', 7, '82', '2010-12-01 16:15:00')
 
-dcm.create_parameter_linestring('hrpt_201012011615_lvl0_smb.l0', 8, 'LINESTRING(0 47.606, 3 51.5, 5 56, 10 59, 15 66)'::geography, '2010-12-01 16:10:00')
-dcm.create_parameter_linestring('hrpt_201012011715_lvl0_smb.l0', 8, 'LINESTRING(-100 1, -101 11, -102 22, -103 33, -104 44)'::geography, '2010-12-01 16:10:00')
-dcm.create_parameter_linestring('hrpt_201012011815_lvl0_smb.l0', 8, 'LINESTRING(12 55, 14 44, 16 37, 18 28, 20 9)'::geography, '2010-12-01 16:10:00')
-"""
+dcm.create_parameter_value(filename='hrpt_201012011615_lvl0_smb.l0',
+                           parameter_name="orbit_number",
+                           data_value=2134,
+                           creation_time=datetime(2010, 12, 1, 16, 15))
+
+dcm.create_parameter_value(filename='hrpt_201012011615_lvl0_smb.l0',
+                           parameter_name='satellite_name',
+                           data_value='noaa19',
+                           creation_time=datetime(2010, 12, 1, 16, 15))
+
+dcm.create_parameter_value(filename='hirlam_2010_12_01_1200_areaB.grib',
+                           parameter_name='time_of_analysis',
+                           data_value=datetime(2010, 12, 1, 12, 0),
+                           creation_time=datetime(2010, 12, 1, 16, 15))
+
+dcm.create_parameter_value(filename='hirlam_2010_12_01_1200_areaB.grib',
+                           parameter_name='forcast_length',
+                           data_value=timedelta(hours=6),
+                           creation_time=datetime(2010, 12, 1, 16, 15))
+
+dcm.create_parameter_value(filename='hirlam_2010_12_01_1200_areaB.grib',
+                           parameter_name='processing_center',
+                           data_value=82,
+                           creation_time=datetime(2010, 12, 1, 16, 15))
+
+wkt_o = shapely.wkt.loads("LINESTRING(0 47.606, 3 51.5, 5 56, 10 59, 15 66)")
+dcm.create_parameter_linestring(filename='hrpt_201012011615_lvl0_smb.l0',
+                                parameter_name='sub_satellite_track',
+                                linestring=wkt_o,
+                                creation_time=datetime(2010, 12, 1, 16, 15))
+
+wkt_o = shapely.wkt.loads("LINESTRING(-100 1, -101 11, -102 22, -103 33, -104 44)")
+dcm.create_parameter_linestring(filename='hrpt_201012011715_lvl0_smb.l0',
+                                parameter_name='sub_satellite_track',
+                                linestring=wkt_o,
+                                creation_time=datetime(2010, 12, 1, 16, 15))
+
+wkt_o = shapely.wkt.loads("LINESTRING(12 55, 14 44, 16 37, 18 28, 20 9)")
+dcm.create_parameter_linestring(filename='hrpt_201012011815_lvl0_smb.l0',
+                                parameter_name='sub_satellite_track',
+                                linestring=wkt_o,
+                                creation_time=datetime(2010, 12, 1, 16, 15))
+                           
+
+dcm.create_file_uri(filename='hrpt_201012011615_lvl0_smb.l0',
+                    URI="file:///data/24/saf/polar_in/rawdata/hrpt_201012011615_lvl0_smb.l0")
+
+dcm.create_file_uri(filename='hrpt_201012011615_lvl0_smb.l0',
+                    URI="file:///data/prodtest/saf/polar_in/rawdata/hrpt_201012011615_lvl0_smb.l0")
 
 dcm.session.commit()
+
+
