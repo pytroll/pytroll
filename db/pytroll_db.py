@@ -281,8 +281,8 @@ class DCManager(object):
         self._session.add(file_format)
         return file_format
 
-    def create_file_uri(self, file_type, file_format, URI, sequence=1):
-        file_uri = FileURI(file_type, file_format, URI, sequence)
+    def create_file_uri(self, filename, URI):
+        file_uri = FileURI(filename, URI)
         self._session.add(file_uri)
         return file_uri
 
