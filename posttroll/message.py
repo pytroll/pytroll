@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#
 # Copyright (c) 2010-2011.
 
 # Author(s):
  
-#   Lars Ø. Rasmussen <ras@dmi.dk>
+#   Lars O. Rasmussen <ras@dmi.dk>
 #   Martin Raspaud <martin.raspaud@smhi.se>
 
 # This file is part of pytroll.
@@ -35,9 +35,12 @@ import re
 from datetime import datetime
 import json
 
-_magick = 'pytroll:/'
+_MAGICK = 'pytroll:/'
+_VERSION = 'v1.01'
 
 class MessageError(Exception):
+    """This modules exceptions.
+    """
     pass
 
 #-----------------------------------------------------------------------------
@@ -45,27 +48,27 @@ class MessageError(Exception):
 # Utillities.
 #
 #-----------------------------------------------------------------------------
-def is_valid_subject(s):
+def is_valid_subject(obj):
     """Currently we only check for empty strings.
     """
-    return isinstance(s, str) and bool(s)
+    return isinstance(obj, str) and bool(obj)
 
-def is_valid_type(s):
+def is_valid_type(obj):
     """Currently we only check for empty strings.
     """
-    return isinstance(s, str) and bool(s)
+    return isinstance(obj, str) and bool(obj)
 
-def is_valid_sender(s):
+def is_valid_sender(obj):
     """Currently we only check for empty strings.
     """
-    return isinstance(s, str) and bool(s)
+    return isinstance(obj, str) and bool(obj)
 
-def is_valid_data(s):
+def is_valid_data(obj):
     """Check if data is JSON serializable.
     """
-    if s:
+    if obj:
         try:
-            tmp = json.dumps(s)
+            tmp = json.dumps(obj)
             del tmp
         except TypeError:
             return False
@@ -81,23 +84,28 @@ class Message:
 
     - Has to be initialized with a 'subject', 'type' and optionally 'data'.
     - It will add add few extra attributes.
-    - It will make a Message pickleable."""
+    - It will make a Message pickleable.
+    """
 
-    _version = 'v1.01'
-
-    def __init__(self, subject='', atype='', data='', empty=False):
-        """A Message needs at least a subject and a type ... if not specified as empty.
+    def __init__(self, subject='', atype='', data='', rawstr=None):
+        """Initialize a Message from a subject, type and data ... 
+        or from a raw string.
         """
-        if not empty:
+        if rawstr:
+            self.__dict__ = _decode(rawstr)
+        else:
             self.subject = subject
             self.type = atype
             self.sender = _getsender()
             self.time = datetime.utcnow()
             self.data = data
-            self._validate()
+        self.version = _VERSION
+        self._validate()
 
     @property
     def user(self):
+        """Try to return a user from a sender.
+        """
         try:
             return self.sender[:self.sender.index('@')]
         except ValueError:
@@ -105,6 +113,8 @@ class Message:
       
     @property
     def host(self):
+        """Try to return a host from a sender.
+        """
         try:
             return self.sender[self.sender.index('@')+1:]
         except ValueError:
@@ -112,21 +122,20 @@ class Message:
 
     @property
     def head(self):
+        """Return header of a message (a message without the data part).
+        """
         self._validate()
         return _encode(self, head=True)
 
-    @property
-    def version(self):
-        return self._version
-
     @staticmethod
     def decode(rawstr):
-        m = Message(empty=True)
-        m.__dict__ = _decode(rawstr)
-        m._validate()
-        return m
+        """Decode a raw string into a Message.
+        """
+        return Message(rawstr=rawstr)
     
     def encode(self):
+        """Encode a Message to a raw string.
+        """
         self._validate()
         return _encode(self)
 
@@ -137,12 +146,14 @@ class Message:
         return self.encode()
 
     def _validate(self):
+        """Validate a messages attributes.
+        """
         if not is_valid_subject(self.subject):
-            raise MessageError, "Invalid subject: '%s'"%self.subject
+            raise MessageError, "Invalid subject: '%s'" % self.subject
         if not is_valid_subject(self.type):
-            raise MessageError, "Invalid type: '%s'"%self.type
+            raise MessageError, "Invalid type: '%s'" % self.type
         if not is_valid_subject(self.sender):
-            raise MessageError, "Invalid sender: '%s'"%self.sender
+            raise MessageError, "Invalid sender: '%s'" % self.sender
         if not is_valid_data(self.data):
             raise MessageError, "Invalid data: data is not JSON serializable"
         
@@ -162,55 +173,64 @@ class Message:
 #
 #-----------------------------------------------------------------------------
 def _is_valid_version(version):
-    return version == Message._version
+    """Check version.
+    """
+    return version == _VERSION
 
 def _decode(rawstr):
+    """Convert a raw string to a Message.
+    """
     # Check for the magick word.
-    if not rawstr.startswith(_magick):
-        raise MessageError, "This is not a '%s' message (wrong magick word)"%_magick
-    rawstr = rawstr[len(_magick):]
+    if not rawstr.startswith(_MAGICK):
+        raise MessageError, "This is not a '%s' message (wrong magick word)"\
+            % _MAGICK
+    rawstr = rawstr[len(_MAGICK):]
 
     # Check for element count and version
-    a = re.split(r"\s+", rawstr, maxsplit=6)
-    if len(a) < 5:
-        raise MessageError, "Could node decode raw string: '%s ...'"%str(rawstr[:36])
-    version = a[4][:len(Message._version)]
+    raw = re.split(r"\s+", rawstr, maxsplit=6)
+    if len(raw) < 5:
+        raise MessageError, "Could node decode raw string: '%s ...'"\
+            % str(rawstr[:36])
+    version = raw[4][:len(_VERSION)]
     if not _is_valid_version(version):
-        raise MessageError, "Invalid Message version: '%s'"%str(version)
+        raise MessageError, "Invalid Message version: '%s'" % str(version)
 
     # Start to build message
-    d = dict((('subject', a[0].strip()),
-              ('type', a[1].strip()),
-              ('sender', a[2].strip()),
-              ('time', _strptime(a[3].strip()))))
+    msg = dict((('subject', raw[0].strip()),
+              ('type', raw[1].strip()),
+              ('sender', raw[2].strip()),
+              ('time', _strptime(raw[3].strip()))))
 
     # Data part
     try:
-        mimetype = a[5].lower()
-        data = a[6]
+        mimetype = raw[5].lower()
+        data = raw[6]
     except IndexError:
         mimetype = None
 
     if mimetype == None:
-        d['data'] = ''
+        msg['data'] = ''
     elif mimetype == 'application/json':
         try:
-            d['data'] = json.loads(a[6])
+            msg['data'] = json.loads(raw[6])
         except ValueError:
-            del d
-            raise MessageError, "JSON decode failed on '%s ...'"%a[6][:36]
+            del msg
+            raise MessageError, "JSON decode failed on '%s ...'" % raw[6][:36]
     elif mimetype == 'text/ascii':
-        d['data'] = str(data)
+        msg['data'] = str(data)
     else:
-        raise MessageError, "Unknown mime-type '%s'"%mimetype
+        raise MessageError, "Unknown mime-type '%s'" % mimetype
 
-    return d
+    return msg
 
-def _encode(m, head=False):
-    rawstr = _magick + \
-             "%s %s %s %s %s"%(m.subject, m.type, m.sender, m.time.isoformat(), m.version)
-    if not head and m.data:
-        return rawstr + ' ' + 'application/json' + ' ' + json.dumps(m.data)
+def _encode(msg, head=False):
+    """Convert a Message to a raw string.
+    """
+    rawstr = _MAGICK + "%s %s %s %s %s" % \
+             (msg.subject, msg.type, msg.sender, \
+                  msg.time.isoformat(), msg.version)
+    if not head and msg.data:
+        return rawstr + ' ' + 'application/json' + ' ' + json.dumps(msg.data)
     return rawstr
 
 #-----------------------------------------------------------------------------
@@ -219,10 +239,14 @@ def _encode(m, head=False):
 #
 #-----------------------------------------------------------------------------
 def _strptime(strg):
+    """Decode an ISO formatted string to a datetime object.
+    """
     _isoformat = "%Y-%m-%dT%H:%M:%S.%f"
     return datetime.strptime(strg, _isoformat)
 
 def _getsender():
+    """Return local sender.
+    """
     import getpass
     import socket
     host = socket.gethostname()
@@ -231,24 +255,24 @@ def _getsender():
 
 #-----------------------------------------------------------------------------
 if __name__ == '__main__':
-    MSG = Message('/test/1/2/3/nodata', 'heartbeat')
-    print MSG
+    msg_ = Message('/test/1/2/3/nodata', 'heartbeat')
+    print msg_
 
-    MSG1 = Message('/test/whatup/doc', 'info', data='not much to say')
-    SENDER = '%s@%s' % (MSG1.user, MSG1.host)
-    print SENDER
-    if SENDER != MSG1.sender:
-        print 'OOPS 1 ... deconding SENDER failed'
-    MSG2 = Message.decode(MSG1.encode())
-    print MSG2
-    if str(MSG2) != str(MSG1):
+    msg1_ = Message('/test/whatup/doc', 'info', data='not much to say')
+    sender_ = '%s@%s' % (msg1_.user, msg1_.host)
+    print sender_
+    if sender_ != msg1_.sender:
+        print 'OOPS 1 ... deconding sender failed'
+    msg2_ = Message.decode(msg1_.encode())
+    print msg2_
+    if str(msg2_) != str(msg1_):
         print 'OOPS 2 ... decoding/encoding message failed'  
 
-    RAWSTR = _magick + \
-        '/test/what/todo info ras@hawaii 2008-04-11T22:13:22.123456 v1.0 '+\
-        'application/json "what\'s up doc"'
-    MSG = Message.decode(RAWSTR)
-    print MSG.head
-    print MSG
-    if str(MSG) != RAWSTR:
+    raws = _MAGICK + \
+        '/test/what/todo info ras@hawaii 2008-04-11T22:13:22.123456 ' + \
+        _VERSION + ' application/json "what\'s up doc"'
+    msg_ = Message.decode(raws)
+    print msg_.head
+    print msg_
+    if str(msg_) != raws:
         print 'OOPS 3 ... decoding/encoding message failed'  
