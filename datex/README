@@ -5,12 +5,13 @@ using rpclite and zmq's publish/subscibe.
 It goes like this:
 
 == Server ==
- * rpclite: register services
- * zmq: start publisher in a separate thread
+  * zmq: publish specific datatypes which can be fetched.
+  * rpclite: RPC server.
 
 == Client ==
- * zmq: start subscriber in same process/thread (zmq has it's own threaded queue)
- * rpclite: for each new subscribe message fetch the corresponding file.
+  * zmq: subscriber to specific datatypes.
+  * rpclite: RPC client, for each new published message fetch the corresponding
+   file.
 
 
 The configuration of the client and server is defined in the etc/datex.cfg
@@ -19,12 +20,12 @@ variables "rpc_address" and "publish_address"/"publish_destination". Moreover,
 if you want the server to serve anything, it can be good to add datatype
 sections, for example::
 
- [datatype-pol_L0]
- distribute = True
- glob = *.hrpt.bz2
- dir = /net/prodsat/datadb/sat/polar/smb/level0
- format = hrpt
- compressed = bzip
+  [datatype-pol_L0]
+  distribute = True
+  glob = *.hrpt.bz2
+  dir = /net/prodsat/datadb/sat/polar/smb/level0
+  format = hrpt
+  compressed = bzip
 
 The config file's location is given by the DATEX_CONFIG_DIR environment variable.
 
@@ -36,11 +37,18 @@ the compressed flag tells if the data is compressed or not.
 Once everything is defined, you just need to start the client and the
 server. Here is the usage of the client::
 
-  datex_client -d<datatype> [-c] [-H] [info|filelist|latest|datatypelist|get filename]
+  datex_client [-c] [-H] <datatype>
       -c, md5 check of received file
       -H, this info
-      if not arguments it will listen for published files, and fetch'm.
 
 and here is the usage of the server::
     
   datex_server
+
+And a standalone client program to execute datex commands:
+
+  datex_cmd [-c] [-H] <command> [<datatype>] [<filename>]
+      -c, md5 check of received file (together with <get_file>)
+      -H, this info
+      valid commands: 'get_file', 'get_file_md5', 'info', 'list_datatypes'
+                      'list_files', 'list_files_latest'
