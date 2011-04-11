@@ -197,9 +197,10 @@ def _decode(rawstr):
 
     # Start to build message
     msg = dict((('subject', raw[0].strip()),
-              ('type', raw[1].strip()),
-              ('sender', raw[2].strip()),
-              ('time', _strptime(raw[3].strip()))))
+                ('type', raw[1].strip()),
+                ('sender', raw[2].strip()),
+                ('time', _strptime(raw[3].strip())),
+                ('version', version)))
 
     # Data part
     try:
@@ -227,8 +228,8 @@ def _encode(msg, head=False):
     """Convert a Message to a raw string.
     """
     rawstr = _MAGICK + "%s %s %s %s %s" % \
-             (msg.subject, msg.type, msg.sender, \
-                  msg.time.isoformat(), msg.version)
+             (msg.subject, msg.type, msg.sender,
+              msg.time.isoformat(), msg.version)
     if not head and msg.data:
         return rawstr + ' ' + 'application/json' + ' ' + json.dumps(msg.data)
     return rawstr

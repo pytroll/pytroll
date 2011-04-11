@@ -28,7 +28,7 @@ import os
 import sys
 import unittest
 
-from posttroll.message import Message, _magick
+from posttroll.message import Message, _MAGICK
 
 
 HOME = os.path.dirname(__file__) or '.'
@@ -63,7 +63,7 @@ class Test(unittest.TestCase):
     def test_decode(self):
         """Test the decoding of a message.
         """
-        rawstr = (_magick + 
+        rawstr = (_MAGICK + 
                   '/test/1/2/3 info ras@hawaii 2008-04-11T22:13:22.123000 v1.01'
                   + ' application/json "what\'s up doc"')
         msg = Message.decode(rawstr)
@@ -79,12 +79,12 @@ class Test(unittest.TestCase):
         data = 'not much to say'
         msg1 = Message(subject, atype, data=data)
         sender = '%s@%s' % (msg1.user, msg1.host)
-        self.assertEquals(_magick +
+        self.assertEquals(_MAGICK +
                           subject + " " +
                           atype + " " +
                           sender + " " +
                           str(msg1.time.isoformat()) + " " +
-                          Message._version + " "
+                          msg1.version + " "
                           + 'application/json' + " " +
                           '"' + data + '"',
                           msg1.encode())
