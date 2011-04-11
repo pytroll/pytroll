@@ -72,7 +72,7 @@ signal.signal(signal.SIGTERM, sigstop_handler)
 #
 #-----------------------------------------------------------------------------
 karg = {}
-opts,args = getopt.getopt( sys.argv[1:], 'Hc:' )
+opts, args = getopt.getopt( sys.argv[1:], 'Hc' )
 for k,v in opts:
     if k == '-H': 
         usage()
@@ -82,7 +82,7 @@ for k,v in opts:
 try:
     datatype = args[0]
 except IndexError:
-    pass
+    usage()
 
 rpc_address, publish_address = datex_config.get_client()
 url = "http://%s:%d"%rpc_address
@@ -95,13 +95,13 @@ url = "http://%s:%d"%rpc_address
 
 subscriber = Subscriber('pytroll://' + datatype + ' file', publish_address) 
 try:
-    for m in subscriber.get(): #timeout=2.):
+    for m in subscriber.get(timeout=2.):
         if m:
             logger.info(m)
             try:
                 RPCProxy(url).get_file(datatype, os.path.basename(m.data['uri']), **karg)
-            except:
-                logger.exception('rpc get_file failed')
+            except Exception, e:
+                logger.exception("rpc get_file failed, '%s'", str(e))
         else:
             # timeout
             pass
@@ -111,4 +111,3 @@ except HangupInterrupt:
 except (KeyboardInterrupt, SystemExit):
     pass
 logger.info('stopping')
-
