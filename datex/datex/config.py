@@ -1,12 +1,30 @@
 #
-# Read:
-#   [server]
-#   host = "host"
-#   rpc_port = port
-#   publish_port = port
+# Copyright (c) 2009.
 #
-# Remember lock on config writing/reading
+# DMI
+# Lyngbyvej 100
+# DK-2100 Copenhagen
+# Denmark
 #
+# Author(s): 
+#   Lars Orum Rasmussen
+#   Martin Raspaud
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+"""Reading datex configuration file. The file is locked during reading/writing.
+"""
 import os
 from datetime import datetime, timedelta
 from ConfigParser import ConfigParser, NoOptionError
@@ -21,37 +39,39 @@ class _LockedConfigFile(object):
 
     def _read(self):
         cfg = ConfigParser()
-        fp = open(self.filename, 'r')
-        fcntl.flock(fp.fileno(), fcntl.LOCK_EX)
+        fob = open(self.filename, 'r')
+        fcntl.flock(fob.fileno(), fcntl.LOCK_EX)
         try:
-            cfg.readfp(fp)    
+            cfg.readfp(fob)    
         finally:
-            fcntl.flock(fp.fileno(), fcntl.LOCK_UN)
-            fp.close()
+            fcntl.flock(fob.fileno(), fcntl.LOCK_UN)
+            fob.close()
         self.cfg = cfg
     
     def _write(self):
-        fp = open(self.filename, 'w')
-        fcntl.flock(fp.fileno(), fcntl.LOCK_EX)
+        fob = open(self.filename, 'w')
+        fcntl.flock(fob.fileno(), fcntl.LOCK_EX)
         try:
-            self.cfg.write(fp)
+            self.cfg.write(fob)
         finally:
-            fcntl.flock(fp.fileno(), fcntl.LOCK_UN)
-            fp.close()
+            fcntl.flock(fob.fileno(), fcntl.LOCK_UN)
+            fob.close()
 
 class DatexLastStamp(_LockedConfigFile):
     section = 'root'
 
     def __init__(self, datatype=None, filename=None):
         if not filename:
-            filename = os.path.join(os.environ['DATEX_CONFIG_DIR'], 'stamp_%s.cfg'%datatype)        
+            filename = os.path.join(os.environ['DATEX_CONFIG_DIR'],
+                                    'stamp_%s.cfg'%datatype)        
         _LockedConfigFile.__init__(self, filename)
         if not os.path.isfile(filename):
             self.update_last_stamp(datetime.utcnow() - timedelta(hours=3))
 
     def get_last_stamp(self):
         self._read()
-        return datetime.strptime(self.cfg.get(self.section, 'last_stamp'), datetime_format)
+        return datetime.strptime(self.cfg.get(self.section, 'last_stamp'),
+                                 datetime_format)
 
     def update_last_stamp(self, last_stamp):
         try:
@@ -93,7 +113,8 @@ class DatexConfig(_LockedConfigFile):
     def distribute(self, datatype):
         self._read()
         try:
-            return bool(eval(self.cfg.get(self.datatype_prefix + datatype, 'distribute')))
+            return bool(eval(self.cfg.get(self.datatype_prefix + datatype,
+                                          'distribute')))
         except NoOptionError:
             return True
 
@@ -107,17 +128,17 @@ class DatexConfig(_LockedConfigFile):
     def get_metadata(self, datatype):
         self._read()
         section = self.datatype_prefix + datatype
-        format = str(self.cfg.get(section, 'format'))
+        fmt = str(self.cfg.get(section, 'format'))
         try:
-            compressed = str(self.cfg.get(section, 'compressed'))
+            cmpr = str(self.cfg.get(section, 'compressed'))
         except NoOptionError:
-            compressed = 'no'
-        return format, compressed
+            cmpr = 'no'
+        return fmt, cmpr
 
     def get_datatypes(self):
         self._read()
-        ss = []
-        for s in self.cfg.sections():
-            if s.startswith(self.datatype_prefix):
-                ss.append(s[len(self.datatype_prefix):])
-        return ss
+        types = []
+        for sec in self.cfg.sections():
+            if sec.startswith(self.datatype_prefix):
+                types.append(sec[len(self.datatype_prefix):])
+        return types

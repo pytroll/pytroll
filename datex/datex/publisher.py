@@ -1,4 +1,33 @@
 #
+# Copyright (c) 2009.
+#
+# DMI
+# Lyngbyvej 100
+# DK-2100 Copenhagen
+# Denmark
+#
+# Author(s): 
+#   Lars Orum Rasmussen
+#   Martin Raspaud
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+"""publisher.py, used by datex_server.
+
+   Check for new files for a giver datatype and publish.
+"""
+#
 # A proccess to check for new pol_L0 files and publish.
 #
 import copy
@@ -13,7 +42,6 @@ from datex.services import _get_file_list
 
 from datex import logger, datex_config
 from posttroll.message import Message
-
 
 TIME_WAKEUP = 15
 TIME_EPSILON = timedelta(microseconds=10)
@@ -52,12 +80,12 @@ class Publisher(object):
         return self
 
     def stop(self):
-        """Stop the publisher (actually a dummy function.
+        """Stop the publisher (actually a dummy function).
         """
         return self
 
     def is_running(self):
-        """Says if the publisher is running.
+        """Tell if the publisher is running.
         """
         return self._process.is_alive()
 
@@ -78,18 +106,18 @@ def check_and_publish(datatype, rpc_metadata, publish):
         fdir, fglob = datex_config.get_path(datatype)
         del fglob
         fstamp = stamp_config.get_last_stamp()
-        for fil, tim in _get_file_list(datatype,
+        for fname, ftime in _get_file_list(datatype,
                                        time_start=fstamp + TIME_EPSILON):
             if datex_config.distribute(datatype):
-                yield os.path.join(fdir, fil)
-            stamp_config.update_last_stamp(tim)
+                yield os.path.join(fdir, fname)
+            stamp_config.update_last_stamp(ftime)
 
 #    def from_datacenter():
 #        fstamp = stamp_config.get_last_stamp()
 #        get_files_from_datacenter_younger_than(fstamp)
 
-    # give the publisher a little time to initialize (reconnections from
-    # subscribers)
+    # give the publisher a little time to initialize
+    # (reconnections from subscribers)
     time.sleep(1)
     logger.info('publisher starting')
     try:
