@@ -32,6 +32,8 @@ from datex import logger
 
 context = zmq.Context() 
 class Subscriber(object):
+    """A class to subscribe to a given subject and wait for messages.
+    """
     def __init__(self, subject, address):
         subscriber = context.socket(zmq.SUB)
         subscriber.setsockopt(zmq.SUBSCRIBE, subject)
@@ -43,6 +45,8 @@ class Subscriber(object):
         return self.get()
 
     def get(self, timeout=None):
+        """Return a published message or None if a timeout has happend.
+        """
         if timeout:
             timeout *= 1000.
         self.subscriber.connect(self.destination)

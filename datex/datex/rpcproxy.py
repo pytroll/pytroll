@@ -45,10 +45,10 @@ class RPCProxy(object):
     def __init__(self, url):
         self.url = url
         self.server = rpc.XMLRPCServerProxy(url)
-        
+
     def get_file(self, datatype, filename, 
                  outdir='.', chunk_size=1000*5120, check_md5=False):
-        """Fetch a file.
+        """Fetch a file in chunks.
         """
         logger.info('getting %s', self.url + '/' + datatype + '/' + filename)
         if check_md5:
@@ -65,8 +65,8 @@ class RPCProxy(object):
                 md5.update(buf)
             fob.write(buf)
             offset += len(buf)
-            logger.info('saved %s (%d bytes)', filename, offset)
         fob.close()
+        logger.info('saved %s (%d bytes)', filename, offset)
         if check_md5:
             logger.info('md5 check on %s', filename)
             remote_md5 = self.server.get_file_md5(datatype, filename,

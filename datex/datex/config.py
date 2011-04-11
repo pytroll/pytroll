@@ -33,11 +33,15 @@ import fcntl
 from datex import logger, datetime_format
 
 class _LockedConfigFile(object):
+    """A ConfigParser where reading and writing is on a locked file.
+    """
     def __init__(self, filename):
         self.filename = filename
         self.cfg = ConfigParser()
 
     def _read(self):
+        """Read a config file while file is locked.
+        """
         cfg = ConfigParser()
         fob = open(self.filename, 'r')
         fcntl.flock(fob.fileno(), fcntl.LOCK_EX)
@@ -49,6 +53,8 @@ class _LockedConfigFile(object):
         self.cfg = cfg
     
     def _write(self):
+        """Write a config file while file is locked.
+        """
         fob = open(self.filename, 'w')
         fcntl.flock(fob.fileno(), fcntl.LOCK_EX)
         try:
@@ -58,6 +64,9 @@ class _LockedConfigFile(object):
             fob.close()
 
 class DatexLastStamp(_LockedConfigFile):
+    """A class for reading and updating last time a file of a 
+    specific datatype was seen.
+    """
     section = 'root'
 
     def __init__(self, datatype=None, filename=None):
@@ -69,11 +78,15 @@ class DatexLastStamp(_LockedConfigFile):
             self.update_last_stamp(datetime.utcnow() - timedelta(hours=3))
 
     def get_last_stamp(self):
+        """Return last time stamp.
+        """
         self._read()
         return datetime.strptime(self.cfg.get(self.section, 'last_stamp'),
                                  datetime_format)
 
     def update_last_stamp(self, last_stamp):
+        """Update last time stamp.
+        """
         try:
             self._read()
         except IOError:
@@ -86,7 +99,8 @@ class DatexLastStamp(_LockedConfigFile):
 
 
 class DatexConfig(_LockedConfigFile):
-
+    """Read a datex config file.
+    """
     datatype_prefix = 'datatype-'
 
     def __init__(self, filename=None):
@@ -95,6 +109,8 @@ class DatexConfig(_LockedConfigFile):
         _LockedConfigFile.__init__(self, filename)
 
     def get_server(self):
+        """Return what a server want to read for rpc and publish addresses.
+        """
         self._read()
         rpc_address = self.cfg.get('server', 'rpc_address')
         rpc_host, rpc_port = rpc_address.split(':')
@@ -103,6 +119,8 @@ class DatexConfig(_LockedConfigFile):
         return (rpc_host, rpc_port), publish_destination
 
     def get_client(self):
+        """Return what a client want to read for rpc and publish addresses.
+        """
         self._read()
         rpc_address = self.cfg.get('client', 'rpc_address')
         rpc_host, rpc_port = rpc_address.split(':')
@@ -111,6 +129,8 @@ class DatexConfig(_LockedConfigFile):
         return (rpc_host, rpc_port), publish_address
 
     def distribute(self, datatype):
+        """Return if a given datatype should be distributed or not.
+        """
         self._read()
         try:
             return bool(eval(self.cfg.get(self.datatype_prefix + datatype,
@@ -119,6 +139,8 @@ class DatexConfig(_LockedConfigFile):
             return True
 
     def get_path(self, datatype):
+        """Return data path for a given datatype.
+        """
         self._read()
         section = self.datatype_prefix + datatype
         fdir = str(self.cfg.get(section, 'dir'))
@@ -126,6 +148,8 @@ class DatexConfig(_LockedConfigFile):
         return fdir, fglob
 
     def get_metadata(self, datatype):
+        """Return meta-data path for a given datatype.
+        """
         self._read()
         section = self.datatype_prefix + datatype
         fmt = str(self.cfg.get(section, 'format'))
@@ -136,6 +160,8 @@ class DatexConfig(_LockedConfigFile):
         return fmt, cmpr
 
     def get_datatypes(self):
+        """Return a list of published datatypes.
+        """
         self._read()
         types = []
         for sec in self.cfg.sections():

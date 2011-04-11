@@ -112,12 +112,8 @@ def check_and_publish(datatype, rpc_metadata, publish):
                 yield os.path.join(fdir, fname)
             stamp_config.update_last_stamp(ftime)
 
-#    def from_datacenter():
-#        fstamp = stamp_config.get_last_stamp()
-#        get_files_from_datacenter_younger_than(fstamp)
-
-    # give the publisher a little time to initialize
-    # (reconnections from subscribers)
+    # Give the publisher a little time to initialize
+    # (e.g reconnections from subscribers)
     time.sleep(1)
     logger.info('publisher starting')
     try:
