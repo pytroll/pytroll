@@ -68,6 +68,7 @@ def send_new_files():
     for fil in younger_than_stamp_files():
         base = os.path.basename(fil)
         metadata = {
+            "filename": base,
             "URIs": ["file://"+fil],
             "type": "HRPT 1b",
             "format": "EPS 1b",
