@@ -20,12 +20,8 @@
 # You should have received a copy of the GNU General Public License along with
 # pytroll.  If not, see <http://www.gnu.org/licenses/>.
 
-"""A very stupid producer.
+"""A very stupid consumer.
 """
-
-import datetime
-import time
-import zmq
 
 from dc.connections import DCConnectionsSub
 
@@ -36,6 +32,6 @@ try:
         print "Consumer got", msg
         
 except KeyboardInterrupt:
-    print "terminating producer..."
+    print "terminating consumer..."
     dc.stop()
 
