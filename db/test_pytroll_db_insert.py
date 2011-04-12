@@ -15,11 +15,12 @@ dcm.create_parameter_type(1, 'dummy', 'parameter_value')
 hrpt = dcm.create_file_type(1, 'HRPT', 'HRPT level 0 data')
 hirlam = dcm.create_file_type(2, 'smhi_hirlam', 'HIRLAM data')
 hrit = dcm.create_file_type(3, "HRIT", "met 9 hrit data")
+hrpt1b = dcm.create_file_type(4, 'HRPT 1b', 'HRPT level 1b data')
 
 
 hrpt_L0 = dcm.create_file_format(1, 'hrpt level 0', '')
 grib = dcm.create_file_format(2, 'GRIB', '')
-
+eps_1b = dcm.create_file_format(3, 'EPS 1b', 'EPS format, level 1b')
 
 p_tofs = dcm.create_parameter(1, 1, 'time_of_first_scanline', '')
 p_tols = dcm.create_parameter(2, 1, 'time_of_last_scanline', '')
