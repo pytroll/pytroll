@@ -29,20 +29,17 @@ from hl_file import File
 import pytroll_db as db
 from dc.connections import DCConnectionsSub
 
-dc = DCConnectionsSub().start()
-
-dbm = db.DCManager('postgresql://a001673:@localhost.localdomain:5432/sat_db')
-
-
 def update(message):
     """Update the database if needed.
     """
     print "Got an update", message
 
-    file_obj = File(message.data["file"], dbm,
+    file_obj = File(message.data["filename"], dbm,
                     filetype=message.data.get("type", None),
                     fileformat=message.data.get("format", None))
     for key, val in message.data.items():
+        if key == "filename":
+            continue
         file_obj[key] = val
 
 def request(message):
@@ -52,14 +49,16 @@ def request(message):
 CASES = {"update": update,
          "request": request}
 
+if __name__ == "__main__":
+    
+    dbm = db.DCManager('postgresql://a001673:@localhost.localdomain:5432/sat_db')
+    dc = DCConnectionsSub().start()
+    try:
+        for msg in dc.receive(timeout=1):
+            if not msg:
+                continue
+            CASES[msg.type](msg)
 
-try:
-    for msg in dc.receive(timeout=1):
-        if not msg:
-            continue
-        CASES[msg.type](msg)
-        
-except KeyboardInterrupt:
-    print "terminating consumer..."
-    dc.stop()
-
+    except KeyboardInterrupt:
+        print "terminating consumer..."
+        dc.stop()
