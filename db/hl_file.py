@@ -51,7 +51,6 @@ class File(object):
             for uri in val:
                 if uri not in uri_vals:
                     self.dbm.create_file_uri(filename=self.filename, URI=uri)
-                    self.dbm.session.commit()
             # deleting old uris
             for uri, uri_obj in zip(uri_vals, uris):
                 if uri not in val:
@@ -65,7 +64,7 @@ class File(object):
         elif key == "type":
             filetype = self.dbm.session.query(db.FileType).\
                        filter(db.FileType.file_type_name==val).one()
-            self._file.file_format = filetype
+            self._file.file_type = filetype
 
         else:
             try:
