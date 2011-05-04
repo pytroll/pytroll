@@ -70,6 +70,7 @@ if kargs.get('check_md5', None) and cmd != 'get_file':
 
 # A single RPC call.
 server = RPCProxy("http://%s:%d"%datex_config.get_client()[0])
+print 'server', server.url
 
 ret = getattr(server, cmd)(*args, **kargs)
 if not isinstance(ret, (list, tuple)):

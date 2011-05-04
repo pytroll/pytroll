@@ -71,13 +71,13 @@ signal.signal(signal.SIGTERM, sigstop_handler)
 # Handle options
 #
 #-----------------------------------------------------------------------------
-karg = {}
-opts, args = getopt.getopt( sys.argv[1:], 'Hc' )
-for k,v in opts:
+kwargs = {}
+opts, args = getopt.getopt(sys.argv[1:], 'Hc')
+for k, v in opts:
     if k == '-H': 
         usage()
     elif k == '-c': 
-        karg['check_md5'] = True
+        kwargs['check_md5'] = True
 
 try:
     datatype = args[0]
@@ -93,13 +93,13 @@ url = "http://%s:%d"%rpc_address
 #
 #-----------------------------------------------------------------------------
 
-subscriber = Subscriber('pytroll://' + datatype + ' file', publish_address) 
+subscriber = Subscriber('pytroll://' + datatype + ' file', publish_address)
 try:
     for m in subscriber.get(timeout=2.):
         if m:
             logger.info(m)
             try:
-                RPCProxy(url).get_file(datatype, os.path.basename(m.data['uri']), **karg)
+                RPCProxy(url).get_file(datatype, os.path.basename(m.data['uri']), **kwargs)
             except Exception, e:
                 logger.exception("rpc get_file failed, '%s'", str(e))
         else:
