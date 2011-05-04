@@ -48,13 +48,16 @@ def _get_file_list(data_type, time_start=None, time_end=None):
         time_end = datetime.utcnow()
         
     path, file_glob = datex_config.get_path(data_type)
+    min_age = datex_config.get_min_age(data_type)
+    max_age = datex_config.get_max_age(data_type)
     file_list = glob(os.path.join(path, file_glob))
     result = []
     for fname in file_list:
         if not os.path.isfile(fname):
             continue
         ftime = datetime.utcfromtimestamp(os.stat(fname).st_mtime)
-        if time_start < ftime < time_end:
+        if((time_start < ftime < time_end) and
+           (min_age < (datetime.utcnow() - ftime).seconds < max_age)):
             result.append((fname, ftime))
 
     result = sorted(result, lambda x, y: cmp(x[1], y[1]))
