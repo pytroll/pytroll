@@ -4,6 +4,7 @@ glob = *.hrpt.bz2
 dir = /net/prodsat/datadb/sat/polar/smb/level0
 format = hrpt
 compressed = bzip
+min_age = 15
 
 [datatype-pol_L3]
 distribute = True

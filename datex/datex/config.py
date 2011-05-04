@@ -147,6 +147,26 @@ class DatexConfig(_LockedConfigFile):
         fglob = str(self.cfg.get(section, 'glob'))
         return fdir, fglob
 
+    def get_min_age(self, datatype):
+        """Return min_age for a given datatype.
+        """
+        self._read()
+        section = self.datatype_prefix + datatype
+        try:
+            return int(self.cfg.get(section, 'min_age'))
+        except NoOptionError:
+            return 0
+
+    def get_max_age(self, datatype):
+        """Return min_age for a given datatype.
+        """
+        self._read()
+        section = self.datatype_prefix + datatype
+        try:
+            return int(self.cfg.get(section, 'max_age'))
+        except NoOptionError:
+            return float("inf")
+
     def get_metadata(self, datatype):
         """Return meta-data path for a given datatype.
         """
