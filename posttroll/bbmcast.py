@@ -44,7 +44,7 @@ from socket import (socket, AF_INET, SOCK_DGRAM, SOL_SOCKET, SO_REUSEADDR,
                     IP_MULTICAST_TTL, IP_MULTICAST_LOOP, SOL_IP, timeout,
                     gethostbyname, htonl)
 
-SocketTimeout = timeout
+SocketTimeout = timeout # for easy access to socket.timeout
 
 #-----------------------------------------------------------------------------
 #
