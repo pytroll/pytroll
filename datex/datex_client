@@ -98,13 +98,17 @@ try:
     for m in subscriber.get(timeout=2.):
         if m:
             logger.info(m)
-            try:
-                RPCProxy(url).get_file(datatype, os.path.basename(m.data['uri']), **karg)
-            except Exception, e:
-                logger.exception("rpc get_file failed, '%s'", str(e))
+            if m.type == "file":
+                try:
+                    RPCProxy(url).get_file(datatype, os.path.basename(m.data['uri']), **karg)
+                except Exception, e:
+                    logger.exception("rpc get_file failed, '%s'", str(e))
+            last_message_time = datetime.utcnow()
         else:
             # timeout
-            pass
+            if (datetime.utcnow - last_message_time).seconds > 30:
+                logger.warning("No hearbeat since 30 seconds... Reconnecting")
+                subscriber = Subscriber('pytroll://' + datatype + ' file', publish_address) 
         time.sleep(0.0001)
 except HangupInterrupt:
     pass
