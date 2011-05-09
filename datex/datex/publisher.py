@@ -32,7 +32,7 @@
 #
 import copy
 import os
-from datetime import timedelta
+from datetime import datetime, timedelta
 from threading import Thread
 
 import time
@@ -43,7 +43,7 @@ from datex.services import _get_file_list
 from datex import logger, datex_config
 from posttroll.message import Message
 
-TIME_WAKEUP = 5
+TIME_WAKEUP = 30
 TIME_EPSILON = timedelta(microseconds=10)
 #-----------------------------------------------------------------------------
 #
@@ -53,14 +53,14 @@ TIME_EPSILON = timedelta(microseconds=10)
 class Publisher(object):
     """The publisher class.
     """
-    def __init__(self, *args, hearbeat=True):
+    def __init__(self, *args, **kwargs):
         try:
             self.publish
         except AttributeError:
             raise AttributeError, ("You need to bind Publisher class before "
                                    "instantiating")
         self._process = Thread(target=check_and_publish,
-                               args=args+(self.publish, heartbeat))
+                               args=args+(self.publish, kwargs.get("heartbeat", True)))
 
     @classmethod
     def bind(cls, destination):
