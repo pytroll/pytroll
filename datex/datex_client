@@ -42,6 +42,8 @@ from datex.subscriber import Subscriber
 
 logger = logging.getLogger('datex-client')
 
+HEARTBEAT_TIMEOUT = 60
+
 def usage():
     print >>sys.stderr, """datex_client [-c] [-H] <datatype>
     -c, md5 check of received file
@@ -71,13 +73,13 @@ signal.signal(signal.SIGTERM, sigstop_handler)
 # Handle options
 #
 #-----------------------------------------------------------------------------
-kwargs = {}
+karg = {}
 opts, args = getopt.getopt(sys.argv[1:], 'Hc')
 for k, v in opts:
     if k == '-H': 
         usage()
     elif k == '-c': 
-        kwargs['check_md5'] = True
+        karg['check_md5'] = True
 
 try:
     datatype = args[0]
@@ -95,16 +97,22 @@ url = "http://%s:%d"%rpc_address
 
 subscriber = Subscriber('pytroll://' + datatype + ' file', publish_address)
 try:
+    last_message_time = datetime.utcnow()
     for m in subscriber.get(timeout=2.):
         if m:
             logger.info(m)
-            try:
-                RPCProxy(url).get_file(datatype, os.path.basename(m.data['uri']), **kwargs)
-            except Exception, e:
-                logger.exception("rpc get_file failed, '%s'", str(e))
+            if m.type == "file":
+                try:
+                    RPCProxy(url).get_file(datatype, os.path.basename(m.data['uri']), **karg)
+                except Exception, e:
+                    logger.exception("rpc get_file failed, '%s'", str(e))
+            last_message_time = datetime.utcnow()
         else:
             # timeout
-            pass
+            if (datetime.utcnow() - last_message_time).seconds > HEARTBEAT_TIMEOUT:
+                logger.warning("No hearbeat since %d seconds... Reconnecting"%HEARTBEAT_TIMEOUT)
+                subscriber = Subscriber('pytroll://' + datatype + ' file', publish_address) 
+                last_message_time = datetime.utcnow()
         time.sleep(0.0001)
 except HangupInterrupt:
     pass

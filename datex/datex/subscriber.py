@@ -37,6 +37,7 @@ class Subscriber(object):
     def __init__(self, subject, address):
         subscriber = context.socket(zmq.SUB)
         subscriber.setsockopt(zmq.SUBSCRIBE, subject)
+        subscriber.setsockopt(zmq.SUBSCRIBE, "pytroll://hearbeat")
         self.subscriber = subscriber
         self.destination = address
         logger.info(self.destination)

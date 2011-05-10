@@ -32,7 +32,7 @@
 #
 import copy
 import os
-from datetime import timedelta
+from datetime import datetime, timedelta
 from threading import Thread
 
 import time
@@ -43,7 +43,7 @@ from datex.services import _get_file_list
 from datex import logger, datex_config
 from posttroll.message import Message
 
-TIME_WAKEUP = 15
+TIME_WAKEUP = 30
 TIME_EPSILON = timedelta(microseconds=10)
 #-----------------------------------------------------------------------------
 #
@@ -53,14 +53,14 @@ TIME_EPSILON = timedelta(microseconds=10)
 class Publisher(object):
     """The publisher class.
     """
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
         try:
             self.publish
         except AttributeError:
             raise AttributeError, ("You need to bind Publisher class before "
                                    "instantiating")
         self._process = Thread(target=check_and_publish,
-                               args=args+(self.publish,))
+                               args=args+(self.publish, kwargs.get("heartbeat", True)))
 
     @classmethod
     def bind(cls, destination):
@@ -94,7 +94,7 @@ class Publisher(object):
 # In the child process.
 #
 #-----------------------------------------------------------------------------
-def check_and_publish(datatype, rpc_metadata, publish):
+def check_and_publish(datatype, rpc_metadata, publish, heartbeat):
     """Check for new files of type *datatype*, with the given *rpc_metadata*
     and publish them through *publish*.
     """
@@ -118,6 +118,13 @@ def check_and_publish(datatype, rpc_metadata, publish):
     logger.info('publisher starting')
     try:
         while(True):
+            if heartbeat:
+                msg = Message('/hearbeat', 'heartbeat', str(datetime.utcnow()))
+                logger.info('sending: ' + str(msg))
+                try:
+                    publish.send(str(msg))
+                except zmq.ZMQError:
+                    logger.exception('publish failed')
             for filedesc in younger_than_stamp_files():
                 # Publish new files
                 data = copy.copy(rpc_metadata)
