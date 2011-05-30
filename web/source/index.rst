@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to pytroll's documentation!
-===================================
+Welcome to pytroll!
+===================
 
 This is the home of the pytroll project.  The pytroll project started as a
 collaboration on weather satellite processing between DMI_ and SMHI_.
@@ -17,12 +17,14 @@ The available python packages at the moment are:
 * pyresample_ for resampling satellite data
 * mipp_ for reading weather satellite data
 * mpop_ for processing weather satellite data
+* python-bufr_ for reading bufr files
 
 .. _DMI: http://www.dmi.dk
 .. _SMHI: http://www.smhi.se
 .. _pyresample: http://pyresample.googlecode.com
 .. _mipp: http://www.github.com/loerum/mipp
 .. _mpop: http://www.github.com/mraspaud/mpop
+.. _python-bufr: http://python-bufr.googlecode.com
 
 Contents:
 
@@ -31,4 +33,4 @@ Contents:
 
    install
    quickstart
-
+   recipes
