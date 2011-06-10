@@ -36,10 +36,27 @@ We take the case of HRIT data from meteosat 9, as send through eumetcast.
     import sys
     from datetime import datetime
 
+    if sys.version_info < (2, 5):
+        import time
+        def strptime(string, fmt=None):
+            """This function is available in the datetime module only
+            from Python >= 2.5.
+            """
+
+            return datetime(*time.strptime(string, fmt)[:6])
+
+    else:
+        strptime = datetime.strptime
+
     if __name__ == '__main__':
+        if len(sys.argv) < 2:
+            print "Usage: " + sys.argv[0] + " time_string"
+            sys.exit()
+
         time_string = sys.argv[1]
-        time_slot = datetime.strptime(time_string, "%Y%m%d%H%M")
-        global_data = GeostationaryFactory.create_scene("meteosat", "09", "seviri", time_slot)
+        time_slot = strptime(time_string, "%Y%m%d%H%M")
+        global_data = GeostationaryFactory.create_scene("meteosat", "09",
+                                                        "seviri", time_slot)
 
         global_data.load()
 
@@ -85,12 +102,26 @@ as output from AAPP.
     import sys
     from datetime import datetime
 
+    if sys.version_info < (2, 5):
+        import time
+        def strptime(string, fmt=None):
+            """This function is available in the datetime module only
+            from Python >= 2.5.
+            """
+
+            return datetime(*time.strptime(string, fmt)[:6])
+
+    else:
+        strptime = datetime.strptime
+
     if __name__ == '__main__':
         if len(sys.argv) < 3:
             print "Usage: " + sys.argv[0] + " time_string orbit"
+            sys.exit()
+
         time_string = sys.argv[1]
         orbit = sys.argv[2] 
-        time_slot = datetime.strptime(time_string, "%Y%m%d%H%M")
+        time_slot = strptime(time_string, "%Y%m%d%H%M")
         global_data = PolarFactory.create_scene("noaa", "19",
                                                 "avhrr", time_slot, orbit)
 
@@ -107,7 +138,6 @@ as output from AAPP.
 
             img = local_data.image.cloudtop()
             img.save("cloudtop_" + area + "_" + time_string + ".png")
-
 
 
 Segmented data (Eumetcast) production
@@ -139,6 +169,9 @@ as output from AAPP.
 
     import sys
     from datetime import timedelta, datetime
+    import glob
+    import os
+    import time
 
     from mpop.saturn.gatherer import Granule, Gatherer
 
@@ -147,12 +180,19 @@ as output from AAPP.
         """Get the list of files from the *directory* which are newer than a given
      *time_stamp*.
         """
-        return []
+        filelist = glob.glob(os.path.join(directory, "*"))
+        return [filename for filename in filelist
+                if datetime.fromtimestamp(os.stat(filename)[8]) > time_stamp]
 
 
     if __name__ == '__main__':
+        if len(sys.argv) < 3:
+            print "Usage: " + sys.argv[0] + " directory wait_for_more"
+            sys.exit()
 
         directory = sys.argv[1]
+        # if we wait for files in the directory forever or not
+        wait_for_more = eval(sys.argv[2])
 
         areas = ["euro4", "scan2"]
 
@@ -161,19 +201,26 @@ as output from AAPP.
         time_stamp = datetime(1970, 1, 1)
 
         while True:
+
+            # Scanning directory
+
             new_time_stamp = datetime.now()
             filenames = get_files_newer_than(directory, time_stamp)
             time_stamp = new_time_stamp
+
+            # Adding files to the gatherer
 
             for filename in filenames:
                 granule = Granule(filename)
                 if gatherer is None:
                     gatherer = Gatherer(areas_of_interest=areas,
                                         timeliness=timedelta(minutes=150),
-                                        satellite=granule.satname,
+                                        satname=granule.satname,
                                         number=granule.number,
                                         variant=granule.variant)
                 gatherer.add(granule)
+
+            # Build finished swath and process them.
 
             for swath in gatherer.finished_swaths:
                 global_data = swath.concatenate()
@@ -182,9 +229,17 @@ as output from AAPP.
 
                 time_string = global_data.time_slot.strftime("%Y%m%d%H%M")
 
-                img = local_data.image.overview()
-                img.save("overview_" + swath.area + "_" + time_string + ".png")
+                area_id = swath.area.area_id
 
-                img = local_data.image.cloudtop()
-                img.save("cloudtop_" + swath.area + "_" + time_string + ".png")
+                img = local_data.image.overview()
+                img.save("overview_" + area_id + "_" + time_string + ".png")
+
+                img = local_data.image.natural()
+                img.save("natural_" + area_id + "_" + time_string + ".png")
+
+            if not wait_for_more:
+                break
+
+            # wait 60 seconds before restarting
+            time.sleep(60)
 

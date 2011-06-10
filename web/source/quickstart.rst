@@ -60,6 +60,8 @@ channels based on its name.
     >>> img.save("./myoverview.png")
     >>>
 
+.. image:: myoverview.png
+
 Once the channels are loaded, we generate an overview RGB composite image, and
 save it as a png image. Instead of :meth:`save`, one could also use
 :meth:`show` if the only purpose is to display the image on screen.
@@ -94,6 +96,8 @@ Now you can save the image::
 
     >>> img.save("./mynaturalcolors.png")
     >>>
+
+.. image:: mynaturalcolors.png
 
 If you want to combine several prerequisites for channel loading, since
 prerequisites are python sets, you can do::
@@ -150,6 +154,13 @@ data property::
      0.29507370375 0.29507370375]
     [5.80311617374 7.57355839624 6.88505308749 ..., 0.29507370375
      0.29507370375 0.29507370375]]
+
+Channels can be viewed with the :meth:`show` method::
+
+  >>> global_data[0.6].show()
+
+.. image:: ch6.png
+   
 
 Channel arithmetics
 ===================
@@ -271,6 +282,8 @@ and we can operate as before to generate and play with RGB composites::
     >>> img = local_data.image.overview()
     >>> img.save("./local_overview.tif")
     >>>
+
+.. image:: local_overview.png
 
 The image is saved here in GeoTiff_ format. 
 
