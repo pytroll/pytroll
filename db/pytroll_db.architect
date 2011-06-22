@@ -70,7 +70,7 @@
     <folder id="FOLTAB172" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
     </folder>
     <folder id="FOLTAB174" populated="true" name="Indices" physicalName="Indices" type="4">
-    <index id="IDX22" populated="true" UUID="815ed8c7-18e7-409f-93b6-1480eb92fa54" clustered="false" name="file_access_uri_pk" physicalName="file_uri_pk" primaryKeyIndex="true" unique="false" >
+    <index id="IDX22" populated="true" UUID="815ed8c7-18e7-409f-93b6-1480eb92fa54" clustered="false" name="file_access_uri_pk" physicalName="file_access_uri_pk" primaryKeyIndex="true" unique="false" >
      <index-column id="IDC23" populated="true" UUID="82a9e026-01bc-4cf2-a260-bbe0ab3f4bba" ascendingOrDescending="UNSPECIFIED" column-ref="COL18" name="file_type_id" physicalName="file_type_id" />
      <index-column id="IDC24" populated="true" UUID="95981a85-b181-4c1a-96aa-e284fe1ce302" ascendingOrDescending="UNSPECIFIED" column-ref="COL19" name="file_format_id" physicalName="file_format_id" />
      <index-column id="IDC25" populated="true" UUID="4289a1b1-4660-41aa-bcc6-b5026f7b408a" ascendingOrDescending="UNSPECIFIED" column-ref="COL20" name="sequence" physicalName="sequence" />
@@ -384,7 +384,7 @@
    </relationship>
   </relationships>
  </target-database>
- <ddl-generator type="ca.sqlpower.architect.ddl.PostgresDDLGenerator" allow-connection="true" target-schema="public"> </ddl-generator>
+ <ddl-generator type="ca.sqlpower.architect.ddl.PostgresDDLGenerator" allow-connection="false" target-schema="public"> </ddl-generator>
  <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
  <play-pen zoom="1.0" viewportX="0" viewportY="0" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
