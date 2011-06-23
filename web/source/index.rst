@@ -12,7 +12,7 @@ collaboration on weather satellite data processing between DMI_ and SMHI_.
 Its objective is provide different python modules for the reading,
 interpretation, and writing of weather satellite data.
 
-The provided python package are designed to be used both in R&D environments and in 24/7 operational production. 
+The provided python packages are designed to be used both in R&D environments and in 24/7 operational production. 
 
 The available python packages at the moment are:
 
