@@ -8,7 +8,9 @@ Installing the different packages
 From the web pages of the different project you will find instructions on how
 to install them. Here we will cover the configuration part of the process, so
 that the packages work together.
-
+These documentation pages focus on the usage of mpop for processing of satellite data. So as a minimum this package should be installed. 
+mpop uses plugins for reading of satellite data. In order to read the MSG SEVERI data used in many of the document examples the mipp package should be installed.
+In order to resample image data with mpop the package pyresample must be installed.
 
 Configuration
 =============
@@ -43,7 +45,7 @@ provided with mpop_ in the `etc` directory):
 
 
 The different levels indicate different steps of the reading. The `level2`
-section gives at least the mpop_ plugin to read the data with. In some cases,
+section gives at the mpop_ plugin to read the data with. In some cases,
 the data is first read from another level, as is this case with HRIT/LRIT data
 when we use mipp_: there we use the `level1` section.
 
@@ -53,8 +55,7 @@ plugin: here, mipp needs also the filename for prologue and epilogue files.
 
 Note that the section starts with the name of the instrument. This is important
 in the case where several instruments are available for the same satellite.
-Note also that the filename can contain wildcards (`*` and `?`) and optional
-values (here channel, segment, and time markers). It is up to the input plugin
+Note also that the filename can contain wildcards (`*` and `?`). It is up to the input plugin
 to handle these constructs if needed.
 
 

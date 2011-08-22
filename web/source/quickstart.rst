@@ -1,16 +1,15 @@
-============
- Quickstart
-============
+===========================
+ Quickstart with MSG SEVERI
+===========================
 
-The software uses OOP extensively, to allow higher level metaobject handling.
+For this tutorial, we will use the Meteosat data in the XRIT format, read it through mipp into
+mpop_, resample it with pyresample and process it a bit.
 
-For this tutorial, we will use the Meteosat data, read it through mipp into
-mpop, resample it with pyresample and process it a bit.
+Don't forget to setup your PYTHONPATH so that all dependencies are reachable and set PPP_CONFIG_DIR to the directory containing your mpop_ config files (see :doc:`install`).
 
-Don't forget to setup your PYTHONPATH so that all dependencies are reachable.
-
-First example
-=============
+First example: Loading data
+===========================
+This example assumes XRIT data for 8/10-2009 14:30 exists in the dir defined in the **severi-level1** section of your meteosat configuration file.
 
 Ok, let's get it on::
 
@@ -36,14 +35,15 @@ Ok, let's get it on::
     'IR_108: (9.800,10.800,11.800)μm, shape (1200, 3000), resolution 3000.40316582m'
 
 
-In this example, we create an mpop scene object for the seviri instrument
-onboard meteosat 9, specifying the time of the snapshot of interest. The time
+In this example, we create an mpop_ scene object for the seviri instrument
+onboard meteosat 9, specifying the time of the scene of interest. The time
 is defined as a datetime object.
+
+The **get_area_def** function reads an area definition from the configururation file  *area.def* in the PPP_CONFIG_DIR. The area defintion is read into the variable *europe* which then gives access information about the area like projection and extent. 
 
 The next step is loading the data. This is done using mipp, which takes care of
 reading the HRIT data, and slicing the data so that we read just what is
-needed. Calibration is also done with mipp. In order to slice the data, we
-retreive the area we will work on, here set to variable *europe*.
+needed. Calibration is also done with mipp. 
 
 Here we call the :meth:`load` function with a list of the wavelengths of the
 channels we are interested in, and the area extent in satellite projection of
@@ -56,13 +56,23 @@ point number (*i.e.*, don't type '1', but '1.0'). Using an integer number
 instead returns a channel based on resolution, while using a string retrieves a
 channels based on its name.
 
+Retrieving the same channels base on channel name would be
+
+    >>> global_data.load(['VIS006', 'VIS008', 'IR_108'], area_extent=europe.area_extent)
+
+The **area_extent** keyword argument in the **load** method specifies the subsection of the image to load in satellite projection coordinates. In this case the *EuropeCanary* is an area definition in the *geos* projection defined in the *area.def* file used by mpop_ (this area is provided in the mpop_ template *area.def*). If the **area_extent** keyword argument is not provided the full globe image is loaded.
+
+Making RGB composites
+=====================
+The **load** functions return an mpop_ scene object. The scene object is composed with an object named **image** which handles the creation of RGBs
+
     >>> img = global_data.image.overview()
     >>> img.save("./myoverview.png")
     >>>
 
 .. image:: myoverview.png
 
-Once the channels are loaded, we generate an overview RGB composite image, and
+Here we use the loaded data to generate an overview RGB composite image, and
 save it as a png image. Instead of :meth:`save`, one could also use
 :meth:`show` if the only purpose is to display the image on screen.
 
@@ -291,7 +301,7 @@ On projected images, one can also add contour overlay with the
 :meth:`imageo.geo_image.add_overlay`.
 
 .. _GeoTiff: http://trac.osgeo.org/geotiff/
-
+.. _mpop: http://www.github.com/mraspaud/mpop
 
 
 
