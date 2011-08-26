@@ -2,14 +2,18 @@
  Quickstart with MSG SEVERI
 ===========================
 
-For this tutorial, we will use the Meteosat data in the XRIT format, read it through mipp into
-mpop_, resample it with pyresample and process it a bit.
+For this tutorial, we will use the Meteosat data in the uncompressed EUMETSAT HRIT format, read it through mipp_ into
+mpop_, resample it with pyresample_ and process it a bit.
 
-Don't forget to setup your PYTHONPATH so that all dependencies are reachable and set PPP_CONFIG_DIR to the directory containing your mpop_ config files (see :doc:`install`).
+For this tutorial template config files (see :doc:`install`) can be used. These are located in the *etc* dir of the mpop_ source. Copy *mpop.cfg.template*, *areas.def.template* and *meteosat09.cfg.template* to another dir and remove the *.template* extension. In the config file *meteosat09.cfg* locate the section :attr:`severi-level1` and modify the defined :attr:`dir` to point to the dir of your uncompressed HRIT data. 
+
+Set PPP_CONFIG_DIR to the directory containing your mpop_ config files.
+
+Don't forget to setup your PYTHONPATH so that all dependencies are reachable.
 
 First example: Loading data
 ===========================
-This example assumes XRIT data for 8/10-2009 14:30 exists in the dir defined in the **severi-level1** section of your meteosat configuration file.
+This example assumes uncompressed EUMETSAT HRIT data for 8/10-2009 14:30 exists in the :attr:`dir` defined in the :attr:`severi-level1` section of your meteosat09 configuration file. Change the arguments to the creation of :attr:`time_slot` to match the time slot of your HRIT data.  
 
 Ok, let's get it on::
 
@@ -35,15 +39,15 @@ Ok, let's get it on::
     'IR_108: (9.800,10.800,11.800)μm, shape (1200, 3000), resolution 3000.40316582m'
 
 
-In this example, we create an mpop_ scene object for the seviri instrument
+In this example, we create an mpop_ scene object (:attr:`global_data`) for the seviri instrument
 onboard meteosat 9, specifying the time of the scene of interest. The time
 is defined as a datetime object.
 
-The **get_area_def** function reads an area definition from the configururation file  *area.def* in the PPP_CONFIG_DIR. The area defintion is read into the variable *europe* which then gives access information about the area like projection and extent. 
+The :meth:`get_area_def` function reads an area definition from the configururation file  *area.def* in the PPP_CONFIG_DIR. The area defintion is read into the variable :attr:`europe` which then gives access information about the area like projection and extent. 
 
-The next step is loading the data. This is done using mipp, which takes care of
+The next step is loading the data. This is done using mipp_, which takes care of
 reading the HRIT data, and slicing the data so that we read just what is
-needed. Calibration is also done with mipp. 
+needed. Calibration is also done with mipp_. 
 
 Here we call the :meth:`load` function with a list of the wavelengths of the
 channels we are interested in, and the area extent in satellite projection of
@@ -60,11 +64,11 @@ Retrieving the same channels base on channel name would be
 
     >>> global_data.load(['VIS006', 'VIS008', 'IR_108'], area_extent=europe.area_extent)
 
-The **area_extent** keyword argument in the **load** method specifies the subsection of the image to load in satellite projection coordinates. In this case the *EuropeCanary* is an area definition in the *geos* projection defined in the *area.def* file used by mpop_ (this area is provided in the mpop_ template *area.def*). If the **area_extent** keyword argument is not provided the full globe image is loaded.
+The :attr:`area_extent` keyword argument in the :meth:`load` method specifies the subsection of the image to load in satellite projection coordinates. In this case the *EuropeCanary* is an area definition in the *geos* projection defined in the *area.def* file used by mpop_ (this area is provided in the mpop_ template *area.def*). If the :attr:`area_extent` keyword argument is not provided the full globe image is loaded.
 
 Making RGB composites
 =====================
-The **load** functions return an mpop_ scene object. The scene object is composed with an object named **image** which handles the creation of RGBs
+The :meth:`load` functions return an mpop_ scene object (:attr:`global_data`). The scene object is composed with an object named :attr:`image` which handles the creation of RGBs
 
     >>> img = global_data.image.overview()
     >>> img.save("./myoverview.png")
@@ -96,7 +100,7 @@ result in an error::
 So it means that we have to load the missing channel first. To do this we could
 enter the channels list to load manually, as we did for the overview, but we
 provide a way to get the list of channels needed by a given method using the
-`prerequisites` method attribute::
+:attr:`prerequisites` method attribute::
 
     >>> global_data.load(global_data.image.natural.prerequisites, area_extent=europe.area_extent)
     >>> img = global_data.image.natural()
@@ -117,7 +121,7 @@ prerequisites are python sets, you can do::
     ...                  area_extent=europe.area_extent)
     >>>
 
-and add as many `| global_data.image.mymethod.prerequisites` as needed.
+and add as many :attr:`| global_data.image.mymethod.prerequisites` as needed.
 
 Retrieving channels
 ===================
@@ -180,21 +184,34 @@ run for example::
 
   >>> cool_channel = (global_data[0.6] - global_data[0.8]) * global_data[10.8]
 
-Other types of channels
-=======================
+Projections
+===========
 
-Other kinds of channels can be used also. For example, PGEs which have been
-produced by nwcsaf PPS or MSG from the satellite data can be loaded in exactly
-the same fashion as with regular channels::
+Until now, we have used the channels directly as provided by the satellite,
+that is in satellite projection. Generating composites thus produces views in
+satellite projection, *i.e.* as viewed by the satellite.
 
-    >>> global_data.area = "EuropeCanary"
-    >>> global_data.load(["CTTH"])
+Most often however, we will want to project the data onto a specific area so
+that only the area of interest is depicted in the RGB composites.
+
+Here is how we do that::
+
+    >>> local_data = global_data.project("eurol")
     >>>
-    
-and they can be retrieved as simply as before::
-    
-    >>> print global_data["CTTH"] 
-    'CTTH: shape (1200, 3000), resolution 3000.40316582m'
+
+Now we have projected data onto the *eurol* area in the :attr:`local_data` variable
+and we can operate as before to generate and play with RGB composites::
+
+    >>> img = local_data.image.overview()
+    >>> img.save("./local_overview.tif")
+    >>>
+
+.. image:: local_overview.png
+
+The image is saved here in GeoTiff_ format. 
+
+On projected images, one can also add contour overlay with the
+:meth:`imageo.geo_image.add_overlay`.
 
 Making custom composites
 ========================
@@ -214,7 +231,7 @@ building an overview composite can be done manually with::
 
 In order to have mpop automatically use the composites you create, it is
 possible to write them in a python module which name has to be specified in the
-`mpop.cfg` configuration file, under the *composites* section::
+`mpop.cfg` configuration file, under the :attr:`composites` section::
 
   [composites]
   module=smhi_composites
@@ -262,7 +279,7 @@ Here is an example of such a module::
   seviri = [overview,
             hr_visual]
 
-Note the *seviri* variable in the end. This means that the composites it
+Note the :attr:`seviri` variable in the end. This means that the composites it
 contains will be available to all scenes using the Seviri instrument. If we
 replace this by::
 
@@ -271,40 +288,10 @@ replace this by::
 
 then the composites will only be available for the Meteosat 9 satellite scenes.
 
-Projections
-===========
 
-Until now, we have used the channels directly as provided by the satellite,
-that is in satellite projection. Generating composites thus produces views in
-satellite projection, *i.e.* as viewed by the satellite.
-
-Most often however, we will want to project the data onto a specific area so
-that only the area of interest is depicted in the RGB composites.
-
-Here is how we do that::
-
-    >>> local_data = global_data.project("eurol")
-    >>>
-
-Now we have projected data onto the "eurol" area in the `local_data` variable
-and we can operate as before to generate and play with RGB composites::
-
-    >>> img = local_data.image.overview()
-    >>> img.save("./local_overview.tif")
-    >>>
-
-.. image:: local_overview.png
-
-The image is saved here in GeoTiff_ format. 
-
-On projected images, one can also add contour overlay with the
-:meth:`imageo.geo_image.add_overlay`.
 
 .. _GeoTiff: http://trac.osgeo.org/geotiff/
 .. _mpop: http://www.github.com/mraspaud/mpop
+.. _mipp: http://www.github.com/loerum/mipp
+.. _pyresample: http://pyresample.googlecode.com
 
-
-
-.. rubric:: Footnotes
-
-.. [#f1] PGEs supported for Meteosat : CloudType and CTTH
