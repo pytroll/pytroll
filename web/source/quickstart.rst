@@ -43,7 +43,7 @@ In this example, we create an mpop_ scene object (:attr:`global_data`) for the s
 onboard meteosat 9, specifying the time of the scene of interest. The time
 is defined as a datetime object.
 
-The :meth:`get_area_def` function reads an area definition from the configururation file  *area.def* in the PPP_CONFIG_DIR. The area defintion is read into the variable :attr:`europe` which then gives access information about the area like projection and extent. 
+The :meth:`get_area_def` function reads an area definition from the configuration file  *area.def* in the PPP_CONFIG_DIR. The area definition is read into the variable :attr:`europe` which then gives access information about the area like projection and extent. 
 
 The next step is loading the data. This is done using mipp_, which takes care of
 reading the HRIT data, and slicing the data so that we read just what is
@@ -275,7 +275,7 @@ replace this by::
 then the composites will only be available for the Meteosat 9 satellite scenes.
 In *my_composites.py* we have now defined 2 custom composites using the HRV channel. 
 :attr:`hr_visual` makes an enhanced black and white image from the HRV channel alone. 
-:attr:`hr_overview` is a more complex composite using the HRV channel as luminace for the overview image from the previous example. This creates the perception of higher resolution.
+:attr:`hr_overview` is a more complex composite using the HRV channel as luminance for the overview image from the previous example. This creates the perception of higher resolution.
 
 Add the dir containing *my_composites.py* to your PYTHONPATH. Now your new composites will be accessible on the :attr:`scene.image` object like the builtin composites::
 
