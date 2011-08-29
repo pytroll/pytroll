@@ -1,19 +1,19 @@
+.. -*- coding: utf-8 -*-
+
 ===========================
- Quickstart with MSG SEVERI
+ Quickstart with MSG SEVIRI
 ===========================
 
 For this tutorial, we will use the Meteosat data in the uncompressed EUMETSAT HRIT format, read it through mipp_ into
-mpop_, resample it with pyresample_ and process it a bit.
+mpop_, resample it with pyresample_ and process it a bit. Install theses packages first.
 
 For this tutorial template config files (see :doc:`install`) can be used. These are located in the *etc* dir of the mpop_ source. Copy *mpop.cfg.template*, *areas.def.template* and *meteosat09.cfg.template* to another dir and remove the *.template* extension. In the config file *meteosat09.cfg* locate the section :attr:`severi-level1` and modify the defined :attr:`dir` to point to the dir of your uncompressed HRIT data. 
 
-Set PPP_CONFIG_DIR to the directory containing your mpop_ config files.
-
-Don't forget to setup your PYTHONPATH so that all dependencies are reachable.
+Set PPP_CONFIG_DIR to the directory containing your modified mpop_ config files.
 
 First example: Loading data
 ===========================
-This example assumes uncompressed EUMETSAT HRIT data for 8/10-2009 14:30 exists in the :attr:`dir` defined in the :attr:`severi-level1` section of your meteosat09 configuration file. Change the arguments to the creation of :attr:`time_slot` to match the time slot of your HRIT data.  
+This example assumes uncompressed EUMETSAT HRIT data for 8/10-2009 14:30 exists in the :attr:`dir` defined in the :attr:`severi-level1` section of your meteosat09 configuration file. Change the arguments to the creation of :attr:`time_slot` in the code example to match the time slot of your HRIT data.  
 
 Ok, let's get it on::
 
@@ -53,7 +53,7 @@ Here we call the :meth:`load` function with a list of the wavelengths of the
 channels we are interested in, and the area extent in satellite projection of
 the area of interest. Each retrieved channel is the closest in terms of central
 wavelength, provided that the required wavelength is within the bounds of the
-channel.
+channel. Note: If you have not installed the numexpr_ package on your system you get the warning *"Module numexpr not found. Performance will be slower"*. This only affects the speed of loading SEVIRI data.
 
 The wavelengths are given in micrometers and have to be given as a floating
 point number (*i.e.*, don't type '1', but '1.0'). Using an integer number
@@ -79,9 +79,6 @@ The :meth:`load` functions return an mpop_ scene object (:attr:`global_data`). T
 Here we use the loaded data to generate an overview RGB composite image, and
 save it as a png image. Instead of :meth:`save`, one could also use
 :meth:`show` if the only purpose is to display the image on screen.
-
-Available composites are listed in the :mod:`mpop.satellites.visir` module
-in the mpop documentation.
 
 We want more !
 ==============
@@ -136,16 +133,6 @@ or from the channel name::
    >>> print global_data["VIS006"]
    'VIS006: (0.560,0.635,0.710)μm, shape (1200, 3000), resolution 3000.40316582m'
 
-or from the resolution::
- 
-   >>> print global_data[3000]
-   'VIS006: (0.560,0.635,0.710)μm, shape (1200, 3000), resolution 3000.40316582m'
-
-or more than one at the time::
-
-   >>> print global_data[3000, 0.8]
-   'VIS008: (0.740,0.810,0.880)μm, shape (1200, 3000), resolution 3000.40316582m'
-
 The printed lines consists of the following values:
 
 * First the name is displayed,
@@ -162,12 +149,9 @@ data property::
     [-- -- -- ..., -- -- --]
     [-- -- -- ..., -- -- --]
     ..., 
-    [7.37684259374 8.65549530999 6.58997938374 ..., 0.29507370375 0.1967158025
-     0.1967158025]
-    [7.18012679124 7.86863209999 6.19654777874 ..., 0.29507370375
-     0.29507370375 0.29507370375]
-    [5.80311617374 7.57355839624 6.88505308749 ..., 0.29507370375
-     0.29507370375 0.29507370375]]
+    [0.0 0.0 0.0 ..., 33.3433285237 33.6384022275 33.83511803]
+    [0.0 0.0 0.0 ..., 33.441686425 33.6384022275 33.83511803]
+    [0.0 0.0 0.0 ..., 33.5400443262 33.83511803 34.1301917337]]
 
 Channels can be viewed with the :meth:`show` method::
 
@@ -196,8 +180,10 @@ that only the area of interest is depicted in the RGB composites.
 
 Here is how we do that::
 
-    >>> local_data = global_data.project("eurol")
+    >>> local_data = global_data.project("euro_north")
     >>>
+
+The area *eurol* is defined in the *areas.def* file in PPP_CONFIG_DIR. In the sample *area.def* file this is a Stereographic projection of the european area.
 
 Now we have projected data onto the *eurol* area in the :attr:`local_data` variable
 and we can operate as before to generate and play with RGB composites::
@@ -206,12 +192,9 @@ and we can operate as before to generate and play with RGB composites::
     >>> img.save("./local_overview.tif")
     >>>
 
-.. image:: local_overview.png
+.. image:: euro_north.png
 
 The image is saved here in GeoTiff_ format. 
-
-On projected images, one can also add contour overlay with the
-:meth:`imageo.geo_image.add_overlay`.
 
 Making custom composites
 ========================
@@ -231,34 +214,14 @@ building an overview composite can be done manually with::
 
 In order to have mpop automatically use the composites you create, it is
 possible to write them in a python module which name has to be specified in the
-`mpop.cfg` configuration file, under the :attr:`composites` section::
+`mpop.cfg` configuration file, under the :attr:`composites` section. Change the *mpop.cfg* file to have the following line::
 
   [composites]
-  module=smhi_composites
+  module=my_composites
 
-The module has to be importable (i.e. it has to be in the pythonpath). 
-Here is an example of such a module::
+Now create a file named *my_composites.py* in a local dir with the content::
 
-  def overview(self):
-      """Make an overview RGB image composite.
-      """
-      self.check_channels(0.635, 0.85, 10.8)
-
-      ch1 = self[0.635].check_range()
-      ch2 = self[0.85].check_range()
-      ch3 = -self[10.8].data
-
-      img = geo_image.GeoImage((ch1, ch2, ch3),
-                               self.area,
-                               self.time_slot,
-                               fill_value=(0, 0, 0),
-                               mode="RGB")
-
-      img.enhance(stretch = (0.005, 0.005))
-
-      return img
-
-  overview.prerequisites = set([0.6, 0.8, 10.8])
+  from mpop.imageo.geo_image import GeoImage
 
   def hr_visual(self):
       """Make a High Resolution visual BW image composite from Seviri
@@ -266,18 +229,41 @@ Here is an example of such a module::
       """
       self.check_channels("HRV")
 
-      img = geo_image.GeoImage(self["HRV"].data,
-                               self.area,
-                               self.time_slot,
-                               fill_value=0,
-                               mode="L")
+      img = GeoImage(self["HRV"].data, self.area, self.time_slot,
+                     fill_value=0, mode="L")
       img.enhance(stretch="crude")
       return img
 
   hr_visual.prerequisites = set(["HRV"])
 
-  seviri = [overview,
-            hr_visual]
+  def hr_overview(self):
+      """Make a High Resolution Overview RGB image composite from Seviri
+      channels.
+      """
+      self.check_channels(0.635, 0.85, 10.8, "HRV")
+
+      ch1 = self[0.635].check_range()
+      ch2 = self[0.85].check_range()
+      ch3 = -self[10.8].data
+
+      img = GeoImage((ch1, ch2, ch3), self.area, self.time_slot,
+                     fill_value=(0, 0, 0), mode="RGB")
+
+      img.enhance(stretch="crude")
+      img.enhance(gamma=[1.6, 1.6, 1.1])
+
+      luminance = GeoImage((self["HRV"].data), self.area, self.time_slot,
+                           crange=(0, 100), mode="L")
+
+      luminance.enhance(gamma=2.0)
+
+      img.replace_luminance(luminance.channels[0])
+
+      return img
+
+  hr_overview.prerequisites = set(["HRV", 0.635, 0.85, 10.8])
+
+  seviri = [hr_visual, hr_overview] 
 
 Note the :attr:`seviri` variable in the end. This means that the composites it
 contains will be available to all scenes using the Seviri instrument. If we
@@ -287,11 +273,29 @@ replace this by::
                       hr_visual]
 
 then the composites will only be available for the Meteosat 9 satellite scenes.
+In *my_composites.py* we have now defined 2 custom composites using the HRV channel. 
+:attr:`hr_visual` makes an enhanced black and white image from the HRV channel alone. 
+:attr:`hr_overview` is a more complex composite using the HRV channel as luminace for the overview image from the previous example. This creates the perception of higher resolution.
 
+Add the dir containing *my_composites.py* to your PYTHONPATH. Now your new composites will be accessible on the :attr:`scene.image` object like the builtin composites::
+
+    >>> from mpop.satellites import GeostationaryFactory
+    >>> from mpop.projector import get_area_def
+    >>> import datetime
+    >>> time_slot = datetime.datetime(2009, 10, 8, 14, 30)
+    >>> global_data = GeostationaryFactory.create_scene("meteosat", "09", "seviri", time_slot)
+    >>> msghrvn = get_area_def("MSGHRVN")
+    >>> global_data.load(global_data.image.hr_visual.prerequisites, area_extent=msghrvn.area_extent)   
+    >>> local_data = global_data.project("euro_north")
+    >>> img = local_data.image.hr_overview()
+    >>> img.show()
+
+.. image:: euro_north_hr.png
 
 
 .. _GeoTiff: http://trac.osgeo.org/geotiff/
 .. _mpop: http://www.github.com/mraspaud/mpop
 .. _mipp: http://www.github.com/loerum/mipp
 .. _pyresample: http://pyresample.googlecode.com
+.. _numexpr http://code.google.com/p/numexpr/
 
