@@ -25,18 +25,18 @@ Ok, let's get it on::
     >>> europe = get_area_def("EuropeCanary")
     >>> global_data.load([0.6, 0.8, 10.8], area_extent=europe.area_extent)
     >>> print global_data
-    'IR_097: (9.380,9.660,9.940)μm, resolution 3000.40316582m, not loaded'
-    'IR_016: (1.500,1.640,1.780)μm, resolution 3000.40316582m, not loaded'
-    'VIS008: (0.740,0.810,0.880)μm, shape (1200, 3000), resolution 3000.40316582m'
     'VIS006: (0.560,0.635,0.710)μm, shape (1200, 3000), resolution 3000.40316582m'
+    'VIS008: (0.740,0.810,0.880)μm, shape (1200, 3000), resolution 3000.40316582m'
+    'IR_016: (1.500,1.640,1.780)μm, resolution 3000.40316582m, not loaded'
+    'IR_039: (3.480,3.920,4.360)μm, resolution 3000.40316582m, not loaded'
     'WV_062: (5.350,6.250,7.150)μm, resolution 3000.40316582m, not loaded'
-    'IR_120: (11.000,12.000,13.000)μm, resolution 3000.40316582m, not loaded'
     'WV_073: (6.850,7.350,7.850)μm, resolution 3000.40316582m, not loaded'
     'IR_087: (8.300,8.700,9.100)μm, resolution 3000.40316582m, not loaded'
-    'IR_039: (3.480,3.920,4.360)μm, resolution 3000.40316582m, not loaded'
-    'HRV: (0.500,0.700,0.900)μm, resolution 1000.13434887m, not loaded'
-    'IR_134: (12.400,13.400,14.400)μm, resolution 3000.40316582m, not loaded'
+    'IR_097: (9.380,9.660,9.940)μm, resolution 3000.40316582m, not loaded'
     'IR_108: (9.800,10.800,11.800)μm, shape (1200, 3000), resolution 3000.40316582m'
+    'IR_120: (11.000,12.000,13.000)μm, resolution 3000.40316582m, not loaded'
+    'IR_134: (12.400,13.400,14.400)μm, resolution 3000.40316582m, not loaded'
+    'HRV: (0.500,0.700,0.900)μm, resolution 1000.13434887m, not loaded'
 
 
 In this example, we create an mpop_ scene object (:attr:`global_data`) for the seviri instrument
@@ -273,6 +273,7 @@ replace this by::
                       hr_visual]
 
 then the composites will only be available for the Meteosat 9 satellite scenes.
+
 In *my_composites.py* we have now defined 2 custom composites using the HRV channel. 
 :attr:`hr_visual` makes an enhanced black and white image from the HRV channel alone. 
 :attr:`hr_overview` is a more complex composite using the HRV channel as luminance for the overview image from the previous example. This creates the perception of higher resolution.
