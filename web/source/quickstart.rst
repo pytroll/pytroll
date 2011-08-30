@@ -7,6 +7,8 @@
 For this tutorial, we will use the Meteosat data in the uncompressed EUMETSAT HRIT format, read it through mipp_ into
 mpop_, resample it with pyresample_ and process it a bit. Install theses packages first.
 
+Software to uncompress HRIT can be obtained from EUMETSAT (register and download the `Public Wavelet Transform Decompression Library Software`_)
+
 For this tutorial template config files (see :doc:`install`) can be used. These are located in the *etc* dir of the mpop_ source. Copy *mpop.cfg.template*, *areas.def.template* and *meteosat09.cfg.template* to another dir and remove the *.template* extension. In the config file *meteosat09.cfg* locate the section :attr:`severi-level1` and modify the defined :attr:`dir` to point to the dir of your uncompressed HRIT data. 
 
 Set PPP_CONFIG_DIR to the directory containing your modified mpop_ config files.
@@ -119,6 +121,13 @@ prerequisites are python sets, you can do::
     >>>
 
 and add as many :attr:`| global_data.image.mymethod.prerequisites` as needed.
+
+A description of the available builtin composites for SEVIRI and VISIR derived sensors can be seen using::
+
+    >>> from mpop.instruments.visir import VisirScene
+    >>> help(VisirScene)
+
+The builtin composites are recommendations from the `MSG Interpretation Guide`_
 
 Retrieving channels
 ===================
@@ -286,7 +295,7 @@ Add the dir containing *my_composites.py* to your PYTHONPATH. Now your new compo
     >>> time_slot = datetime.datetime(2009, 10, 8, 14, 30)
     >>> global_data = GeostationaryFactory.create_scene("meteosat", "09", "seviri", time_slot)
     >>> msghrvn = get_area_def("MSGHRVN")
-    >>> global_data.load(global_data.image.hr_visual.prerequisites, area_extent=msghrvn.area_extent)   
+    >>> global_data.load(global_data.image.hr_overview.prerequisites, area_extent=msghrvn.area_extent)   
     >>> local_data = global_data.project("euro_north")
     >>> img = local_data.image.hr_overview()
     >>> img.show()
@@ -298,5 +307,6 @@ Add the dir containing *my_composites.py* to your PYTHONPATH. Now your new compo
 .. _mpop: http://www.github.com/mraspaud/mpop
 .. _mipp: http://www.github.com/loerum/mipp
 .. _pyresample: http://pyresample.googlecode.com
-.. _numexpr http://code.google.com/p/numexpr/
-
+.. _numexpr: http://code.google.com/p/numexpr/
+.. _Public Wavelet Transform Decompression Library Software: http://www.eumetsat.int/Home/Main/DataAccess/SupportSoftwareTools/index.htm?l=en
+.. _MSG Interpretation Guide: http://oiswww.eumetsat.org/WEBOPS/msg_interpretation/index.php 
