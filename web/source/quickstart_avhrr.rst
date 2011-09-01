@@ -109,6 +109,37 @@ Making custom composites
 ========================
 Making custom composites can be done using the same recipe as described in the :doc:`quickstart_seviri` tutorial.
 
+Assuming a *my_composites.py* file has been created as described in the :doc:`quickstart_seviri` tutorial add the following lines to the file::
+    
+    def red_clouds(self):
+        """Make and RGB with red clouds
+        """
+        
+        self.check_channels(0.6, 3.7, 10.8)
+        img = GeoImage((self[0.6].data, self[3.7].data, self[10.8].data), 
+                        self.area, self.time_slot,
+                        fill_value=(0, 0, 0), mode="RGB")
+        img.enhance(stretch="crude")
+        return img
+
+    red_clouds.prerequisites = set([0.6, 3.7, 10.8])
+        
+    avhrr = [red_clouds]
+    
+Add the dir containing *my_composites.py* to your PYTHONPATH. Now your new :attr:`red_clouds` composite will be accessible on the :attr:`scene.image` object for AVHRR like the builtin composites::
+
+    >>> from mpop.satellites import PolarFactory
+    >>> from datetime import datetime
+    >>> orbit = "13173"
+    >>> time_slot = datetime(2011,8,29,11,40)
+    >>> global_data = PolarFactory.create_scene("noaa", "19", "avhrr", time_slot, orbit)
+    >>> global_data.load(global_data.image.red_clouds.prerequisites)
+    >>> local_data = global_data.project("euro_north", mode="nearest")
+    >>> img = local_data.image.red_clouds()
+    >>> img.show()
+    
+.. image:: images/avhrr_red_clouds.png
+
 .. _AAPP: http://research.metoffice.gov.uk/research/interproj/nwpsaf/
 .. _`NWC SAF`: http://www.nwcsaf.org/HD/MainNS.jsp
 .. _`NWC SAF homepage`: http://www.nwcsaf.org/HD/MainNS.jsp
