@@ -76,7 +76,7 @@ The :meth:`load` functions return an mpop_ scene object (:attr:`global_data`). T
     >>> img.save("./myoverview.png")
     >>>
 
-.. image:: myoverview.png
+.. image:: images/myoverview.png
 
 Here we use the loaded data to generate an overview RGB composite image, and
 save it as a png image. Instead of :meth:`save`, one could also use
@@ -110,7 +110,7 @@ Now you can save the image::
     >>> img.save("./mynaturalcolors.png")
     >>>
 
-.. image:: mynaturalcolors.png
+.. image:: images/mynaturalcolors.png
 
 If you want to combine several prerequisites for channel loading, since
 prerequisites are python sets, you can do::
@@ -164,9 +164,9 @@ data property::
 
 Channels can be viewed with the :meth:`show` method::
 
-  >>> global_data[0.6].show()
+  >>> global_data.image.channel_image(0.6).show()
 
-.. image:: ch6.png
+.. image:: images/ch6.png
    
 
 Channel arithmetics
@@ -192,16 +192,16 @@ Here is how we do that::
     >>> local_data = global_data.project("euro_north")
     >>>
 
-The area *eurol* is defined in the *areas.def* file in PPP_CONFIG_DIR. In the sample *area.def* file this is a Stereographic projection of the european area.
+The area *euro_north* is defined in the *areas.def* file in PPP_CONFIG_DIR. In the sample *area.def* file this is a Stereographic projection of the european area.
 
-Now we have projected data onto the *eurol* area in the :attr:`local_data` variable
+Now we have projected data onto the *euro_north* area in the :attr:`local_data` variable
 and we can operate as before to generate and play with RGB composites::
 
     >>> img = local_data.image.overview()
     >>> img.save("./local_overview.tif")
     >>>
 
-.. image:: euro_north.png
+.. image:: images/euro_north.png
 
 The image is saved here in GeoTiff_ format. 
 
@@ -300,7 +300,7 @@ Add the dir containing *my_composites.py* to your PYTHONPATH. Now your new compo
     >>> img = local_data.image.hr_overview()
     >>> img.show()
 
-.. image:: euro_north_hr.png
+.. image:: images/euro_north_hr.png
 
 
 .. _GeoTiff: http://trac.osgeo.org/geotiff/

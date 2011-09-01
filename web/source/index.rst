@@ -34,5 +34,6 @@ Contents:
    :maxdepth: 2
 
    install
-   quickstart
+   quickstart_seviri
+   quickstart_avhrr
    recipes
