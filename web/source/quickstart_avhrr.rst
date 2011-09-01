@@ -94,6 +94,17 @@ Reprojecting data is done analogous to the way the SEVIRI data was reprojected i
 
 Note the *mode="nearest"* argument for :meth:`project` is currently needed to make mpop select an appropriate type of resampling for swaths.
 
+Channel arithmetics
+===================
+
+The common arithmetical operators are supported on channels, so that one can
+run for example::
+
+  >>> ndvi = (local_data["2"] - local_data["1"]) / (local_data["2"] + local_data["1"])
+  >>> ndvi.show()
+  
+.. image:: images/avhrr_ndvi.png
+
 Making custom composites
 ========================
 Making custom composites can be done using the same recipe as described in the :doc:`quickstart_seviri` tutorial.
