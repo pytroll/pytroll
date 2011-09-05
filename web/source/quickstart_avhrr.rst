@@ -6,6 +6,8 @@ mpop_, resample it with pyresample_ and process it a bit. Install theses package
 
 For this tutorial template config files (see :doc:`install`) can be used. These are located in the *etc* dir of the mpop_ source. Copy *mpop.cfg.template*, *areas.def.template* and *noaa19.cfg.template* to another dir and remove the *.template* extension. In the config file *noaa19.cfg* locate the section :attr:`avhrr-level2` and modify the defined :attr:`dir` to point to the dir of your level1b AVHRR data.
 
+Set PPP_CONFIG_DIR to the directory containing your modified mpop_ config files.
+
 Making mpop read level1b AVHRR
 ==============================
 mpop reads level1b AVHRR using a plugin based on AHAMAP. `Download the latest patched version of AHAMAP here`_. 

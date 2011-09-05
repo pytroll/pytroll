@@ -36,4 +36,7 @@ Contents:
    install
    quickstart_seviri
    quickstart_avhrr
+   quickstart_custom
    recipes
+
+Contact us: https://groups.google.com/group/pytroll
