@@ -9,10 +9,11 @@ Welcome to pytroll!
 This is the home of the pytroll project.  The pytroll project is a
 collaboration on weather satellite data processing between DMI_ and SMHI_.
 
-Its objective is provide different python modules for the reading,
-interpretation, and writing of weather satellite data.
+Its objective is provide different free and open source python modules for the
+reading, interpretation, and writing of weather satellite data.
 
-The provided python packages are designed to be used both in R&D environments and in 24/7 operational production. 
+The provided python packages are designed to be used both in R&D environments
+and in 24/7 operational production.
 
 The available python packages at the moment are:
 
@@ -21,12 +22,20 @@ The available python packages at the moment are:
 * mpop_ for processing weather satellite data
 * python-bufr_ for reading bufr files
 
+Some more packages are in the process of being developped (you're very welcome
+to have a look and give us a hand):
+
+* pyorbital_ for computing satellite orbital parameters and reading TLE's
+* pycoast_ for putting coast lines on an image 
+
 .. _DMI: http://www.dmi.dk
 .. _SMHI: http://www.smhi.se
 .. _pyresample: http://pyresample.googlecode.com
 .. _mipp: http://www.github.com/loerum/mipp
 .. _mpop: http://www.github.com/mraspaud/mpop
 .. _python-bufr: http://python-bufr.googlecode.com
+.. _pyorbital: http://www.github.com/mraspaud/pyorbital
+.. _pycoast: http://pycoast.googlecode.com
 
 Contents:
 
