@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2009.
+# Copyright (c) 2009, 2011.
 #
 # DMI
 # Lyngbyvej 100
@@ -121,7 +121,7 @@ def check_and_publish(datatype, rpc_metadata, publish, heartbeat):
     try:
         while(True):
             if(heartbeat and
-               (datetime.now() - last_heartbeat).seconds > heartbeat):
+               (datetime.now() - last_heartbeat).seconds >= heartbeat):
                 msg = Message('/hearbeat', 'heartbeat', str(datetime.utcnow()))
                 logger.info('sending: ' + str(msg))
                 try:
