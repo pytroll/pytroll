@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2009.
+# Copyright (c) 2009, 2011.
 #
 # DMI
 # Lyngbyvej 100
@@ -42,7 +42,7 @@ from datex.subscriber import Subscriber
 
 logger = logging.getLogger('datex-client')
 
-HEARTBEAT_TIMEOUT = 60
+HEARTBEAT_TIMEOUT = 15 * 60
 
 def usage():
     print >>sys.stderr, """datex_client [-c] [-H] <datatype>

@@ -60,7 +60,8 @@ class Publisher(object):
             raise AttributeError, ("You need to bind Publisher class before "
                                    "instantiating")
         self._process = Thread(target=check_and_publish,
-                               args=args+(self.publish, kwargs.get("heartbeat", True)))
+                               args=args+(self.publish,
+                                          kwargs.get("heartbeat", 10 * 60)))
 
     @classmethod
     def bind(cls, destination):
@@ -116,13 +117,16 @@ def check_and_publish(datatype, rpc_metadata, publish, heartbeat):
     # (e.g reconnections from subscribers)
     time.sleep(1)
     logger.info('publisher starting')
+    last_heartbeat = datetime.now()
     try:
         while(True):
-            if heartbeat:
+            if(heartbeat and
+               (datetime.now() - last_heartbeat).seconds > heartbeat):
                 msg = Message('/hearbeat', 'heartbeat', str(datetime.utcnow()))
                 logger.info('sending: ' + str(msg))
                 try:
                     publish.send(str(msg))
+                    last_heartbeat = datetime.now()
                 except zmq.ZMQError:
                     logger.exception('publish failed')
             for filedesc in younger_than_stamp_files():
