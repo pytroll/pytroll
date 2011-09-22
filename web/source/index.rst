@@ -45,6 +45,7 @@ Contents:
    install
    quickstart_seviri
    quickstart_avhrr
+   quickstart_viirs
    quickstart_custom
    recipes
 
