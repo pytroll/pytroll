@@ -12,8 +12,8 @@ Thus it is now possible to generate RGB image composites also for VIIRS.
 
 We have so far only added support M-bands. Support for I-bands and the Day/Night band will follow.
 
-Loading the data
-================
+Loading
+=======
 
     >>> from mpop.satellites import PolarFactory
     >>> import datetime
@@ -47,8 +47,8 @@ We have now loaded the VIIRS M14 band, and we can display it if we want:
 .. image:: images/viirs_tb86.png
 
 
-Making RGB composites and projecting on a map
-=============================================
+Making RGB's
+============
 
 Here is an example making a true color RGB with the VIIRS bands:
 
@@ -57,6 +57,9 @@ Here is an example making a true color RGB with the VIIRS bands:
     >>> img.save("./viirs_trucolor.png")
 
 .. image:: images/viirs_trucolor.png
+
+Map projection
+==============
 
 Reprojecting data is done in exactly the same way the AVHRR data was reprojected in the :doc:`quickstart_avhrr` tutorial:
 
