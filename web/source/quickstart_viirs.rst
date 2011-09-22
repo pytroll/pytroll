@@ -2,15 +2,17 @@
 Pytroll goes VIIRS
 ==================
 The NOAA/NASA weather satellite NPOESS Preparatory Project (NPP) satellite is due for 
-launch October 25th, 2011. `NPP sample`_ data have been made 
-available to the public mid September 2011. NPP has a MODIS/AVHRR like imager 
+launch October 25th, 2011. `NPP sample`_ data have now finally been made 
+available to the public. NPP has a MODIS/AVHRR like imager 
 onboard, called the Visible Infrared Imager Radiometer Suite (VIIRS).
 
 In preparation for the upcoming VIIRS data we have made a plugin reader and custom 
 compositer to mpop_.
 Thus it is now possible to generate RGB image composites also for VIIRS.
 
-We have so far only added support M-bands. Support for I-bands and the Day/Night band will follow.
+We have so far only added support for the M-bands. Support for I-bands and the Day/Night 
+band will follow.
+
 
 Loading
 =======
@@ -45,6 +47,12 @@ We have now loaded the VIIRS M14 band, and we can display it if we want:
     >>> global_data.image.channel_image(8.6).show()
 
 .. image:: images/viirs_tb86.png
+
+The black stripes are due to the so called bowtie deletion, which is handled onboard the
+satellite. The bow-tie effect is a geometric feature of the VIIRS scan. Similar to the MODIS
+sensor individual VIIRS lines will overlap as one approach the edge of the swath.
+These overlapping samples/pixels have been removed, and thus when data are displayed 
+un-projected these no-data lines will appear. 
 
 
 Making RGB's
