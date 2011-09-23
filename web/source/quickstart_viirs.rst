@@ -90,7 +90,7 @@ the :doc:`quickstart_avhrr` tutorial:
     >>> img = local_data.image.trucolor()
     >>> img.save('./viirs_trucolor_proj.png')
 
-.. image:: images/viirs_trucolor_proj.png
+.. image:: images/viirs_truecolor_proj.png
 
 Here we have defined an area called *npp_sample_m* covering parts of western central US. 
 This definition is stored in the *areas.def.template* file. See 
