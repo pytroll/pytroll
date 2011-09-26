@@ -124,7 +124,7 @@ in this example it's assumed the netCDF files *ssmi_f13_200509151935_sncp.nc*, *
     'tb37v: (-inf,-inf,-inf)μm, resolution 0m, not loaded'
     'tb37h: (-inf,-inf,-inf)μm, resolution 0m, not loaded'
 
-The *tb19v* channel has now been loaded. As nothing has been specified on wavelengths and resolutions in the config file these values are not set
+The *tb19v* channel has now been loaded. As nothing has been specified on wavelengths and resolutions in the config file these values are not set (the *-inf* and *0m* above).
 
 The channel data can be retrieved as a numpy array:
 
@@ -149,8 +149,4 @@ mpop has the capability to assemble swaths
 
 .. _mpop: http://www.github.com/mraspaud/mpop
 .. _pyresample: http://pyresample.googlecode.com 
-
-
-
-
 
