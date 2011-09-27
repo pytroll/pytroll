@@ -62,8 +62,8 @@ We have now loaded the VIIRS M14 band, and we can display it if we want:
 
 .. image:: images/viirs_tb86.png
 
-The black stripes are due to the so called bowtie deletion, which is handled onboard the
-satellite. The bow-tie effect is a geometric feature of the VIIRS scan. Similar to the MODIS
+The black stripes are due to the so called *bowtie deletion*, which is handled onboard the
+satellite. The bowtie effect is a geometric feature of the VIIRS scan. Similar to the MODIS
 sensor individual VIIRS lines will overlap as one approach the edge of the swath.
 These overlapping samples/pixels have been removed, and thus when data are displayed 
 un-projected these no-data lines will appear. 
@@ -129,13 +129,19 @@ Here we have made a specific I-band overview method called *hr_overview*:
 The Day/Night Band
 ==================
 
-The VIIRS Day/Night band draws heritage from the DMSP Operational Linescan System (OLS) and is a broad band channel in the Visible and Near-Infrared spectral range. It operates with three different gains to optimise the sensitivity independant of illumination. During nighttime it is sufficiently sensitive so that useful information on clouds and surfaces may be deduced from reflected moonlight. Naturally the units of this band cannot be given as a solar reflectance factor, but instead the radiance is provided:
+The VIIRS Day/Night band draws heritage from the DMSP Operational Linescan System (OLS) and is a broad band channel in the Visible and Near-Infrared spectral range. It operates with three different gains to optimise the sensitivity independant of illumination:
 
     >>> global_data.load(['DNB'])
+    >>> global_data['DNB'].show()
+
+.. image:: images/viirs_dnb.png
+
+During nighttime it is sufficiently sensitive so that useful information on clouds and surfaces may be deduced from reflected moonlight. Naturally the units of this band cannot be given as a solar reflectance factor, but instead the radiance is provided:
+
     >>> print global_data['DNB'].info
         {'units': 'W sr-1 m-2', 'band_id': 'DNB'}
 
-So, we see the unit is W/(sr*m²). The units in the HDF5 SDR file is W/(sr*cm²) but in pytroll we keep to the physical units dictated by the netCDF `CF convention`_ on meta data.
+So, we see the unit is W/(sr*m²). The units in the HDF5 SDR file is W/(sr*cm²) but in pytroll we keep to the physical units dictated by the netCDF `CF convention`_ on metadata.
 
     >>> print global_data['DNB'].data
     [[-- 25.2138214111 24.7121238708 ..., 34.5851135254 36.7595329285
