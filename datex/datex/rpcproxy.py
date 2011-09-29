@@ -81,6 +81,11 @@ class RPCProxy(object):
                     self.url + '/' + datatype + '/' + filename)
         return self.server.get_file_md5(datatype, filename, timeout=1800)
 
+    def ping(self, text=''):
+        """Ping a RPC server.
+        """
+        return self.server.system.ping(text)
+            
     def info(self):
         """Get servers RPC info.
         """
