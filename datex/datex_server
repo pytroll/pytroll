@@ -28,16 +28,12 @@ import sys
 import os
 import logging
 import getopt
-from glob import glob
 from datetime import datetime
 import signal
-import hashlib
 
-import rpclite as rpc
 from rpclite.server import ForkingXMLRPCServer as XMLRPCServer
 
-from datex import datetime_format, datex_config
-from datex.config import DatexConfig
+from datex import datex_config
 from datex.publisher import Publisher
 from datex.services import get_datatype_list, get_file_list, get_file, get_file_chunk, get_file_md5
 
@@ -46,6 +42,30 @@ logger = logging.getLogger('datex-server')
 # time.strptime not thread-safe (Issue 7980), work around
 datetime.strptime("1956", "%Y")
 
+#-----------------------------------------------------------------------------
+#
+# Redirections and reopen of logfile
+#
+#-----------------------------------------------------------------------------
+def relog():
+    if relog.p:
+        relog.p.close()
+    if relog.n:
+        relog.p = open(relog.n, "a+", 1)
+        os.dup2(relog.p.fileno(), sys.stdout.fileno())
+        os.dup2(relog.p.fileno(), sys.stderr.fileno())
+
+relog.n, relog.p = '', None
+opts, args = getopt.getopt(sys.argv[1:], '', ['logfile=', 'pidfile='])
+for k, v in opts:
+    if k == '--logfile':
+        relog.n = v
+    elif k == '--pidfile':
+        with open(v, 'w') as fp:
+            print >>fp, os.getpid()
+
+relog()
+        
 #-----------------------------------------------------------------------------
 #
 # Signals we care about
@@ -61,6 +81,11 @@ def sigstop_handler(signum, frame):
     raise SystemExit
 signal.signal(signal.SIGTERM, sigstop_handler)
 
+#-----------------------------------------------------------------------------
+#
+# Read configuration file
+#
+#-----------------------------------------------------------------------------
 rpc_address, publish_destination = datex_config.get_server()
 
 #-----------------------------------------------------------------------------
@@ -82,18 +107,20 @@ rpc_server.register_function(get_file_md5, 'get_file_md5')
 #
 #-----------------------------------------------------------------------------
 Publisher.bind(publish_destination)
-for dt in datex_config.get_datatypes():
+for datetype in datex_config.get_datatypes():
     metadata = {}
-    metadata['format'], metadata['compressed'] = datex_config.get_metadata(dt)
-    metadata['uri'] = 'datexrpc://%s:%d/%s/'%(rpc_address[0], rpc_address[1], dt)
-    logger.info('starting %s', dt)    
-    Publisher(dt, metadata).start()
+    metadata['format'], metadata['compressed'] = datex_config.get_metadata(datetype)
+    metadata['uri'] = 'datexrpc://%s:%d/%s/'%(rpc_address[0], rpc_address[1], datetype)
+    logger.info('starting %s', datetype)    
+    Publisher(datetype, metadata).start()
 
 #-----------------------------------------------------------------------------
 while(True):
     try:
         rpc_server.serve_forever()
     except HangupInterrupt:
+        logger.info("got a hangup ... will reopen logfile")
+        relog()
         continue
     except (KeyboardInterrupt, SystemExit):
         logger.info('rpc-server stopping')
