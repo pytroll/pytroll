@@ -45,9 +45,10 @@ logger = logging.getLogger('datex-client')
 HEARTBEAT_TIMEOUT = 15 * 60
 
 def usage():
-    print >>sys.stderr, """datex_client [-c] [-H] <datatype>
+    print >>sys.stderr, """datex_client [-c] [-H] [<datatype>]
     -c, md5 check of received file
-    -H, this info"""
+    -H, this info
+    If no <datatype>, client will just listen for heartbeats"""
     sys.exit(2)
 
 # time.strptime not thread-safe (Issue 7980), work around
@@ -83,8 +84,9 @@ for k, v in opts:
 
 try:
     datatype = args[0]
+    subject = 'pytroll://' + datatype + ' file'
 except IndexError:
-    usage()
+    subject = None
 
 rpc_address, publish_address = datex_config.get_client()
 url = "http://%s:%d"%rpc_address
@@ -94,8 +96,7 @@ url = "http://%s:%d"%rpc_address
 # Subscribe for pol_L0 file messages and run forever.
 #
 #-----------------------------------------------------------------------------
-
-subscriber = Subscriber('pytroll://' + datatype + ' file', publish_address)
+subscriber = Subscriber(subject, publish_address)
 try:
     last_message_time = datetime.utcnow()
     for m in subscriber.get(timeout=2.):
@@ -110,8 +111,8 @@ try:
         else:
             # timeout
             if (datetime.utcnow() - last_message_time).seconds > HEARTBEAT_TIMEOUT:
-                logger.warning("No hearbeat since %d seconds... Reconnecting"%HEARTBEAT_TIMEOUT)
-                subscriber = Subscriber('pytroll://' + datatype + ' file', publish_address) 
+                logger.warning("No heartbeat since %d seconds... Reconnecting"%HEARTBEAT_TIMEOUT)
+                subscriber = Subscriber(subject, publish_address) 
                 last_message_time = datetime.utcnow()
         time.sleep(0.0001)
 except HangupInterrupt:
