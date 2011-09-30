@@ -41,12 +41,12 @@ broadcast_port = 21200
 class MessageBroadcaster(object):
     """Class to broadcast stuff.
     """
-    def __init__(self, message, port, interval):
+    def __init__(self, msg, port, interval):
         # mcgroup = None or '<broadcast>' is broadcast
         # mcgroup = MC_GROUP is default multicast group
         self._sender = MulticastSender(port, mcgroup=MC_GROUP)
         self._interval = interval
-        self._message = message
+        self._message = msg
         self._do_run = False
         self._is_running = False
         self._thread = threading.Thread(target=self._run)

@@ -66,18 +66,19 @@ class MulticastSender(object):
 
 # Allow non-object interface
 def mcast_sender(mcgroup=MC_GROUP):
-    s = socket(AF_INET, SOCK_DGRAM)
-    s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+    sock = socket(AF_INET, SOCK_DGRAM)
+    sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     if _is_broadcast_group(mcgroup):
         group = '<broadcast>'
-        s.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
-    elif((int(mcgroup.split(".")[0]) > 239) or (int(mcgroup.split(".")[0]) < 224)):
+        sock.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
+    elif((int(mcgroup.split(".")[0]) > 239) or 
+         (int(mcgroup.split(".")[0]) < 224)):
         raise IOError("Invalid multicast address.")
     else:
         group = mcgroup
         ttl = struct.pack('b', TTL_LOCALNET) # Time-to-live
-        s.setsockopt(IPPROTO_IP, IP_MULTICAST_TTL, ttl)
-    return s, group
+        sock.setsockopt(IPPROTO_IP, IP_MULTICAST_TTL, ttl)
+    return sock, group
 
 #-----------------------------------------------------------------------------
 #
@@ -92,9 +93,9 @@ class MulticastReceiver(object):
         self.port = port
         self.socket, self.group = mcast_receiver(port, mcgroup)
         
-    def settimeout(self, timeout=None):
+    def settimeout(self, tout=None):
         # A timeout will throw a 'socket.timeout'
-        self.socket.settimeout(timeout)
+        self.socket.settimeout(tout)
         return self
 
     def __call__(self):
@@ -114,17 +115,17 @@ def mcast_receiver(port, mcgroup=MC_GROUP):
         group = mcgroup
 
     # Create a socket
-    s = socket(AF_INET, SOCK_DGRAM)
+    sock = socket(AF_INET, SOCK_DGRAM)
 
     # Allow multiple copies of this program on one machine
     # (not strictly needed)
-    s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+    sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     if group:
-        s.setsockopt(SOL_IP, IP_MULTICAST_TTL, TTL_LOCALNET) # default
-        s.setsockopt(SOL_IP, IP_MULTICAST_LOOP, 1) # default
+        sock.setsockopt(SOL_IP, IP_MULTICAST_TTL, TTL_LOCALNET) # default
+        sock.setsockopt(SOL_IP, IP_MULTICAST_LOOP, 1) # default
 
     # Bind it to the port
-    s.bind(('', port))
+    sock.bind(('', port))
 
     # Look up multicast group address in name server
     # (doesn't hurt if it is already in ddd.ddd.ddd.ddd format)
@@ -132,7 +133,7 @@ def mcast_receiver(port, mcgroup=MC_GROUP):
         group = gethostbyname(group)
 
         # Construct binary group address
-        bytes_ = map(int, group.split("."))
+        bytes_ = [int(b) for b in group.split(".")]
         grpaddr = 0
         for byte in bytes_:
             grpaddr = (grpaddr << 8) | byte
@@ -142,9 +143,9 @@ def mcast_receiver(port, mcgroup=MC_GROUP):
         mreq = struct.pack('LL', htonl(grpaddr), htonl(ifaddr))
 
         # Add group membership
-        s.setsockopt(IPPROTO_IP, IP_ADD_MEMBERSHIP, mreq)
+        sock.setsockopt(IPPROTO_IP, IP_ADD_MEMBERSHIP, mreq)
         
-    return s, group or '<broadcast>'
+    return sock, group or '<broadcast>'
 
 #-----------------------------------------------------------------------------
 #
@@ -171,7 +172,7 @@ if __name__ == '__main__':
         sys.exit(2)
 
     # Sender subroutine (only one per local area network ... NOT)
-    def sender(mcgroup):
+    def do_send(mcgroup):
         send = MulticastSender(PORT, mcgroup)
         while 1:
             data = repr(time.time())
@@ -181,7 +182,7 @@ if __name__ == '__main__':
 
 
     # Receiver subroutine (as many as you like)
-    def receiver(mcgroup):
+    def do_receive(mcgroup):
         # Open and initialize the socket
         recv = MulticastReceiver(PORT, mcgroup)
         # Loop, printing any data we receive
@@ -192,17 +193,17 @@ if __name__ == '__main__':
             print sender, ':', repr(data)
 
     PORT = 21200
-    mcgroup = MC_GROUP
+    grp = MC_GROUP
     opts, args = getopt.getopt(sys.argv[1:], "mb")
     for k, v in opts:
         if k == '-b':
-            mcgroup = None
+            grp = None
     if not args:
         usage()
     what = args[0]
     if what == 'send':
-        sender(mcgroup)
+        do_send(grp)
     elif what == 'recv':
-        receiver(mcgroup)
+        do_receive(grp)
     else:
         usage()
