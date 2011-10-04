@@ -247,11 +247,14 @@ def _strptime(strg):
 
 def _getsender():
     """Return local sender.
+    Don't use the getpass module, it looks at various environment variables
+    and is unreliable.
     """
-    import getpass
+    import os
+    import pwd
     import socket
     host = socket.gethostname()
-    user = getpass.getuser()
+    user = pwd.getpwuid(os.getuid())[0]
     return "%s@%s" % (user, host)
 
 #-----------------------------------------------------------------------------
