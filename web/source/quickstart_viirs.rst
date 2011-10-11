@@ -10,8 +10,6 @@ In preparation for the upcoming VIIRS data we have made a plugin reader and cust
 compositer to mpop_.
 Thus it is now possible to generate RGB image composites also for VIIRS.
 
-We have so far no support for the Day/Night band, but that will follow soon.
-
 For this tutorial template config files (see :doc:`install`) can be used. 
 These are located in the *etc* dir of the mpop_ source. Copy *mpop.cfg.template*, *areas.def.template* 
 and *npp1.cfg.template* to another dir and remove the *.template* extension. In the config file 
@@ -141,7 +139,11 @@ During nighttime it is sufficiently sensitive so that useful information on clou
     >>> print global_data['DNB'].info
         {'units': 'W sr-1 m-2', 'band_id': 'DNB'}
 
-So, we see the unit is W/(sr*m²). The units in the HDF5 SDR file is W/(sr*cm²) but in pytroll we keep to the physical units dictated by the netCDF `CF convention`_ on metadata.
+The units in the HDF5 SDR file is W/(sr*cm²) (see table 2.18.2-1, page 355 of the NPOESS Common Data Format Control Book - Volume III - D34862-03 Rev E CDRL No. A014). But in pytroll we keep to the physical units 
+dictated by the netCDF `CF convention`_ on metadata, which is W/(sr*m²). 
+
+Observe that this is really the spectral radiance *integrated* over the entire band of wavelengths from 500 to 900 nm, and *not* a spectral radiance (e.g. unit W/(sr*m²*μm) which is otherwise common for narrow band channels.
+ 
 
     >>> print global_data['DNB'].data
     [[-- 25.2138214111 24.7121238708 ..., 34.5851135254 36.7595329285
