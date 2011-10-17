@@ -43,8 +43,9 @@ datetime.strptime("1956", "%Y")
 #
 #-----------------------------------------------------------------------------
 def usage():
-    print >>sys.stderr, """datex_cmd [-c] [-H] <command> [<datatype>] [<filename>]
+    print >>sys.stderr, """datex_cmd [-c] [-H] <command> [-n<client-name>] [<datatype>] [<filename>]
     -c, md5 check of received file (together with <get_file>)
+    -n <client-name>, section name of client in config file
     -H, this info"""
     cmds = sorted([x for x in dir(RPCProxy) if x[0] != '_' and callable(getattr(RPCProxy, x))])
     print "    valid commands: %s"%' '.join(cmds)
@@ -52,13 +53,15 @@ def usage():
 
 kargs = {}
 datatype = ''
-opts,args = getopt.getopt( sys.argv[1:], 'Hcd:' )
+client_name = 'client'
+opts,args = getopt.getopt( sys.argv[1:], 'Hcn:' )
 for k,v in opts:
     if k == '-H': 
         usage()
+    elif k == '-n':
+        client_name = v
     elif k == '-c': 
         kargs['check_md5'] = True
-
 try:
     cmd = args.pop(0)
 except IndexError:
@@ -69,7 +72,7 @@ if kargs.get('check_md5', None) and cmd != 'get_file':
     sys.exit(2)
 
 # A single RPC call.
-server = RPCProxy("http://%s:%d"%datex_config.get_client()[0])
+server = RPCProxy("http://%s:%d"%datex_config.get_client(name=client_name)[0])
 print 'server', server.url
 
 ret = getattr(server, cmd)(*args, **kargs)

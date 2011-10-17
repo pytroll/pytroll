@@ -45,8 +45,9 @@ logger = logging.getLogger('datex-client')
 HEARTBEAT_TIMEOUT = 15 * 60
 
 def usage():
-    print >>sys.stderr, """datex_client [-c] [-H] [<datatype>]
+    print >>sys.stderr, """datex_client [-c] [-H] [-n <client-name>] [<datatype>]
     -c, md5 check of received file
+    -n <client-name>, section name of client in config file
     -H, this info
     If no <datatype>, client will just listen for heartbeats"""
     sys.exit(2)
@@ -74,11 +75,14 @@ signal.signal(signal.SIGTERM, sigstop_handler)
 # Handle options
 #
 #-----------------------------------------------------------------------------
+client_name = 'client'
 kwargs = {}
-opts, args = getopt.getopt(sys.argv[1:], 'Hc')
+opts, args = getopt.getopt(sys.argv[1:], 'Hcn:')
 for k, v in opts:
     if k == '-H': 
         usage()
+    elif k == '-n':
+        client_name = v
     elif k == '-c': 
         kwargs['check_md5'] = True
 
@@ -88,7 +92,7 @@ try:
 except IndexError:
     subject = None
 
-rpc_address, publish_address = datex_config.get_client()
+rpc_address, publish_address = datex_config.get_client(name=client_name)
 url = "http://%s:%d"%rpc_address
 
 #-----------------------------------------------------------------------------
