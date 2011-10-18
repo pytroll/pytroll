@@ -47,13 +47,16 @@ class RPCProxy(object):
         self.server = rpc.XMLRPCServerProxy(url)
 
     def get_file(self, datatype, filename, 
-                 outdir='.', chunk_size=1000*5120, check_md5=False):
+                 outdir='.', 
+                 chunk_size=1000*5120,
+                 check_md5=False):
         """Fetch a file in chunks.
         """
         logger.info('getting %s', self.url + '/' + datatype + '/' + filename)
         if check_md5:
-            md5 = hashlib.md5()        
-        fob = open(os.path.join(outdir, filename), 'w+b')
+            md5 = hashlib.md5()
+        localfile = os.path.join(outdir, filename)
+        fob = open(localfile, 'w+b')
         offset = 0
         while True: 
             buf = self.server.get_file_chunk(datatype, filename,
@@ -66,13 +69,15 @@ class RPCProxy(object):
             fob.write(buf)
             offset += len(buf)
         fob.close()
-        logger.info('saved %s (%d bytes)', filename, offset)
+        logger.info('saved %s (%d bytes)', localfile, offset)
         if check_md5:
             logger.info('md5 check on %s', filename)
             remote_md5 = self.server.get_file_md5(datatype, filename,
                                                   timeout=1800)
             if remote_md5 != md5.hexdigest():
                 logger.error('md5 check failed on %s', filename)
+                return None
+        return localfile
 
     def get_file_md5(self, datatype, filename):
         """Get a files md5 sum.
