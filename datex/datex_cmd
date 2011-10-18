@@ -43,7 +43,7 @@ datetime.strptime("1956", "%Y")
 #
 #-----------------------------------------------------------------------------
 def usage():
-    print >>sys.stderr, """datex_cmd [-c] [-H] <command> [-n<client-name>] [<datatype>] [<filename>]
+    print >>sys.stderr, """datex_cmd [-c] [-H] [-n<client-name>] <command> [<datatype>] [<filename>]
     -c, md5 check of received file (together with <get_file>)
     -n <client-name>, section name of client in config file
     -H, this info"""
