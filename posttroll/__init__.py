@@ -22,4 +22,21 @@
 # pytroll.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-assert sys.version[0:3] >= '2.6', 'Python version 2.6 or above is required.'
+assert sys.version[0:3] >= '2.5', 'Python version 2.5 or above is required.'
+from datetime import datetime, timedelta
+
+def strp_isoformat(strg):
+    """Decode an ISO formatted string to a datetime object.
+    """
+    if sys.version[0:3] >= '2.6':
+        _isoformat = "%Y-%m-%dT%H:%M:%S.%f"
+        return datetime.strptime(strg, _isoformat)
+    else:
+        _isoformat = "%Y-%m-%dT%H:%M:%S"
+        if strg.find(".") > -1:
+            _dt, _ms = strg.strip().split(".")
+            _ms = int(_ms)
+        else:
+            _dt, _ms = strg.strip(), 0
+        return datetime.strptime(_dt, _isoformat) + \
+            timedelta(microseconds=_ms)
