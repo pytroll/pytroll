@@ -30,7 +30,7 @@ from datetime import datetime, timedelta
 from ConfigParser import ConfigParser, NoOptionError
 import fcntl
 
-from datex import logger, datetime_format
+from datex import logger, strp_isoformat
 
 class _LockedConfigFile(object):
     """A ConfigParser where reading and writing is on a locked file.
@@ -81,9 +81,8 @@ class DatexLastStamp(_LockedConfigFile):
         """Return last time stamp.
         """
         self._read()
-        return datetime.strptime(self.cfg.get(self.section, 'last_stamp'),
-                                 datetime_format)
-
+        return strp_isoformat(self.cfg.get(self.section, 'last_stamp'))
+    
     def update_last_stamp(self, last_stamp):
         """Update last time stamp.
         """
@@ -93,7 +92,7 @@ class DatexLastStamp(_LockedConfigFile):
             logger.info("create last stamp file '%s'", self.filename)
             self.cfg.add_section(self.section)
         if not isinstance(last_stamp, str):
-            last_stamp = last_stamp.strftime(datetime_format)
+            last_stamp = last_stamp.isoformat()
         self.cfg.set(self.section, 'last_stamp', last_stamp)
         self._write()
 

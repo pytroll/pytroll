@@ -32,7 +32,7 @@ from glob import glob
 from datetime import datetime
 import hashlib
 import rpclite as rpc
-from datex import logger, datetime_format, datex_config
+from datex import logger, strp_isoformat, datex_config
 
 #-----------------------------------------------------------------------------
 #
@@ -80,13 +80,13 @@ def get_file_list(data_type, time_start=None, time_end=None):
     logger.info('... get_file_list(%s, %s, %s)'%(data_type, time_start,
                                                  time_end))
     if time_start:
-        time_start = datetime.strptime(time_start, datetime_format)
+        time_start = strp_isoformat(time_start)
     if time_end:
-        time_end = datetime.strptime(time_end, datetime_format)
+        time_end = strp_isoformat(time_end)
 
     result = []
     for fname, ftime in _get_file_list(data_type, time_start, time_end):
-        fname, ftime = os.path.basename(fname), ftime.strftime(datetime_format)
+        fname, ftime = os.path.basename(fname), ftime.isoformat()
         result.append((fname, ftime))
 
     return result

@@ -32,7 +32,7 @@ from datetime import datetime, timedelta
 import hashlib
 
 import rpclite as rpc
-from datex import logger, datetime_format
+from datex import logger
 
 #-----------------------------------------------------------------------------
 #
@@ -102,7 +102,7 @@ class RPCProxy(object):
         """
         if latest:
             time_start = (datetime.now() - 
-                          timedelta(hours=2)).strftime(datetime_format)
+                          timedelta(hours=2)).isoformat()
             fnames = self.server.get_file_list(datatype, time_start)
         else:
             fnames = self.server.get_file_list(datatype)
