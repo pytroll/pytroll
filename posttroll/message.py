@@ -34,9 +34,9 @@ Note: It's not optimized for BIG messages.
 import sys
 import re
 from datetime import datetime
-if sys.version[0:3] >= '2.6':
+try:
     import json
-else:
+except ImportError:
     import simplejson as json
 
 from posttroll import strp_isoformat
