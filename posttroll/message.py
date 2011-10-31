@@ -31,7 +31,6 @@ application/json "jhuuuu !!!"
 
 Note: It's not optimized for BIG messages.
 """
-import sys
 import re
 from datetime import datetime
 try:

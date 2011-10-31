@@ -42,7 +42,7 @@ import struct
 from socket import (socket, AF_INET, SOCK_DGRAM, SOL_SOCKET, SO_REUSEADDR,
                     SO_BROADCAST, IPPROTO_IP, IP_ADD_MEMBERSHIP, INADDR_ANY,
                     IP_MULTICAST_TTL, IP_MULTICAST_LOOP, SOL_IP, timeout,
-                    gethostbyname, htonl)
+                    gethostbyname)
 
 SocketTimeout = timeout # for easy access to socket.timeout
 
@@ -140,7 +140,7 @@ def mcast_receiver(port, mcgroup=MC_GROUP):
 
         # Construct struct mreq from grpaddr and ifaddr
         ifaddr = INADDR_ANY
-        mreq = struct.pack('LL', htonl(grpaddr), htonl(ifaddr))
+        mreq = struct.pack('!LL', grpaddr, ifaddr)
 
         # Add group membership
         sock.setsockopt(IPPROTO_IP, IP_ADD_MEMBERSHIP, mreq)
