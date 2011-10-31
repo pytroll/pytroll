@@ -44,6 +44,13 @@ logger = logging.getLogger('datex-server')
 # time.strptime not thread-safe (Issue 7980), work around
 datetime.strptime("1956", "%Y")
 
+def usage():
+    print >>sys.stderr, """datex_server [-n<name>] [--logfile=<logfile>] [--pidfile=<pidfile>]
+    -n<name>, server name ... corresponding to a section in config file.
+    --logfiles=<logfile>, specify logfile.
+    --pidfile=<pidfile>, specify file to write process id."""
+    sys.exit(2)
+
 #-----------------------------------------------------------------------------
 #
 # Redirections and reopen of logfile
@@ -59,7 +66,7 @@ def relog():
 
 relog.n, relog.p = '', None
 config_name = 'server'
-opts, args = getopt.getopt(sys.argv[1:], 'n:', ['logfile=', 'pidfile='])
+opts, args = getopt.getopt(sys.argv[1:], 'Hn:', ['logfile=', 'pidfile='])
 for k, v in opts:
     if k == '-n':
         config_name = v
@@ -68,6 +75,8 @@ for k, v in opts:
     elif k == '--pidfile':
         with open(v, 'w') as fp:
             print >>fp, os.getpid()
+    elif k == '-H':
+        usage()
 
 relog()
         
