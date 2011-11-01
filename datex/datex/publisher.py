@@ -124,7 +124,7 @@ def check_and_publish(datatype, rpc_metadata, publish, heartbeat):
             if(heartbeat and
                (datetime.now() - last_heartbeat).seconds >= heartbeat):
                 # Send a heartbeat
-                msg = Message('/hearbeat/' + datatype, 'heartbeat', str(datetime.utcnow()))
+                msg = Message('/hearbeat/' + datatype, 'heartbeat', datetime.utcnow().isoformat())
                 logger.info('sending: ' + str(msg))
                 try:
                     publish.send(str(msg))
