@@ -36,20 +36,20 @@ class Subscriber(object):
     """
     def __init__(self, subject, address):
         subscriber = context.socket(zmq.SUB)
-        if subject == None: # allow to subscribe just for heartbeats
-            sub = "pytroll://hearbeat"
-            logger.info("Subscribing to %s"%sub)
-            subscriber.setsockopt(zmq.SUBSCRIBE, sub)
-        else:
-            logger.info("Subscribing to %s"%subject)
+        if subject:
+            logger.info("Subscribing to '%s'"%subject)
             subscriber.setsockopt(zmq.SUBSCRIBE, subject)
+            # corresponding heartbeat
             sub = subject.split()[0].split('://')
-            sub = sub[0] + "://hearbeat/" + sub[1] + ' heartbeat'
-            logger.info("Subscribing to %s"%sub)
-            subscriber.setsockopt(zmq.SUBSCRIBE, sub)
+            heartbeat_subject = sub[0] + "://hearbeat/" + sub[1] + ' heartbeat'
+        else:
+            heartbeat_subject = "pytroll://hearbeat"
+        # subscribe for heartbeats
+        logger.info("Subscribing to '%s'"%heartbeat_subject)
+        subscriber.setsockopt(zmq.SUBSCRIBE, heartbeat_subject)
         self.subscriber = subscriber
         self.destination = address
-        logger.info("Destination %s"%self.destination)
+        logger.info("Destination '%s'"%self.destination)
 
     def __call__(self):
         return self.get()
