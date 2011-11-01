@@ -43,7 +43,7 @@ from datex.services import _get_file_list
 from datex import logger, datex_config
 from posttroll.message import Message
 
-TIME_WAKEUP = 30
+TIME_WAKEUP = 20
 TIME_EPSILON = timedelta(microseconds=10)
 #-----------------------------------------------------------------------------
 #
@@ -108,7 +108,7 @@ def check_and_publish(datatype, rpc_metadata, publish, heartbeat):
         del fglob
         fstamp = stamp_config.get_last_stamp()
         for fname, ftime in _get_file_list(datatype,
-                                       time_start=fstamp + TIME_EPSILON):
+                                           time_start=fstamp + TIME_EPSILON):
             if datex_config.distribute(datatype):
                 yield os.path.join(fdir, fname)
             stamp_config.update_last_stamp(ftime)
@@ -116,13 +116,15 @@ def check_and_publish(datatype, rpc_metadata, publish, heartbeat):
     # Give the publisher a little time to initialize
     # (e.g reconnections from subscribers)
     time.sleep(1)
-    logger.info('publisher starting')
-    last_heartbeat = datetime.now()
+    logger.info('publisher starting for datatype %s'%datatype)
+    if heartbeat:
+        last_heartbeat = datetime.now() - timedelta(seconds=heartbeat + 1)
     try:
         while(True):
             if(heartbeat and
                (datetime.now() - last_heartbeat).seconds >= heartbeat):
-                msg = Message('/hearbeat', 'heartbeat', str(datetime.utcnow()))
+                # Send a heartbeat
+                msg = Message('/hearbeat/' + datatype, 'heartbeat', str(datetime.utcnow()))
                 logger.info('sending: ' + str(msg))
                 try:
                     publish.send(str(msg))
