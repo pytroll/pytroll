@@ -49,7 +49,7 @@ class AddressReceiver(object):
         self._max_age = max_age
         self._address_lock = thread.allocate_lock()
         self._addresses = {}
-        self._subject = '/%s/address'%name
+        self._subject = '/%s/address' % name
         self._do_run = False
         self._is_running = False
         self._thread = threading.Thread(target=self._run)        
@@ -69,19 +69,19 @@ class AddressReceiver(object):
 
     def get(self):
         now = datetime.now()
-        ads = []
+        addrs = []
         self._address_lock.acquire()
         try:
-            for a, s in self._addresses.items():
-                if now - s < self._max_age:
-                    ads.append(a)
+            for addr, atime in self._addresses.items():
+                if now - atime < self._max_age:
+                    addrs.append(addr)
                 else:
-                    del self._addresses[a]
+                    del self._addresses[addr]
         finally:
             self._address_lock.release()
         if debug:
-            print 'return address', ads
-        return ads
+            print 'return address', addrs
+        return addrs
 
     def _run(self):
         port = broadcast_port
@@ -91,13 +91,12 @@ class AddressReceiver(object):
             while self._do_run:
                 try:
                     data, fromaddr = recv()
+                    del fromaddr
                 except SocketTimeout:
                     continue
-                m = Message.decode(data)
-                if debug:
-                    print "address_receiver got", m
-                if m.type == 'info' and m.subject.lower() == self._subject:
-                    addr = [i.strip() for i in m.data.split(':')]
+                msg = Message.decode(data)
+                if msg.type == 'info' and msg.subject.lower() == self._subject:
+                    addr = [i.strip() for i in msg.data.split(':')]
                     addr[1] = int(addr[1])
                     addr = tuple(addr)
                     if debug:

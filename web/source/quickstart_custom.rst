@@ -124,7 +124,7 @@ in this example it's assumed the netCDF files *ssmi_f13_200509151935_sncp.nc*, *
     'tb37v: (-inf,-inf,-inf)μm, resolution 0m, not loaded'
     'tb37h: (-inf,-inf,-inf)μm, resolution 0m, not loaded'
 
-The *tb19v* channel has now been loaded. As nothing has been specified on wavelengths and resolutions in the config file these values are not set
+The *tb19v* channel has now been loaded. As nothing has been specified on wavelengths and resolutions in the config file these values are not set (the *-inf* and *0m* above).
 
 The channel data can be retrieved as a numpy array:
 
@@ -147,10 +147,64 @@ mpop has the capability to assemble swaths
     'tb37v: (-inf,-inf,-inf)μm, resolution 0m, not loaded'
     'tb37h: (-inf,-inf,-inf)μm, resolution 0m, not loaded'   
 
+Calculating geophysical parameters
+==================================
+In this example we will calculate the sea ice concentration based on the SSM/I data.
+
+Create the file *ice_conc.py* with the content::
+
+    def nasa_team(scene, area='nh'):
+
+        if area == 'nh':
+            a0, a1, a2, a3 = 3290.2, -20761.2, 23934.0, 47985.4
+            b0, b1, b2, b3 = -790.9, 13825.3, -33155.8, -47771.9
+            c0, c1, c2, c3 = 2035.3, 9244.6, -5665.8, -12875.1
+        else:
+            a0, a1, a2, a3 = 3055.0, -18592.6, 20906.9, 42554.5
+            b0, b1, b2, b3 = -782.750, 13453.5, -33098.3, -47334.6
+            c0, c1, c2, c3 = 2078.00, 7423.28, -3376.76, -8722.03
+
+        PR = (scene['tb19v'] - scene['tb19h']) / (scene['tb19v'] + scene['tb19h'])
+        GR = (scene['tb37v'] - scene['tb19v']) / (scene['tb37v'] + scene['tb19v'])
+
+        D = c0 + c1 * PR + c2 * GR + c3 * PR * GR
+        CF = (a0 + a1 * PR + a2 * GR + a3 * PR * GR) / D
+        CM = (b0 + b1 * PR + b2 * GR + b3 * PR * GR) / D
+        CT = CF + CM
+        return CT
+
+    nasa_team.prerequisites = ['tb19v', 'tb19h', 'tb37v', 'tb37h']
+    
+and make sure the file is in the PYTHONPATH.
+
+Now the data needed to calculate the ice concentration is loaded and assembled:
+
+    >>> import ice_conc
+    >>> time_slot = datetime(2005, 9, 15, 19, 35)
+    >>> global_data = PolarFactory.create_scene("dmsp", "f13", "ssmi", time_slot)
+    >>> global_data2 = PolarFactory.create_scene("dmsp", "f13", "ssmi", datetime(2005, 9, 15, 21, 17))
+    >>> global_data3 = PolarFactory.create_scene("dmsp", "f13", "ssmi", datetime(2005, 9, 15, 22, 59))
+    >>> global_data.load(ice_conc.nasa_team.prerequisites)
+    >>> global_data2.load(ice_conc.nasa_team.prerequisites)
+    >>> global_data3.load(ice_conc.nasa_team.prerequisites)
+    >>> global_all = scene.assemble_segments([global_data, global_data2, global_data3])
+
+The assembled scenes are combined into a new scene object (:attr:`global_all`) which can be used in the calculation:
+
+    >>> ic = ice_conc.nasa_team(global_all)
+    
+The result can be reprojected and plotted:
+
+    >>> from mpop.projector import get_area_def
+    >>> from pyresample import plot
+    >>> global_all["ic"] = ic
+    >>> local_data = global_all.project("ease_nh", ["ic"], mode="nearest", radius=25000)
+    >>> nh = get_area_def("ease_nh")
+    >>> plot.show_quicklook(nh, local_data["ic"].data, vmin=0, vmax=1, label="ice conc")
+
+.. image:: images/ssmi_ice_conc.png
+
 .. _mpop: http://www.github.com/mraspaud/mpop
-.. _pyresample: http://pyresample.googlecode.com 
-
-
-
-
+.. _pyresample: http://pyresample.googlecode.com
+.. _netCDF4: http://code.google.com/p/netcdf4-python/
 
