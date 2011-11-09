@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2009.
+# Copyright (c) 2009, 2011.
 #
 # DMI
 # Lyngbyvej 100
@@ -42,3 +42,9 @@ class Publisher(object):
         """Send the given message.
         """
         self.publish.send(msg)
+        return self
+
+    def stop(self):
+        """Stop the publisher.
+        """
+        return self

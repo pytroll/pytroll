@@ -94,6 +94,8 @@ class AddressReceiver(object):
                 except SocketTimeout:
                     continue
                 m = Message.decode(data)
+                if debug:
+                    print "address_receiver got", m
                 if m.type == 'info' and m.subject.lower() == self._subject:
                     addr = [i.strip() for i in m.data.split(':')]
                     addr[1] = int(addr[1])

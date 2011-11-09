@@ -31,6 +31,28 @@ import zmq
 from posttroll.address_receiver import getaddress
 from posttroll.message import Message
 
+class GenericConnections(object):
+    """Datacenter connections manager.
+    """
+    def __init__(self, module_name):
+        self._dc_addresses = getaddress(module_name)
+        self._context = zmq.Context()
+        self._connections = {}
+
+    def start(self):
+        """Start datacenter address gathering.
+        """
+        self._dc_addresses.start()
+        return self
+    
+    def stop(self):
+        """Stop datacenter address gathering.
+        """
+        self._dc_addresses.stop()
+        for sock in self._connections.values():
+            sock.close()
+        self._connections = {}
+
 class DCConnections(object):
     """Datacenter connections manager.
     """
@@ -52,6 +74,7 @@ class DCConnections(object):
         for sock in self._connections.values():
             sock.close()
         self._connections = {}
+
 
 class  DCConnectionsPush(DCConnections):
 
