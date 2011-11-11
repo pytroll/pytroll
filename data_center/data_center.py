@@ -50,7 +50,7 @@ def get_own_ip():
     sock.close()
     return ip_
 
-publisher = Publisher("tcp://eth0:%d"%PUBLISHER_PORT)
+publisher = Publisher("tcp://wlan0:%d"%PUBLISHER_PORT)
 
 def process_message(msg):
     """Dummy processing function.

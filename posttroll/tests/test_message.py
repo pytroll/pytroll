@@ -123,9 +123,14 @@ class Test(unittest.TestCase):
     def test_serialization(self):
         """Test json serialization.
         """
-        import json
+        compare_file = '/message_metadata.dumps'
+        try:
+            import json
+        except ImportError:
+            import simplejson as json
+            compare_file += '.simplejson'
         metadata = SOME_METADATA
-        fp_ = open(DATADIR + '/message_metadata.dumps')
+        fp_ = open(DATADIR + compare_file)
         dump = fp_.read()
         fp_.close()
         # dumps differ ... maybe it's not a problem
@@ -138,6 +143,4 @@ class Test(unittest.TestCase):
                         ' has changed, python objects differ')
 
 if __name__ == '__main__':
-    import nose
-    sys.argv.append('-s') # when run individually, don't capture stdout
-    nose.main()
+    unittest.main()

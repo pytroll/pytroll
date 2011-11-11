@@ -94,8 +94,25 @@ class AddressBroadcaster(MessageBroadcaster):
     """
     def __init__(self, name, address, interval):
         msg = message.Message("/%s/address"%name, "info",
-                              "%s:%d"%address).encode()
+                              {"URI": "%s:%d"%address}).encode()
         MessageBroadcaster.__init__(self, msg, broadcast_port, interval) 
 #-----------------------------------------------------------------------------
 # default
 sendaddress = AddressBroadcaster
+
+#-----------------------------------------------------------------------------
+#
+# General thread to broadcast addresses and type.
+#
+#-----------------------------------------------------------------------------
+class AddressTypeBroadcaster(MessageBroadcaster):
+    """Class to broadcast stuff.
+    """
+    def __init__(self, name, address, data_type, interval=2):
+        msg = message.Message("/%s/address"%name, "info",
+                              {"URI": address,
+                               "type": str(data_type)}).encode()
+        MessageBroadcaster.__init__(self, msg, broadcast_port, interval) 
+#-----------------------------------------------------------------------------
+# default
+sendaddresstype = AddressTypeBroadcaster

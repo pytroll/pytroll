@@ -4,7 +4,6 @@
 
 # Author(s):
  
-#   Lars Ø. Rasmussen <ras@dmi.dk>
 #   Martin Raspaud <martin.raspaud@smhi.se>
 
 # This file is part of pytroll.
@@ -21,20 +20,32 @@
 # You should have received a copy of the GNU General Public License along with
 # pytroll.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
-assert sys.version[0:3] >= '2.5', 'Python version 2.5 or above is required.'
-from datetime import datetime
+"""A very stupid consumer.
+"""
 
-def strp_isoformat(strg):
-    """Decode an ISO formatted string to a datetime object.
-    Allow a time-string without microseconds.
+from dc.subscriber import Subscriber
+from posttroll.message_broadcaster import sendaddress
+import socket
+
+def get_own_ip():
+    """Get the host's ip number.
     """
-    if strg.find(".") == -1:
-        strg += '.000000'
-    if sys.version[0:3] >= '3.6':
-        return datetime.strptime(strg, "%Y-%m-%dT%H:%M:%S.%f")
-    else:
-        dat, mis = strg.split(".")
-        dat = datetime.strptime(dat, "%Y-%m-%dT%H:%M:%S")
-        mis = int(float('.' + mis)*1000000)
-        return dat.replace(microsecond=mis)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.connect(('smhi.se', 0))
+    ip_ = sock.getsockname()[0]
+    sock.close()
+    return ip_
+
+BROADCASTER_PORT = 21200
+BROADCASTER = sendaddress('p1', (get_own_ip(), BROADCASTER_PORT), 2).start()
+
+SUB = Subscriber("tcp://localhost:9000")
+
+try:
+    for msg in SUB(timeout=1):
+        print "Consumer got", msg
+        
+except KeyboardInterrupt:
+    print "terminating consumer..."
+    SUB.close()
+    BROADCASTER.stop()

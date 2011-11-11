@@ -33,7 +33,12 @@ Note: It's not optimized for BIG messages.
 """
 import re
 from datetime import datetime
-import json
+try:
+    import json
+except ImportError:
+    import simplejson as json
+
+from posttroll import strp_isoformat
 
 _MAGICK = 'pytroll:/'
 _VERSION = 'v1.01'
@@ -199,7 +204,7 @@ def _decode(rawstr):
     msg = dict((('subject', raw[0].strip()),
                 ('type', raw[1].strip()),
                 ('sender', raw[2].strip()),
-                ('time', _strptime(raw[3].strip())),
+                ('time', strp_isoformat(raw[3].strip())),
                 ('version', version)))
 
     # Data part
@@ -239,12 +244,6 @@ def _encode(msg, head=False):
 # Small internal helpers.
 #
 #-----------------------------------------------------------------------------
-def _strptime(strg):
-    """Decode an ISO formatted string to a datetime object.
-    """
-    _isoformat = "%Y-%m-%dT%H:%M:%S.%f"
-    return datetime.strptime(strg, _isoformat)
-
 def _getsender():
     """Return local sender.
     Don't use the getpass module, it looks at various environment variables

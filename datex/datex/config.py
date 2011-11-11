@@ -30,7 +30,7 @@ from datetime import datetime, timedelta
 from ConfigParser import ConfigParser, NoOptionError
 import fcntl
 
-from datex import logger, datetime_format
+from datex import logger, strp_isoformat
 
 class _LockedConfigFile(object):
     """A ConfigParser where reading and writing is on a locked file.
@@ -81,9 +81,8 @@ class DatexLastStamp(_LockedConfigFile):
         """Return last time stamp.
         """
         self._read()
-        return datetime.strptime(self.cfg.get(self.section, 'last_stamp'),
-                                 datetime_format)
-
+        return strp_isoformat(self.cfg.get(self.section, 'last_stamp'))
+    
     def update_last_stamp(self, last_stamp):
         """Update last time stamp.
         """
@@ -93,7 +92,7 @@ class DatexLastStamp(_LockedConfigFile):
             logger.info("create last stamp file '%s'", self.filename)
             self.cfg.add_section(self.section)
         if not isinstance(last_stamp, str):
-            last_stamp = last_stamp.strftime(datetime_format)
+            last_stamp = last_stamp.isoformat()
         self.cfg.set(self.section, 'last_stamp', last_stamp)
         self._write()
 
@@ -108,24 +107,24 @@ class DatexConfig(_LockedConfigFile):
             filename = os.path.join(os.environ['DATEX_CONFIG_DIR'], 'datex.cfg')
         _LockedConfigFile.__init__(self, filename)
 
-    def get_server(self):
+    def get_server(self, name='server'):
         """Return what a server want to read for rpc and publish addresses.
         """
         self._read()
-        rpc_address = self.cfg.get('server', 'rpc_address')
+        rpc_address = self.cfg.get(name, 'rpc_address')
         rpc_host, rpc_port = rpc_address.split(':')
         rpc_port = int(rpc_port)
-        publish_destination = self.cfg.get('server', 'publish_destination')
+        publish_destination = self.cfg.get(name, 'publish_destination')
         return (rpc_host, rpc_port), publish_destination
 
-    def get_client(self):
+    def get_client(self, name='client'):
         """Return what a client want to read for rpc and publish addresses.
         """
         self._read()
-        rpc_address = self.cfg.get('client', 'rpc_address')
+        rpc_address = self.cfg.get(name, 'rpc_address')
         rpc_host, rpc_port = rpc_address.split(':')
         rpc_port = int(rpc_port)
-        publish_address = self.cfg.get('client', 'publish_address')
+        publish_address = self.cfg.get(name, 'publish_address')
         return (rpc_host, rpc_port), publish_address
 
     def distribute(self, datatype):

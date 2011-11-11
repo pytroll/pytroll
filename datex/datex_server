@@ -24,6 +24,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
+from __future__ import with_statement
+
 import sys
 import os
 import logging
@@ -42,6 +44,13 @@ logger = logging.getLogger('datex-server')
 # time.strptime not thread-safe (Issue 7980), work around
 datetime.strptime("1956", "%Y")
 
+def usage():
+    print >>sys.stderr, """datex_server [-n<name>] [--logfile=<logfile>] [--pidfile=<pidfile>]
+    -n<name>, server name ... corresponding to a section in config file.
+    --logfiles=<logfile>, specify logfile.
+    --pidfile=<pidfile>, specify file to write process id."""
+    sys.exit(2)
+
 #-----------------------------------------------------------------------------
 #
 # Redirections and reopen of logfile
@@ -56,13 +65,18 @@ def relog():
         os.dup2(relog.p.fileno(), sys.stderr.fileno())
 
 relog.n, relog.p = '', None
-opts, args = getopt.getopt(sys.argv[1:], '', ['logfile=', 'pidfile='])
+config_name = 'server'
+opts, args = getopt.getopt(sys.argv[1:], 'Hn:', ['logfile=', 'pidfile='])
 for k, v in opts:
-    if k == '--logfile':
+    if k == '-n':
+        config_name = v
+    elif k == '--logfile':
         relog.n = v
     elif k == '--pidfile':
         with open(v, 'w') as fp:
             print >>fp, os.getpid()
+    elif k == '-H':
+        usage()
 
 relog()
         
@@ -86,7 +100,7 @@ signal.signal(signal.SIGTERM, sigstop_handler)
 # Read configuration file
 #
 #-----------------------------------------------------------------------------
-rpc_address, publish_destination = datex_config.get_server()
+rpc_address, publish_destination = datex_config.get_server(name=config_name)
 
 #-----------------------------------------------------------------------------
 #
