@@ -1,5 +1,6 @@
 Here we keep the Data base design and code.
 
+
 So far only a first draft database design done with Power Architect
 and some example code to verify it.
 
@@ -17,30 +18,27 @@ Content:
         * pytroll_db.architect
           The db-design as done with Power Architect
 
-        * pytroll_db_ed.sql
+        * pytroll_db_v2.sql
           The slightly modified/edited sql file that was generated automatically from pgDesigner
-
-        * test_pytroll_db_insert.sql
-          Test code to insert some synthetic (made up) values into the database.
-
-        * pytroll_test_query.sql*
-          Test code to illustrate the kind of queries you can do on the database.
-
-        * create_sat_db_tables.sql*
-          The sql code we wrote during the working week (w48 2010) at SMHI.
-
-        * test_insert_into_table.sql
-          The test code (also written during the working week) to insert some synthetic (made up) 
-          values into the database.
-
-        * delete_sat_db_tables.sql*
-          Cleaning up the database (also written during the working week)
 
         * postgisify_pytroll_db.py*
           Creates PostGIS version of pytroll_db create SQL
+
+        * pytroll_db.py
+          SQLAlchemy interface for the pytroll DB
+
+        * pytroll_db_insert_pps.sql
+          Test code to insert some PPS values into the database.
+        
+        * pps_db_import.py
+          Scan directory for global metop PPS cloudtype granules and add to DB
+
+        * pytroll_cleanup.py
+          Clean up DB files based on content of dir containing global metop PPS cloudtype granules 
+
         
 
 Esben & Adam
-2010-12-08
+2011-11-11
 
 
