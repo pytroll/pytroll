@@ -41,7 +41,7 @@ Base = declarative_base()
 #relation table
 data_boundary = Table('data_boundary', Base.metadata,
                       Column('filename', String,
-                             ForeignKey('file.filename')),
+                             ForeignKey('file.filename', ondelete="CASCADE")),
                       Column('boundary_id', Integer,
                              ForeignKey('boundary.boundary_id')))
 
@@ -57,7 +57,7 @@ file_tag = Table('file_tag', Base.metadata,
                  Column('tag_id', Integer,
                         ForeignKey('tag.tag_id')),
                  Column('filename', String,
-                        ForeignKey('file.filename')))
+                        ForeignKey('file.filename', ondelete="CASCADE")))
 
 #relation table
 file_type_tag = Table('file_type_tag', Base.metadata,
@@ -181,7 +181,7 @@ class ParameterLinestring(Base):
     __tablename__ = 'parameter_linestring'
 
     #mapping
-    filename = Column(String, ForeignKey('file.filename'), primary_key=True)
+    filename = Column(String, ForeignKey('file.filename', ondelete="CASCADE"), primary_key=True)
     parameter_id = Column(Integer, ForeignKey('parameter.parameter_id'), primary_key=True)
     creation_time = Column(DateTime)
     data_value = Column(LINESTRING())
@@ -197,7 +197,7 @@ class ParameterValue(Base):
     __tablename__ = "parameter_value"
 
     #mapping
-    filename = Column(String, ForeignKey('file.filename'), primary_key=True)
+    filename = Column(String, ForeignKey('file.filename', ondelete="CASCADE"), primary_key=True)
     parameter_id = Column(Integer, ForeignKey('parameter.parameter_id'), primary_key=True)
     data_value = Column(String)
     creation_time = Column(DateTime)
@@ -228,7 +228,7 @@ class FileURI(Base):
     __tablename__ = "file_uri"
 
     #mapping
-    filename = Column(String, ForeignKey('file.filename'), primary_key=True)
+    filename = Column(String, ForeignKey('file.filename', ondelete="CASCADE"), primary_key=True)
     uri = Column(String, primary_key=True)
     
     def __init__(self, filename, uri):
@@ -258,10 +258,10 @@ FileType.file_type_tags = relation(Tag, secondary=file_type_tag, backref='file_t
 
 
 #File
-File.parameter_values = relation(ParameterValue, backref='file_obj')
-File.parameter_linestrings = relation(ParameterLinestring, backref='file_obj')
-File.file_tags = relation(Tag, secondary=file_tag, backref='file_objs')
-File.boundary = relation(Boundary, secondary=data_boundary, backref='file_objs')
+File.parameter_values = relation(ParameterValue, backref='file_obj', cascade="all, delete, delete-orphan")
+File.parameter_linestrings = relation(ParameterLinestring, backref='file_obj', cascade="all, delete, delete-orphan")
+File.file_tags = relation(Tag, secondary=file_tag, backref='file_objs', cascade="all, delete")
+File.boundary = relation(Boundary, secondary=data_boundary, backref='file_objs', cascade="all, delete")
 
 #FileURI
 FileURI.file_obj = relation(File, backref='uris')
@@ -486,6 +486,19 @@ class DCManager(object):
         return self._session.query(File).\
                filter(File.filename == filename).one()
 
+    def get_files(self, file_type_name, oldest_creation_time=None, 
+                  newest_creation_time=None):
+        if newest_creation_time is None:
+            newest_creation_time = datetime.datetime.utcnow()
+        if oldest_creation_time is None:
+            oldest_creation_time = datetime.datetime(1, 1, 1)
+        
+        return self._session.query(File).\
+            filter(FileType.file_type_name == file_type_name).\
+            filter(File.file_type_id == FileType.file_type_id).\
+            filter(File.creation_time > oldest_creation_time).\
+            filter(File.creation_time < newest_creation_time).all() 
+
     def create_file(self, filename,
                     is_archived=False,
                     creation_time=datetime.datetime.utcnow(),
@@ -546,6 +559,8 @@ class DCManager(object):
         self._session.add(file_obj)
         return file_obj
 
+    def delete(self, sqla_object):
+        self._session.delete(sqla_object)
 
 if __name__ == '__main__':
     rm = DCManager('postgresql://iceopr@devsat-lucid:5432/testdb2')
