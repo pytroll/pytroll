@@ -25,7 +25,17 @@
 #
 
 import zmq
-from threading import Thread
+from posttroll.message_broadcaster import sendaddresstype
+import socket
+
+def get_own_ip():
+    """Get the host's ip number.
+    """
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.connect(('smhi.se', 0))
+    ip_ = sock.getsockname()[0]
+    sock.close()
+    return ip_
 
 class Publisher(object):
     """The publisher class.
@@ -48,3 +58,31 @@ class Publisher(object):
         """Stop the publisher.
         """
         return self
+
+class Publish(object):
+    def __init__(self, name, data_type, port, broadcast_interval=2):
+        self._name = name
+        self._data_type = data_type
+        self._port = port
+        self._broadcast_interval = broadcast_interval
+        self._broadcaster = None
+        self._publisher = None
+
+    def __enter__(self):
+        print "entering publish"
+        addr = "tcp://" + str(get_own_ip()) + ":" + str(self._port)
+        self._broadcaster = sendaddresstype(self._name, addr,
+                                            self._data_type,
+                                            self._broadcast_interval).start()
+        self._publisher = Publisher(addr)
+        return self._publisher
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        print "exiting publish"
+        if self._publisher is not None:
+            self._publisher.stop()
+            self._publisher = None
+        if self._broadcaster is not None:
+            self._broadcaster.stop()
+            self._broadcaster = None
+        

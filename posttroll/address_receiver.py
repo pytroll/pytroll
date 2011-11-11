@@ -30,6 +30,7 @@ import os
 from datetime import datetime, timedelta
 import thread
 import threading
+import copy
 
 from posttroll.message import Message
 from posttroll.bbmcast import MulticastReceiver, SocketTimeout
@@ -45,11 +46,12 @@ broadcast_port = 21200
 #
 #-----------------------------------------------------------------------------
 class AddressReceiver(object):
-    def __init__(self, name, max_age=timedelta(hours=1)):
+    def __init__(self, name="", max_age=timedelta(hours=1)):
         self._max_age = max_age
         self._address_lock = thread.allocate_lock()
         self._addresses = {}
-        self._subject = '/%s/address' % name
+        self._subject = '/address'
+        self._name = name
         self._do_run = False
         self._is_running = False
         self._thread = threading.Thread(target=self._run)        
@@ -67,14 +69,16 @@ class AddressReceiver(object):
     def is_running(self):
         return self._is_running
 
-    def get(self):
-        now = datetime.now()
+    def get(self, name=""):
+        now = datetime.utcnow()
         addrs = []
+        name = name or self._name
         self._address_lock.acquire()
         try:
-            for addr, atime in self._addresses.items():
+            for addr, metadata in self._addresses.items():
+                atime = metadata["receive_time"]
                 if now - atime < self._max_age:
-                    addrs.append(addr)
+                    addrs.append(metadata)
                 else:
                     del self._addresses[addr]
         finally:
@@ -95,21 +99,23 @@ class AddressReceiver(object):
                 except SocketTimeout:
                     continue
                 msg = Message.decode(data)
-                if msg.type == 'info' and msg.subject.lower() == self._subject:
-                    addr = [i.strip() for i in msg.data.split(':')]
-                    addr[1] = int(addr[1])
-                    addr = tuple(addr)
+                name = msg.subject.split("/")[1]
+                if msg.type == 'info' and msg.subject.lower().endswith(self._subject):
+                    addr = msg.data["URI"]
+                    metadata = copy.copy(msg.data)
+                    metadata["name"] = name
                     if debug:
-                        print 'receiving address', addr
-                    self._add(addr)
+                        print 'receiving address', addr, name, metadata
+                    self._add(addr, metadata)
         finally:
             self._is_running = False
             recv.close()
 
-    def _add(self, adr):
+    def _add(self, adr, metadata):
         self._address_lock.acquire()
         try:
-            self._addresses[adr] = datetime.now()
+            metadata["receive_time"] = datetime.utcnow()
+            self._addresses[adr] = metadata
         finally:
             self._address_lock.release()
 
