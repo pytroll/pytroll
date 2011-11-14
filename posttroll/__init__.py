@@ -31,7 +31,7 @@ def strp_isoformat(strg):
     """
     if strg.find(".") == -1:
         strg += '.000000'
-    if sys.version[0:3] >= '3.6':
+    if sys.version[0:3] >= '2.6':
         return datetime.strptime(strg, "%Y-%m-%dT%H:%M:%S.%f")
     else:
         dat, mis = strg.split(".")
