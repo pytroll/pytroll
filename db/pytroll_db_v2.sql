@@ -193,14 +193,14 @@ NOT DEFERRABLE;
 ALTER TABLE public.file_tag ADD CONSTRAINT tag_file_tag_fk
 FOREIGN KEY (tag_id)
 REFERENCES public.tag (tag_id)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.file_access_uri ADD CONSTRAINT file_format_file_uri_fk
 FOREIGN KEY (file_format_id)
 REFERENCES public.file_format (file_format_id)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
@@ -249,21 +249,21 @@ NOT DEFERRABLE;
 ALTER TABLE public.parameter_value ADD CONSTRAINT file_parameter_value_fk
 FOREIGN KEY (filename)
 REFERENCES public.file (filename)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.parameter_linestring ADD CONSTRAINT file_parameter_track_fk
 FOREIGN KEY (filename)
 REFERENCES public.file (filename)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.data_boundary ADD CONSTRAINT file_data_boundary_fk
 FOREIGN KEY (filename)
 REFERENCES public.file (filename)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
