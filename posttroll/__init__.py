@@ -28,7 +28,13 @@ from datetime import datetime
 def strp_isoformat(strg):
     """Decode an ISO formatted string to a datetime object.
     Allow a time-string without microseconds.
+
+    We handle input like: 2011-11-14T12:51:25.123456
     """
+    if len(strg) < 19 or len(strg) > 26:
+        if len(strg) > 30:
+            strg = strg[:30] + '...'
+        raise ValueError, "Invalid ISO formatted time string '%s'"%strg
     if strg.find(".") == -1:
         strg += '.000000'
     if sys.version[0:3] >= '2.6':
