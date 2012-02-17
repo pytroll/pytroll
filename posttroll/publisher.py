@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2009, 2011.
+# Copyright (c) 2009, 2011, 2012.
 #
 # DMI
 # Lyngbyvej 100
@@ -74,7 +74,8 @@ class Publish(object):
         self._broadcaster = sendaddresstype(self._name, addr,
                                             self._data_type,
                                             self._broadcast_interval).start()
-        self._publisher = Publisher(addr)
+        pub_addr = "tcp://*:" + str(self._port)
+        self._publisher = Publisher(pub_addr)
         return self._publisher
 
     def __exit__(self, exc_type, exc_val, exc_tb):
