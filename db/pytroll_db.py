@@ -24,11 +24,19 @@
 
 import datetime
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime,\
-                       create_engine, ForeignKey, Table
+#from sqlalchemy import Column, Integer, String, Boolean, DateTime,\
+#                       create_engine, ForeignKey, Table
+from sqlalchemy import Integer, String, Boolean, DateTime,\
+                       create_engine, ForeignKey
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relation, backref, sessionmaker
+
+#from geoalchemy.postgis import PGComparator
+from geoalchemy import *
+#from geoalchemy import (GeometryColumn, Point, Polygon, LineString,
+#        GeometryDDL, WKTSpatialElement, DBSpatialElement, GeometryExtensionColumn,
+#        WKBSpatialElement)
 
 #from osgeo import ogr
 import shapely.wkb
@@ -185,6 +193,7 @@ class ParameterLinestring(Base):
     parameter_id = Column(Integer, ForeignKey('parameter.parameter_id'), primary_key=True)
     creation_time = Column(DateTime)
     data_value = Column(LINESTRING())
+    #data_value = GeometryColumn(LineString(2))
 
     def __init__(self, file_obj, parameter, data_value, creation_time):
         self.file_obj = file_obj
@@ -235,6 +244,8 @@ class FileURI(Base):
         self.filename = filename
         self.uri = uri
 
+
+#GeometryDDL(ParameterLinestring.__table__)
 
 #
 #Relations
@@ -476,7 +487,7 @@ class DCManager(object):
 
     def get_file_format(self, file_format_name):
         return self._session.query(FileFormat).\
-               filter(FileFormat.file_format_name == file_format_name).one()
+               filter(FileFormat.file_format_name7 == file_format_name).one()
 
     def get_parameter(self, parameter_name):
         return self._session.query(Parameter).\
@@ -498,6 +509,42 @@ class DCManager(object):
             filter(File.file_type_id == FileType.file_type_id).\
             filter(File.creation_time > oldest_creation_time).\
             filter(File.creation_time < newest_creation_time).all() 
+
+    def get_within_area_of_interest(self, boundingbox, file_type_name = None):
+        """Get all files within area of interest.
+        E.g.: boundingbox = 'POLYGON ((1.7  54.8, 28.7 54.9, 34.8 71.2, 2.3 71.7, 1.7  54.8))'
+        """
+
+        #retv = self._session.query(ParameterLinestring).\
+        #    filter(ParameterLinestring.data_value.intersects(boundingbox)).count()
+        #retv = self._session.query(ParameterLinestring).\
+        #    filter(ParameterLinestring.data_value.intersects(boundingbox) == True).all()
+        #retv = self._session.query(ParameterLinestring).\
+        #    filter(ParameterLinestring.data_value.distance(boundingbox)/1000. <= 0.).all()
+        #retv = self._session.query(File).from_statement(
+        #    "select f.* from file f, parameter_linestring pl where ST_Distance(ST_GeomFromText(:bbox), pl.data_value) < 1000000.").\
+        #             params(bbox=boundingbox).all() 
+        #retv = self._session.query(File).from_statement(
+        #    "select f.* from file f, parameter_linestring pl where ST_Distance(pl.data_value, ST_GeomFromText(:bbox)) < 1.").\
+        #    params(bbox=boundingbox).all()
+        retv = self._session.query(File).from_statement(
+            "select * from (select filename, ST_Distance(data_value, 'POLYGON ((1.7  54.8, 28.7 54.9, 34.8 71.2, 2.3 71.7, 1.7  54.8))':: geography)/1000. as dist from parameter_linestring) dlist where dlist.dist < 1000").all()
+
+
+        return retv
+
+#select * from
+#(
+#select filename, ST_Distance(data_value, 'POLYGON ((1.7  54.8, 28.7 54.9, 34.8 71.2, 2.3 71.#7, 1.7  54.8))':: geography)/1000. as dist from parameter_linestring
+#) dlist where dlist.dist < 1000
+
+        #return self._session.query(File).\
+        #    filter(File.file_type_id == FileType.file_type_id).\
+#select * from
+#(
+#select filename, ST_Distance(data_value, 'POLYGON ((1.7  54.8, 28.7 54.9, 34.8 71.2, 2.3 71.7, 1.7  54.8))':: ge#ography)/1000. as dist from parameter_linestring
+#) dlist where dlist.dist < 1000
+
 
     def create_file(self, filename,
                     is_archived=False,
@@ -563,11 +610,17 @@ class DCManager(object):
         self._session.delete(sqla_object)
 
 if __name__ == '__main__':
-    rm = DCManager('postgresql://iceopr@devsat-lucid:5432/testdb2')
+    #rm = DCManager('postgresql://iceopr@devsat-lucid:5432/testdb2')
     #rm = DCManager('postgresql://a000680:@localhost.localdomain:5432/sat_db')
+    
+    dcm = DCManager('postgresql://polar:polar@safe:5432/sat_db')
+    boundingbox = 'POLYGON ((1.7  54.8, 28.7 54.9, 34.8 71.2, 2.3 71.7, 1.7  54.8))'
+    
+    res = dcm.get_within_area_of_interest(boundingbox)
+    print res[0].filename
 
-    f = rm.get_file()
-    pl = f.parameter_linestrings[0]
-    print type(pl.data_value)
-    print pl.data_value.wkt
+    #f = rm.get_file()
+    #pl = f.parameter_linestrings[0]
+    #print type(pl.data_value)
+    #print pl.data_value.wkt
     

@@ -79,7 +79,7 @@ if __name__ == '__main__':
         try:
             add_product(dcm, os.path.basename(file_path))
         except Exception, e:
-            #print 'Failed to add file %s to database: %s' % (os.path.basename(file_path), e)
-            print 'Failed to add file %s to database' % os.path.basename(file_path)
+            print 'Failed to add file %s to database: %s' % (os.path.basename(file_path), e)
             dcm.rollback()
 
+        break
