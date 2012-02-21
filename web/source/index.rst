@@ -47,6 +47,7 @@ Contents:
    quickstart_avhrr
    quickstart_viirs
    quickstart_custom
+   quickstart_bufr
    recipes
 
 Contact us: https://groups.google.com/group/pytroll
