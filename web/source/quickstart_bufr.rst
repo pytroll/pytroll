@@ -14,8 +14,8 @@ data in BUFR format.
 
 The Grib file format is another WMO file format. Traditionally this has been the 
 file format used for the output of NWP models, but it is occasionally also used for storing 
-satellite products. For reading Grib files in python we refer to the excellent pygrib 
-(pygrib_) package. 
+satellite products. For reading Grib files in python we refer to the excellent 
+pygrib_ package. 
 
 
 
@@ -56,8 +56,8 @@ Example on EUMETCast IASI level 2 product
     
 Now lets just check what fields are in the file:
 
-    >>> n = bfr.next()
-    >>> print [ s.name for s in n ]
+    >>> nxt = bfr.next()
+    >>> print [ s.name for s in nxt ]
 
 .. code-block:: ini
    
@@ -89,15 +89,15 @@ three PRESSURE fields in the file. In the BUFR file data are layed out sequentia
 and cointing the fields in the above name list gives that the pressure fields are located 
 at index 32, 36 and 40. Lets see what they contain:
 
-    >>> print len(n)
+    >>> print len(nxt)
     44
-    >>> print n[32].name
+    >>> print nxt[32].name
     'PRESSURE                                                        '
-    >>> print n[32].data.min(), n[32].data.max()
+    >>> print nxt[32].data.min(), nxt[32].data.max()
     (14376.0, 1.7e+38)
-    >>> print n[36].data.min(), n[36].data.max()
+    >>> print nxt[36].data.min(), nxt[36].data.max()
     (1.7e+38, 1.7e+38)
-    >>> print n[40].data.min(), n[40].data.max()
+    >>> print nxt[40].data.min(), nxt[40].data.max()
     (1.7e+38, 1.7e+38)
 
 
@@ -177,6 +177,4 @@ shown below:
 .. _python-bufr: http://code.google.com/p/python-bufr/
 .. _pyresample: http://pyresample.googlecode.com/
 .. _nwcsaf: http://nwcsaf.smhi.se/
-
-
 
