@@ -116,19 +116,11 @@ Let us extract all the data and the geolocation:
     >>>             lon.append(entry.data)
     >>>         if entry.name.find("LATITUDE") == 0:
     >>>             lat.append(entry.data)
-    >>> arr = np.array([])
-    >>> for item in lon:
-    >>>     arr = np.concatenate((arr, item))
-    >>> lons = arr
-    >>> arr = np.array([])
-    >>> for item in lat:
-    >>>     arr = np.concatenate((arr, item))
-    >>> lats = arr
-    >>> arr = np.array([])
-    >>> for item in pres:
-    >>>     arr = np.concatenate((arr, item))
-    >>> pres = arr / 100.0 # hPa
+    >>> lons = np.concatenate(lon) 
+    >>> lats = np.concatenate(lat)
+    >>> pres = np.concatenate(pres) / 100.0 # hPa
     >>> pres = np.ma.masked_greater(pres, 1.0e+6)
+
 
 Now we have an IASI granule with the level 2 CTP parameter.
 It is geolocated, so we could project it to a user area and map projection.
