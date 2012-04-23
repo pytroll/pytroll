@@ -143,8 +143,8 @@ as output from AAPP.
 Segmented data (Eumetcast) production
 =====================================
 
-We take the case of level 1b data (calibrated and geolocalized) from noaa 19,
-as output from AAPP.
+We take the case of level 1b data (calibrated and geolocalized) from metop A,
+as received through the global data service of Eumetsat.
 
 - Install mpop and pyresample
 - Don't forget to set up the PPP_CONFIG_DIR variable to point to your
@@ -159,7 +159,7 @@ as output from AAPP.
    granularity=60
    full_scan_period=0.1667
    scan_width=2048
-   dir=/data/prod/satellit/ears/avhrr
+   dir=/data/prod/satellit/gds/avhrr
    filename=AVHR_xxx_1B_M02_%Y%m%d%H%M*
 
 
