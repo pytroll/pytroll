@@ -27,6 +27,7 @@ to have a look and give us a hand):
 
 * pyorbital_ for computing satellite orbital parameters and reading TLE's
 * pycoast_ for putting coast lines on an image 
+* python-geotiepoints_ for interpolating (and extrapolation) geographic tiepoints.
 
 .. _DMI: http://www.dmi.dk
 .. _SMHI: http://www.smhi.se
@@ -36,6 +37,7 @@ to have a look and give us a hand):
 .. _python-bufr: http://python-bufr.googlecode.com
 .. _pyorbital: http://www.github.com/mraspaud/pyorbital
 .. _pycoast: http://pycoast.googlecode.com
+.. _python-geotiepoints: http://www.github.com/adybbroe/python-geotiepoints
 
 Contents:
 
