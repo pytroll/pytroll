@@ -111,7 +111,7 @@ class AddressTypeBroadcaster(MessageBroadcaster):
     def __init__(self, name, address, data_type, interval=2):
         msg = message.Message("/%s/address"%name, "info",
                               {"URI": address,
-                               "type": str(data_type)}).encode()
+                               "type": data_type}).encode()
         MessageBroadcaster.__init__(self, msg, broadcast_port, interval) 
 #-----------------------------------------------------------------------------
 # default

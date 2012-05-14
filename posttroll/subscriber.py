@@ -31,9 +31,10 @@ import time
 from datetime import datetime, timedelta
 
 class Subscriber(object):
-    def __init__(self, addresses):
+    def __init__(self, addresses, data_types):
         self._context = zmq.Context()
         self._addresses = addresses
+        self._data_types = data_types
         self.subscribers = []
         for a in addresses:
             subscriber = self._context.socket(zmq.SUB)
@@ -59,6 +60,14 @@ class Subscriber(object):
                         for sub in self.subscribers:
                             if sub in s and s[sub] == zmq.POLLIN:
                                 m = Message.decode(sub.recv(zmq.NOBLOCK))
+                                
+                                # Only accept pre-defined data types 
+                                try:
+                                    if m.data['type'] not in self._data_types:
+                                        continue
+                                except KeyError:
+                                    pass
+
                                 yield m
                     else:
                         # timeout
@@ -105,14 +114,17 @@ class Subscribe(object):
                 if addr:
                     return addr
                 time.sleep(1)
-            
+        
+        # search for addresses corresponding to data types
         addresses = []
         for data_type in self._data_types:
             addr = _get_addr_loop(data_type, self._timeout)
             if not addr:
                 raise nc.TimeoutException("Can't get address for " + data_type)
             addresses.append(addr)
-        self._subscriber = Subscriber(addresses)
+
+        # subscribe to those data types
+        self._subscriber = Subscriber(addresses, self._data_types)
         return self._subscriber
 
     def __exit__(self, exc_type, exc_val, exc_tb):

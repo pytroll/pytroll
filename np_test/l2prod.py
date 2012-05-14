@@ -28,9 +28,14 @@ from posttroll.publisher import Publish
 from posttroll.message import Message
 
 try:
-    with Publish("l2prod", "HRPT 2", 9002) as pub:
+    with Publish("l2prod", "HRPT 2", 9003) as pub:
         with Subscribe("HRPT 1b") as sub1:
             for msg in sub1.recv():
+                
+                ##data = msg.data
+                ##if data["type"] != "HRPT 1b":
+                ##    continue
+
                 print "Consumer got", msg
                 if msg is not None and msg.type == "file":
                     data = msg.data
