@@ -60,9 +60,14 @@ class Publisher(object):
         return self
 
 class Publish(object):
-    def __init__(self, name, data_type, port, broadcast_interval=2):
+    def __init__(self, name, data_types, port, broadcast_interval=2):
         self._name = name
-        self._data_type = data_type
+        
+        if isinstance(data_types, str):
+            self._data_types = [data_types,]
+        else:
+            self._data_types = data_types
+        
         self._port = port
         self._broadcast_interval = broadcast_interval
         self._broadcaster = None
@@ -72,7 +77,7 @@ class Publish(object):
         print "entering publish"
         addr = "tcp://" + str(get_own_ip()) + ":" + str(self._port)
         self._broadcaster = sendaddresstype(self._name, addr,
-                                            self._data_type,
+                                            self._data_types,
                                             self._broadcast_interval).start()
         pub_addr = "tcp://*:" + str(self._port)
         self._publisher = Publisher(pub_addr)
