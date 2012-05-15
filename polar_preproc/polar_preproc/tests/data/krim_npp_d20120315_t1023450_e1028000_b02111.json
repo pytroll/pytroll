@@ -1,0 +1,19 @@
+[
+    {
+        "create_time": "2012-04-17T10:18:47.411713", 
+        "description": "List of overlapping granules", 
+        "domain": "dev", 
+        "end_time": "2012-03-15T10:28:00", 
+        "name": "krim", 
+        "orbit_number": "02111", 
+        "platform": "npp", 
+        "site": "smb", 
+        "start_time": "2012-03-15T10:23:45"
+    }, 
+    "/data/npp/level1", 
+    [
+        "npp_d20120315_t1023450_e1025092_b02111", 
+        "npp_d20120315_t1025105_e1026346_b02111", 
+        "npp_d20120315_t1026359_e1028000_b02111"
+    ]
+]
