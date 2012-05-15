@@ -24,11 +24,6 @@ class TestNPPJsonIO(unittest.TestCase):
         self.json_file = "%s/data/SDR_npp_d20120424_t1305467_e1307109_b02542_smb_dev.json" % HOME_DIR
         self.json_outfile = tempfile.mktemp()
 
-    def test_load(self):
-        
-        self.json_segment = segment.json_load(self.json_file)
-        print self.json_segment
-
     def test_read_write(self):
         """Test read and write a json message containing one NPP granule"""
         
@@ -40,7 +35,7 @@ class TestNPPJsonIO(unittest.TestCase):
 
     def tearDown(self):
         import os
-        #os.remove(self.json_outfile)
+        os.remove(self.json_outfile)
 
 
 class TestNPPGranule(unittest.TestCase):
@@ -78,7 +73,7 @@ class TestNPPGranule(unittest.TestCase):
         self.assertEqual(fields['domain'], 'drl')
 
         fields = granule.get_granule_fields(self.rdr_viirs, decode=True)
-        print fields
+        #print fields
 
         self.assertTrue('kind' in fields)
         self.assertTrue('band' in fields)
