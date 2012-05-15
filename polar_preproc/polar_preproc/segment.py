@@ -19,10 +19,10 @@ class Segment(object):
     description = None
     use_stamp_in_list = True
 
-    def __init__(self, satellite_name=None, start_time=None, end_time=None, orbit_number=None,
+    def __init__(self, platform=None, start_time=None, end_time=None, orbit_number=None,
                  create_time=None, site=None, domain=None, name=None,
                  description=None, path='', items=[]):
-        self.satellite_name = satellite_name
+        self.platform = platform
         self.start_time = start_time
         self.end_time = end_time
         self.orbit_number = orbit_number
@@ -51,7 +51,7 @@ class Segment(object):
     @property
     def stamp(self):
         self._check()
-        return str(NPPStamp(self.satellite_name, self.start_time, self.end_time,
+        return str(NPPStamp(self.platform, self.start_time, self.end_time,
                             self.orbit_number))
 
     def dump(self, filename):
@@ -63,7 +63,7 @@ class Segment(object):
         return json_dumps(self)
 
     def is_valid(self):
-        return bool(self.satellite_name and self.start_time and
+        return bool(self.platform and self.start_time and
                     self.end_time and self.orbit_number)
 
     def _check(self):

@@ -4,8 +4,8 @@ class NPPScene(Segment):
 
     description = "List of overlapping granules"
 
-    def __init__(self, satellite_name='npp', start_time=None, **kwargs):
-        super(NPPScene, self).__init__(satellite_name=satellite_name,
+    def __init__(self, platform='npp', start_time=None, **kwargs):
+        super(NPPScene, self).__init__(platform=platform,
                                        start_time=start_time,
                                        **kwargs)
 

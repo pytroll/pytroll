@@ -4,7 +4,7 @@ import glob
 import re
 
 from polar_preproc import _dte2time
-from porlar_proprec.segment import Segment
+from polar_preproc.segment import Segment
 
 _RE_GRANULE_FIELDS = re.compile('(?P<kind>[-A-Z]+)(?P<band>[0-9]*)_' +
                                 '(?P<satname>[A-Za-z0-9]+)_'+
@@ -17,8 +17,8 @@ class NPPGranule(Segment):
 
     description = "NPP Granule"
 
-    def __init__(self, satellite_name='npp', start_time=None, **kwargs):
-        super(NPPGranule, self).__init__(satellite_name=satellite_name,
+    def __init__(self, platform='npp', start_time=None, **kwargs):
+        super(NPPGranule, self).__init__(platform=platform,
                                          start_time=start_time,
                                          **kwargs)
         self.items.sort()
