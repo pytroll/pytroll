@@ -21,7 +21,7 @@ class Segment(object):
 
     def __init__(self, platform=None, start_time=None, end_time=None, orbit_number=None,
                  create_time=None, site=None, domain=None, name=None,
-                 description=None, path='', items=[]):
+                 description=None, items=[]):
         self.platform = platform
         self.start_time = start_time
         self.end_time = end_time
@@ -32,7 +32,6 @@ class Segment(object):
         self.name = name
         self.description = description or self.description # convert to an attribute
         self._attrs = self.__dict__.keys()
-        self.path = path
         self.items = items
 
     def append(self, item, start_time=None, end_time=None, orbit_number=None):
@@ -87,7 +86,7 @@ def json_dumps(seg):
             except AttributeError:
                 pass
         items.append(i)
-    return json.dumps((nfo, seg.path, items),
+    return json.dumps((nfo, items),
                       sort_keys=True, indent=4)
 
 def json_dump(seg, filename):
@@ -95,12 +94,11 @@ def json_dump(seg, filename):
         fp.write(json_dumps(seg) + '\n')
      
 def json_loads(blob):
-    nfo, path, items = json.loads(blob)
+    nfo, items = json.loads(blob)
     for key, val in nfo.items():
         for fmt in _RE_TIME_ISOFORMATS:
             if fmt[0].match(str(val)):
                 nfo[key] = datetime.strptime(val, fmt[1])
-    nfo['path'] = path
     nfo['items'] = items
     return Segment(**nfo)
 
