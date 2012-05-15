@@ -17,17 +17,19 @@ except KeyError:
 #
 # Read config file (SITE and DOMAIN)
 #
-conf = ConfigParser.ConfigParser()
-conf.read(os.path.join(config_dir, 'polar_preproc.cfg'))
-SITE = conf.get('general', 'site')
-DOMAIN = conf.get('general', 'domain')
+_conf = ConfigParser.ConfigParser()
+_conf.read(os.path.join(config_dir, 'polar_preproc.cfg'))
+SITE = eval(_conf.get('general', 'site'))
+DOMAIN = eval(_conf.get('general', 'domain'))
+TLE_DIRS = eval(_conf.get('general', 'tle_dirs'))
+TLE_FILE_FORMAT = eval(_conf.get('general', 'tle_file_format'))
 
 class NPPStamp(object):
     """ A NPP stamp is:
-    <satellite_name>_d<start_date>_t<start_time>_e<end_time>_b<orbit_number>
+    <platform>_d<start_date>_t<start_time>_e<end_time>_b<orbit_number>
     """
-    def __init__(self, satellite_name, start_time, end_time, orbit_number):
-        self.satellite_name = satellite_name
+    def __init__(self, platform, start_time, end_time, orbit_number):
+        self.platform = platform
         self.start_time = start_time
         self.end_time = end_time
         self.orbit_number = orbit_number
@@ -38,7 +40,7 @@ class NPPStamp(object):
                  str(self.start_time.microsecond/100000)[0])
         end = (self.end_time.strftime('%H%M%S') +
                str(self.end_time.microsecond/100000)[0])
-        return "%s_d%s_t%s_e%s_b%05d" % (self.satellite_name, date, start, end,
+        return "%s_d%s_t%s_e%s_b%05d" % (self.platform, date, start, end,
                                          self.orbit_number)
 
     def __cmp__(self, other):
