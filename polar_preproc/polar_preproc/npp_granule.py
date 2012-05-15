@@ -7,7 +7,7 @@ from polar_preproc import _dte2time
 from polar_preproc.segment import Segment
 
 _RE_GRANULE_FIELDS = re.compile('(?P<kind>[-A-Z]+)(?P<band>[0-9]*)_' +
-                                '(?P<satname>[A-Za-z0-9]+)_'+
+                                '(?P<platform>[A-Za-z0-9]+)_'+
                                 'd(?P<date>\d+)_t(?P<start_time>\d+)_' +
                                 'e(?P<end_time>\d+)_b(?P<orbit>\d+)_' +
                                 'c(?P<create_time>\d+)_(?P<site>[a-zA-Z0-9]+)_' +
