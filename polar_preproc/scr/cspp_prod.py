@@ -1,3 +1,7 @@
+"""
+Script to run CSPP in real time
+"""
+
 import os
 import sys
 from datetime import datetime
@@ -9,6 +13,9 @@ from polar_preproc import get_npp_stamp, LOG
 
 
 def do_prod(filename, outdir='.', signal=None, logfile=None):
+    """
+    Run CSPP on VIIRS RDR filename, via the CSPP VIIRS main script viirs_sdr.sh
+    """
     signal = signal or outdir
 
     cspp_batch = "viirs_sdr.sh --out-dir=%s --signal=%s %s" % (
@@ -37,7 +44,9 @@ def do_prod(filename, outdir='.', signal=None, logfile=None):
 if __name__ == '__main__':
     import sys
     try:
-        outdir = sys.argv[2]
-    except:
-        outdir = '.'
-    do_prod(sys.argv[1], outdir=outdir)
+        OUTDIR = sys.argv[2]
+    except IndexError:
+        LOG.info("CSPP-processing: No Output dir specified. " + 
+                 "Will use current directory")
+        OUTDIR = '.'
+    do_prod(sys.argv[1], outdir=OUTDIR)
