@@ -7,7 +7,17 @@ logging.basicConfig()
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
 
-class FileTrigger(ProcessEvent):
+class Trigger:
+    def __init__(self, collectors, terminator):
+        self.collectors = collectors
+        self.terminator = terminator
+
+class FileTrigger(ProcessEvent, Trigger):
+
+    def __init__(self, collectors, terminator, decoder, input_dirs ):
+        Trigger.__init__(self, collectors, terminator,)
+        self.decoder = decoder
+        self.input_dirs = input_dirs
 
     def process_IN_CLOSE_WRITE(self, event):
         LOG.debug("got : " + event.pathname)
@@ -15,24 +25,19 @@ class FileTrigger(ProcessEvent):
     def process_IN_MOVED_TO(self, event):
         LOG.debug("moved to : " + event.pathname)
 
-if __name__ == '__main__':
+    def loop(self):
+        # inotify interface
+        wm = WatchManager()
+        mask = IN_CLOSE_WRITE | IN_MOVED_TO
+        
+        # create notifier 
+        notifier = Notifier(wm, self)
+        
+        # add watches
+        for idir in self.input_dirs:
+            wm.add_watch(idir, mask)
 
-    wdir = 'tests/data'
-
-    # inotify interface
-    wm = WatchManager()
-    mask = IN_CLOSE_WRITE | IN_MOVED_TO
-    
-    # create notifier 
-    notifier = Notifier(wm, FileTrigger())
-    
-    # add watches
-    wm.add_watch(wdir, mask)
-    try:
         notifier.loop()
-    except KeyboardInterrupt:
-        # destroy the inotify's instance on this interrupt (stop monitoring)
-        notifier.stop()
 
 
 
