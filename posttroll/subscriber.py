@@ -112,7 +112,7 @@ class Subscribe(object):
             while(datetime.now() < then):
                 addr = nc.get_address(data_type)
                 if addr:
-                    return addr
+                    return addr["URI"]
                 time.sleep(1)
         
         # search for addresses corresponding to data types

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (c) 2010-2011.
+# Copyright (c) 2010-2012.
 
 # Author(s):
  
@@ -75,7 +75,7 @@ def is_valid_data(obj):
         try:
             tmp = json.dumps(obj)
             del tmp
-        except TypeError:
+        except (TypeError, UnicodeDecodeError):
             return False
     return True
 
@@ -142,7 +142,7 @@ class Message:
         """Encode a Message to a raw string.
         """
         self._validate()
-        return _encode(self)
+        return _encode(self, raw=self.raw)
 
     def __repr__(self):
         return self.encode()
@@ -160,7 +160,10 @@ class Message:
         if not is_valid_subject(self.sender):
             raise MessageError, "Invalid sender: '%s'" % self.sender
         if not is_valid_data(self.data):
-            raise MessageError, "Invalid data: data is not JSON serializable"
+            self.raw = True
+        else:
+            self.raw = False
+            #raise MessageError, "Invalid data: data is not JSON serializable"
         
     #
     # Make it pickleable.
@@ -229,14 +232,16 @@ def _decode(rawstr):
 
     return msg
 
-def _encode(msg, head=False):
+def _encode(msg, head=False, raw=False):
     """Convert a Message to a raw string.
     """
     rawstr = _MAGICK + "%s %s %s %s %s" % \
              (msg.subject, msg.type, msg.sender,
               msg.time.isoformat(), msg.version)
-    if not head and msg.data:
+    if not head and msg.data and not raw:
         return rawstr + ' ' + 'application/json' + ' ' + json.dumps(msg.data)
+    if not head and msg.data and raw:
+        return rawstr + ' ' + 'text/ascii' + ' ' + msg.data
     return rawstr
 
 #-----------------------------------------------------------------------------

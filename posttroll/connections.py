@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2010-2011.
+# Copyright (c) 2010-2012.
 
 # Author(s):
  
@@ -41,6 +41,12 @@ class GenericConnections(object):
         """Return the addresses
         """
         return self._dc_addresses.get()        
+
+    def get_address_by_type(self, atype):
+        """Return the address(es) corresponding to *atype*.
+        """
+        return [addr for addr in self.get_addresses() if addr["type"] == atype]
+
 
     def start(self):
         """Start datacenter address gathering.

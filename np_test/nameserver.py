@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2011 SMHI
+# Copyright (c) 2011, 2012 SMHI
 
 # Author(s):
 
@@ -24,37 +24,42 @@
 """
 
 from posttroll.connections import GenericConnections
+from posttroll.message import Message
 import zmq
 
-GC = GenericConnections("")
-GC.start()
-port = 5555
-
-def get_address(data_type):
+def get_address(data_type, gc):
     """Get the address of the module for a given *data_type*.
     """
     if data_type == "":
-        return str(GC.get_addresses())
+        return Message("/oper/ns", "info", gc.get_addresses())
     # a tuple should be returned...
-    for addr in GC.get_addresses():
-        if addr["type"] == data_type:
-            return addr["URI"]
-    return ""
+    for addr in gc.get_addresses():
+        if data_type in addr["type"]:
+            return Message("/oper/ns", "info", addr)
+    return Message("/oper/ns", "info", "")
 
-try:
-    context = zmq.Context()
-    listener = context.socket(zmq.REP)
-    listener.bind("tcp://*:"+str(port))
-    while True:
-        msg = listener.recv()
-        listener.send_unicode(get_address(msg))
+if __name__ == '__main__':
+    GC = GenericConnections("")
+    GC.start()
+    port = 5555
 
-except KeyboardInterrupt:
-    # this is needed for the reception to be interruptible
-    pass
+    try:
+        context = zmq.Context()
+        listener = context.socket(zmq.REP)
+        listener.bind("tcp://*:"+str(port))
+        while True:
+            m = listener.recv()
+            print m
+            msg = Message.decode(m)
+            listener.send_unicode(str(get_address(msg.data, GC)))
 
-finally:
-    print "terminating nameserver..."
-    GC.stop()
-    listener.close()
+    except KeyboardInterrupt:
+        # this is needed for the reception to be interruptible
+        pass
+
+    finally:
+        print "terminating nameserver..."
+        GC.stop()
+        listener.close()
+
 
