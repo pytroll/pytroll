@@ -57,17 +57,16 @@ class Collector:
                  granule_duration=None):
         self.region = region # area def
         self.granule_times = set()
-        self.granules = set()
+        self.granules = []
         self.planned_granule_times = set()
         self.timeliness = timeliness
         self.timeout = None
         self.granule_duration = granule_duration
 
-    def collect(self, granule_file, granule_metadata ):
+    def collect(self, granule_metadata):
         """ 
             Parameters:
 
-                granule_file : input data
                 granule_metadata : metadata 
 
         """ 
@@ -77,11 +76,12 @@ class Collector:
         platform = granule_metadata['platform']
         start_time = granule_metadata['start_time']
         end_time = granule_metadata['end_time']
+        ##granule_uri = granule_metadata['uri']
 
 
         if start_time in self.planned_granule_times:
             self.granule_times.add(start_time)
-            self.granules.add(granule_file)
+            self.granules.append(granule_metadata)
             return
 
         # Get corners from input data
@@ -105,7 +105,7 @@ class Collector:
 
         if granule_area.overlaps(self.region):
             self.granule_times.add(start_time)
-            self.granules.add(granule_file)
+            self.granules.append(granule_metadata)
             #map.plot(x, y, '-r')
         #else:
             #map.plot(x, y, '-b')
@@ -146,6 +146,8 @@ def read_granule_metadata(filename):
     import json
     with open(filename) as jfp: 
         metadata =  json.load(jfp)[0]
+
+    metadata['uri'] = "file://" + os.path.abspath(filename)
 
     for attr in ["start_time", "end_time"]:
         try:
@@ -211,7 +213,7 @@ if __name__ == '__main__':
 
             for input_granule in sorted(list(input_granules)):
                 metadata = read_granule_metadata(input_granule)
-                swath = collector.collect(input_granule, metadata)
+                swath = collector.collect(metadata)
                 old_granules.add(input_granule)
 
             if swath is not None:
