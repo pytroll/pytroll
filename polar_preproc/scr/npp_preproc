@@ -81,7 +81,9 @@ except IndexError:
 
 stamp = get_npp_stamp(viirs_file)
 outdir = os.path.join(LV1_DIR,
-                      '%s_%05d'%(stamp.satname, stamp.orbit))
+                      '%s_%s_%05d'%(stamp.satname, 
+                                    stamp.start_time.strftime("%Y%m%d_%H%M"),
+                                    stamp.orbit))
 logfile = './CSPP.out'
 start_file = os.path.join(outdir, '.started')
 stop_file = os.path.join(outdir, '.stopped')
