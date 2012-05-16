@@ -6,7 +6,7 @@ import re
 from datetime import datetime
 import json
 
-from polar_preproc import NPPStamp
+from polar_preproc import NPPStamp, SITE, DOMAIN
 
 _RE_TIME_ISOFORMATS = [(re.compile(
             '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$'),

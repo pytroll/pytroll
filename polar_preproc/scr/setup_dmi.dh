@@ -10,9 +10,12 @@ alias dropit=/opt/bin/dropit
 PATH=$(dropit -sfep"$PATH" /opt/bin)
 PATH=$(dropit -sfep"$PATH" /usr/local/jdk7/bin)
 
+POLAR_PREPROC_CONFIG_DIR='/home/ras/dvl/gt/pytroll/polar_preproc/etc'
+export POLAR_PREPROC_CONFIG_DIR
+
 # test
 PYTHONPATH=$(dropit -sfep"$PYTHONPATH" /home/ras/dvl/gt/pyorbital)
-PYTHONPATH=$(dropit -sfep"$PYTHONPATH" /home/ras/dvl/libpy_npp)
+PYTHONPATH=$(dropit -sfep"$PYTHONPATH" /home/ras/dvl/gt/pytroll/polar_preproc)
 
 PYTHONPATH=$(dropit -sfep"$PYTHONPATH" /opt/lib/python2.6/site-packages)
 
