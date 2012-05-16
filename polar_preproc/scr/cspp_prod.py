@@ -5,8 +5,8 @@ import glob
 from subprocess import call
 import re
 
-from npp import get_npp_stamp
-from logger import LOG
+from polar_preproc import get_npp_stamp, LOG
+
 
 def do_prod(filename, outdir='.', signal=None, logfile=None):
     signal = signal or outdir

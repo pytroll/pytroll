@@ -8,7 +8,10 @@ from subprocess import call
 import glob
 from datetime import datetime
 
-from npp import get_npp_stamp, LOG
+import loggers.simple as loggers
+LOG = loggers.get('npp-lib')
+
+from polar_preproc import get_npp_stamp, LOG
 
 DATA_DIR = os.path.realpath(os.environ.get('NPP_DATA_DIR', '.'))
 WRK_DIR = os.path.realpath(os.environ.get('NPP_WRK_DIR', '.'))
@@ -81,9 +84,9 @@ except IndexError:
 
 stamp = get_npp_stamp(viirs_file)
 outdir = os.path.join(LV1_DIR,
-                      '%s_%s_%05d'%(stamp.satname, 
+                      '%s_%s_%05d'%(stamp.platform, 
                                     stamp.start_time.strftime("%Y%m%d_%H%M"),
-                                    stamp.orbit))
+                                    stamp.orbit_number))
 logfile = './CSPP.out'
 start_file = os.path.join(outdir, '.started')
 stop_file = os.path.join(outdir, '.stopped')

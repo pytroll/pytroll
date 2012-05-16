@@ -1,9 +1,8 @@
 import os
-from datetime import datetime, timedelta
-import glob
+from datetime import datetime
 import re
 
-from polar_preproc import _dte2time
+from polar_preproc import _dte2time, get_npp_stamp
 from polar_preproc.segment import Segment
 
 _RE_GRANULE_FIELDS = re.compile('(?P<kind>[-A-Z]+)(?P<band>[0-9]*)_' +

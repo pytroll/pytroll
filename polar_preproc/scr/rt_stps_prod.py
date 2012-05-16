@@ -1,18 +1,18 @@
+"""
+Application to run RT-STPS
+"""
 #
 #
 import os
 import sys
 import re
-import shutil
 from subprocess import call
 import glob
 
-from npp import get_npp_stamp
-from orbitno import check_and_replace_orbitno
-from logger import LOG
-
-RT_STPS_BATCH = "/usr/local/rt-stps/bin/batch.sh"
-TEMPLATE_CONFIG_FILE = "/usr/local/rt-stps/config/npp.xml"
+from polar_preproc import get_npp_stamp, LOG
+from polar_preproc.orbitno import replace_orbitno
+from polar_preproc import (RT_STPS_BATCH, 
+                           RT_STPS_NPP_TEMPLATE_CONFIG_FILE)
 
 _NO_RENAMING = False
 
@@ -22,7 +22,7 @@ def _generate_stps_config_file(outdir='.'):
     config_file = outdir + '/npp.xml'
     counter = 0
     with open(config_file, 'w') as fp_out:
-        with open(TEMPLATE_CONFIG_FILE) as fp_in:
+        with open(RT_STPS_NPP_TEMPLATE_CONFIG_FILE) as fp_in:
             for line in fp_in.readlines():
                 if _re_output_line.match(line.lower()):
                     line, n =_re_output_replace.subn(' directory="%s" ' % 
@@ -39,7 +39,7 @@ def _renaming(files, outdir='.'):
     _re_filename_replace = re.compile('_c\d+_')
     _files = []
     for f in files:
-        fname = check_and_replace_orbitno(f)
+        fname = replace_orbitno(f)
         fname = _re_filename_replace.sub('_', os.path.basename(fname))
         fname = os.path.join(outdir, fname)
         LOG.info("Renaming %s to %s" % (f, fname))

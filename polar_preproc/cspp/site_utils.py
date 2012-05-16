@@ -5,8 +5,8 @@ from datetime import datetime
 import glob
 import re
 
-from npp import LOG, get_npp_stamp
-import npp.sdr_granule as npp_grn
+from polar_preproc import LOG, get_npp_stamp
+import polar_preproc.npp_granule as npp_grn
 
 """
 def start_passage(work_dir, satname, orbit):
@@ -42,12 +42,12 @@ def notify(work_dir, product_times, out_dir='.', signal=''):
                                 _re_filename_replace.sub('_', os.path.basename(fin)))
             LOG.info("Moving %s to %s" % (fin, fout))
             os.rename(fin, fout)
-            lv1_files.append(os.path.basename(fout))
+            lv1_files.append('file://' + os.path.abspath(fout))
 
         stamp = get_npp_stamp(lv1_files[0])
-        grn = npp_grn.SDRGranule(stamp.satname, stamp.start_time,
-                                 end_time=stamp.end_time, orbit=stamp.orbit,
-                                 path=out_dir, items=lv1_files)
+        grn = npp_grn.NPPGranule(stamp.platform, stamp.start_time,
+                                 end_time=stamp.end_time, orbit_number=stamp.orbit_number,
+                                 items=lv1_files)
 
         if os.path.isdir(signal):
             jsfile = os.path.join(signal, 
