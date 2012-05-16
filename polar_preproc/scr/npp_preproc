@@ -8,7 +8,7 @@ from subprocess import call
 import glob
 from datetime import datetime
 
-from npp import get_npp_stamp, LOG
+from polar_preproc import get_npp_stamp, LOG
 
 DATA_DIR = os.path.realpath(os.environ.get('NPP_DATA_DIR', '.'))
 WRK_DIR = os.path.realpath(os.environ.get('NPP_WRK_DIR', '.'))

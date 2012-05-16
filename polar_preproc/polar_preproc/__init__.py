@@ -24,6 +24,11 @@ DOMAIN = eval(_conf.get('general', 'domain'))
 TLE_DIRS = eval(_conf.get('general', 'tle_dirs'))
 TLE_FILE_FORMAT = eval(_conf.get('general', 'tle_file_format'))
 
+# NPP stuff:
+RT_STPS_BATCH = eval(_conf.get('npp', 'rt_stps_batch'))
+RT_STPS_NPP_TEMPLATE_CONFIG_FILE = eval(_conf.get('npp', 'rt_stps_npp_template_config_file'))
+
+
 class NPPStamp(object):
     """ A NPP stamp is:
     <platform>_d<start_date>_t<start_time>_e<end_time>_b<orbit_number>
