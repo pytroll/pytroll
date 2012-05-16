@@ -10,7 +10,7 @@ from subprocess import call
 import glob
 
 from polar_preproc import get_npp_stamp, LOG
-from orbitno import replace_orbitno
+from polar_preproc.orbitno import replace_orbitno
 from polar_preproc import (RT_STPS_BATCH, 
                            RT_STPS_NPP_TEMPLATE_CONFIG_FILE)
 
@@ -39,7 +39,7 @@ def _renaming(files, outdir='.'):
     _re_filename_replace = re.compile('_c\d+_')
     _files = []
     for f in files:
-        fname = check_and_replace_orbitno(f)
+        fname = replace_orbitno(f)
         fname = _re_filename_replace.sub('_', os.path.basename(fname))
         fname = os.path.join(outdir, fname)
         LOG.info("Renaming %s to %s" % (f, fname))

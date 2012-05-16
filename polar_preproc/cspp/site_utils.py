@@ -42,12 +42,12 @@ def notify(work_dir, product_times, out_dir='.', signal=''):
                                 _re_filename_replace.sub('_', os.path.basename(fin)))
             LOG.info("Moving %s to %s" % (fin, fout))
             os.rename(fin, fout)
-            lv1_files.append(os.path.basename(fout))
+            lv1_files.append('file://' + os.path.abspath(fout))
 
         stamp = get_npp_stamp(lv1_files[0])
         grn = npp_grn.NPPGranule(stamp.platform, stamp.start_time,
                                  end_time=stamp.end_time, orbit_number=stamp.orbit_number,
-                                 path=out_dir, items=lv1_files)
+                                 items=lv1_files)
 
         if os.path.isdir(signal):
             jsfile = os.path.join(signal, 
