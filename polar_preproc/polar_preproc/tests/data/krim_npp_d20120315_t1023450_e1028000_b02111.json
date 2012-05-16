@@ -11,8 +11,8 @@
         "start_time": "2012-03-15T10:23:45"
     }, 
     [
-        "file:///data/npp/level1/npp_d20120315_t1023450_e1025092_b02111", 
-        "file:///data/npp/level1/npp_d20120315_t1025105_e1026346_b02111", 
-        "file:///data/npp/level1/npp_d20120315_t1026359_e1028000_b02111"
+        "file:///data/npp/level1/SDR_npp_d20120315_t1023450_e1025092_b02111_smb_dev.json", 
+        "file:///data/npp/level1/SDR_npp_d20120315_t1025105_e1026346_b02111_smb_dev.json", 
+        "file:///data/npp/level1/SDR_npp_d20120315_t1026359_e1028000_b02111_smb_dev.json"
     ]
 ]
