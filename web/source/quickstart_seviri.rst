@@ -13,6 +13,11 @@ For this tutorial template config files (see :doc:`install`) can be used. These 
 
 Set PPP_CONFIG_DIR to the directory containing your modified mpop_ config files.
 
+.. tip:: Using wildcards in the *meteosat09.cfg* file allows mpop to adapt to
+   any changes on the operation satellite for the 0 degree service (for exemple
+   in case of satellite switch, for maintenance or when the successor satellite
+   comes in).
+
 First example: Loading data
 ===========================
 This example assumes uncompressed EUMETSAT HRIT data for 8/10-2009 14:30 exists in the :attr:`dir` defined in the :attr:`severi-level1` section of your meteosat09 configuration file. Change the arguments to the creation of :attr:`time_slot` in the code example to match the time slot of your HRIT data.  

@@ -21,12 +21,12 @@ The available python packages at the moment are:
 * mipp_ for reading weather satellite data
 * mpop_ for processing weather satellite data
 * python-bufr_ for reading bufr files
+* pycoast_ for putting coast lines on an image 
 
 Some more packages are in the process of being developped (you're very welcome
 to have a look and give us a hand):
 
 * pyorbital_ for computing satellite orbital parameters and reading TLE's
-* pycoast_ for putting coast lines on an image 
 * python-geotiepoints_ for interpolating (and extrapolation) geographic tiepoints.
 
 .. _DMI: http://www.dmi.dk

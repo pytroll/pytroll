@@ -37,7 +37,7 @@ def get_address(data_type):
         return str(GC.get_addresses())
     # a tuple should be returned...
     for addr in GC.get_addresses():
-        if data_type in addr["type"]:
+        if addr["type"] == data_type:
             return addr["URI"]
     return ""
 
