@@ -47,16 +47,17 @@ def replace_orbitno(filename):
     epsilon_time = timedelta(days=2)
     import h5py
 
-    def _get_a_good_date(name, obj):
+    def _get_a_good_time(name, obj):
         if isinstance(obj, h5py.Dataset):
             date_key, time_key = ('Ending_Date', 'Ending_Time')
             if date_key in obj.attrs.keys():
-                time_val = datetime.strptime(
-                    obj.attrs[date_key][0][0] + 
-                    obj.attrs[time_key][0][0],
+                if not good_time_val__[0]:
+                    time_val = datetime.strptime(
+                        obj.attrs[date_key][0][0] + 
+                        obj.attrs[time_key][0][0],
                         '%Y%m%d%H%M%S.%fZ')
-                if not good_time_val__[0] and abs(time_val - no_date) > epsilon_time:
-                    good_time_val__[0] = time_val
+                    if abs(time_val - no_date) > epsilon_time:
+                        good_time_val__[0] = time_val
                 
     def _check_orbitno(name, obj):
         if isinstance(obj, h5py.Dataset):
@@ -92,7 +93,7 @@ def replace_orbitno(filename):
     LOG.info("Replacing orbit number %05d with %05d" % (stamp.orbit_number, orbit))
     fp = h5py.File(filename, 'r+')
     good_time_val__ = [None]
-    fp.visititems(_get_a_good_date)
+    fp.visititems(_get_a_good_time)
     counter__ = [0]
     fp.visititems(_check_orbitno)    
     if counter__[0] == 0:
