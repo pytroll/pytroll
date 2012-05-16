@@ -21,12 +21,13 @@ def _get_tle_file(timestamp):
     for path in TLE_DIRS:
         if os.path.isdir(path):
             for i in range(5):
-                t = timestamp - timedelta(days=i)
-                fname = os.path.join(path, t.strftime(TLE_FILE_FORMAT))
+                tobj = timestamp - timedelta(days=i)
+                fname = os.path.join(path, tobj.strftime(TLE_FILE_FORMAT))
                 if os.path.isfile(fname):
                     LOG.info("Found TLE file: '%s'" % fname)
                     return fname
-    raise NoTleFile("Found no TLE file close in time to %s" % timestamp.strftime(TLE_FILE_FORMAT))
+    raise NoTleFile("Found no TLE file close in time to " + 
+                    str(tobj.strftime(TLE_FILE_FORMAT)))
 
 def get_tle(platform, timestamp=None):
     stamp = platform + timestamp.strftime('-%Y%m%d')
