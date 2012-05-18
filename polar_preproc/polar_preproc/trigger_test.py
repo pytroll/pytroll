@@ -41,8 +41,8 @@ timeliness = timedelta(days=7)
 collectors =  [region_collector.RegionCollector(region, timeliness) for region in regions]
 
 # DONE timeout not handled
-# DONE should be able to handle both inotify, database events or posttroll
-# messages
+# DONE (kinda) should be able to handle both inotify, database events or
+# posttroll messages
 # DONE metadata should be decoded.
 
 
@@ -76,6 +76,7 @@ granule_trigger = trigger.FileTrigger(collectors, terminator,
 
 try:
     granule_trigger.loop()
+    print "Thank you for using pytroll! See you soon on pytroll.org."
 except KeyboardInterrupt:
     print "Thank you for using pytroll! See you soon on pytroll.org."
 

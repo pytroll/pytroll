@@ -50,7 +50,7 @@ class Trigger:
             res = collector(metadata)
             if res:
                 return self.terminator(res)
-        
+
 
 from threading import Thread, Event
 
@@ -75,7 +75,7 @@ class FileTrigger(ProcessEvent, Trigger, Thread):
         LOG.debug("New file detected (close write): " + event.pathname)
         self._do(event.pathname)
         self.new_file.set()
-    
+
     def process_IN_MOVED_TO(self, event):
         """On moving a file into the directory.
         """
@@ -92,7 +92,7 @@ class FileTrigger(ProcessEvent, Trigger, Thread):
         # - then the new timeouts are computed
         # - if a timeout occurs during the wait, the wait is interrupted and
         #   the timeout is handled.
-        
+
         while self._running:
             timeouts = [(collector, collector.timeout)
                         for collector in self.collectors
@@ -134,6 +134,7 @@ class FileTrigger(ProcessEvent, Trigger, Thread):
             for idir in self.input_dirs:
                 wm_.add_watch(idir, mask)
 
+            # loop forever
             notifier.loop()
         finally:
             self.stop()

@@ -132,6 +132,7 @@ class RegionCollector:
                 map.plot(x, y, '-r')
             self.granule_times.add(start_time)
             self.granules.append(granule_metadata)
+            LOG.debug("Added granule to area " + self.region.area_id)
             # If last granule return swath and cleanup
             if self.granule_times == self.planned_granule_times:
                 LOG.debug("Collection finished for area: " +
@@ -170,6 +171,8 @@ class RegionCollector:
             
             if not self.planned_granule_times:
                 self.planned_granule_times.add(start_time)
+                LOG.debug("Added granule to area " + self.region.area_id)
+                LOG.debug("Predicting granules covering " + self.region.area_id)
                 gr_time = start_time
                 while True:
                     gr_time += self.granule_duration
