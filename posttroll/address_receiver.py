@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2010-2011.
+# Copyright (c) 2010-2012.
 
 # Author(s):
  
@@ -78,7 +78,9 @@ class AddressReceiver(object):
             for addr, metadata in self._addresses.items():
                 atime = metadata["receive_time"]
                 if now - atime < self._max_age:
-                    addrs.append(metadata)
+                    mda = copy.copy(metadata)
+                    mda["receive_time"] = mda["receive_time"].isoformat()
+                    addrs.append(mda)
                 else:
                     del self._addresses[addr]
         finally:

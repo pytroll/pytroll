@@ -51,7 +51,7 @@ if __name__ == '__main__':
             m = listener.recv()
             print m
             msg = Message.decode(m)
-            listener.send_unicode(str(get_address(msg.data, GC)))
+            listener.send_unicode(str(get_address(msg.data["type"], GC)))
 
     except KeyboardInterrupt:
         # this is needed for the reception to be interruptible
@@ -61,5 +61,4 @@ if __name__ == '__main__':
         print "terminating nameserver..."
         GC.stop()
         listener.close()
-
 
