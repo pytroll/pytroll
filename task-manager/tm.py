@@ -36,7 +36,7 @@ class FileTrigger(Thread):
         self.filename = filename
         self.loop = True
         self.cond = Condition()
-        self.start()
+        #self.start()
         self.exit_status = 0
 
     def run(self):
@@ -45,6 +45,7 @@ class FileTrigger(Thread):
             # Polling is ugly, this should be replaced when possible by inotify.
             if os.path.exists(self.filename):
                 # Could we use yield instead ?
+                self.cond.release()
                 return
             self.cond.wait(1)
             self.cond.release()
@@ -67,7 +68,7 @@ class TimeTrigger(Thread):
         self.time = time
         self.loop = True
         self.cond = Condition()
-        self.start()
+        #self.start()
         self.exit_status = 0
 
     def run(self):
@@ -89,15 +90,33 @@ class TimeTrigger(Thread):
     def __repr__(self):
         return "Time trigger "+str(self.time)
 
+class Action(object):
+    """Action class to store non-interpreted functions.
+    """
+    def __init__(self, function, *args, **kwargs):
+        self.action = (function, args, kwargs)
+
+    def __cmp__(self, other):
+        try:
+            return cmp(self.action, other.action)
+        except AttributeError:
+            return cmp(self.action, other)
+
+    def get_function(self):
+        """Get the function to call.
+        """
+        return (lambda: self.action[0](*self.action[1], **self.action[2]))
+
+    def __call__(self):
+        self.get_function()()
+
 class Task(Thread):
     """Run a given function when *triggers* happen.
     """
     def __init__(self, action, *triggers, **kwargs):
         Thread.__init__(self)
         self.tasks = []
-        self.label = ""
-        if "label" in kwargs:
-            self.label = kwargs["label"]
+        self.label = kwargs.get("label", "")
         self.action = action
         self._trigger(*triggers)
         self.loop = True
@@ -143,19 +162,33 @@ class Task(Thread):
             # If all dependencies where ready and had a clean exit code, run
             # the action.
             if datetime.utcnow() < end and dep_status == 0:
-                self.action()
+                self.exit_status = self.action() or 0
+                self.tasks = []
+                try:
+                    if self.exit_status == 0:
+                        self.parent.tasks.remove(self)
+                except AttributeError:
+                    pass
                 return
 
     def print_tasks(self, indent=0):
         """Print subtasks.
         """
+        print self.format_tasks(indent)
+
+    def format_tasks(self, indent=0):
+        """Make a formated list of tasks.
+        """
+        string = ""
         for task in self.tasks:
-            print " "*indent, task
+            string += " "*indent + str(task) + "\n"
             try:
                 if task.tasks:
-                    task.print_tasks(indent+2)
+                    string += task.format_tasks(indent+2)
             except AttributeError:
                 pass
+        return string
+            
     def __str__(self):
         if self.label:
             return self.label
@@ -171,7 +204,11 @@ class Task(Thread):
             task.cancel()
             self.tasks.remove(task)
 
-        
+    def __cmp__(self, other):
+        try:
+            return cmp(self.action, other.action)
+        except AttributeError:
+            return cmp(self.action, other)
 
 class TaskManager(Task):
     """One task to rule them all. If forever is False, runs the given tasks and
@@ -187,6 +224,7 @@ class TaskManager(Task):
         """
         if not task.isAlive():
             task.start()
+        task.parent = self
         self.tasks.append(task)
 
     def remove(self, task):
@@ -213,7 +251,8 @@ class TaskManager(Task):
         self.cond.notify()
         self.cond.release()
 
-
+    def __str__(self):
+        return self.__repr__() + "\n" + self.format_tasks(2)
 
 if __name__ == "__main__":
     def foo(txt="hej"):
