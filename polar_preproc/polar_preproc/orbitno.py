@@ -20,7 +20,7 @@ def _get_tle_file(timestamp):
     # Find a not to old TLE file
     for path in TLE_DIRS:
         if os.path.isdir(path):
-            for i in range(5):
+            for i in range(-2, 5):
                 tobj = timestamp - timedelta(days=i)
                 fname = os.path.join(path, tobj.strftime(TLE_FILE_FORMAT))
                 if os.path.isfile(fname):
