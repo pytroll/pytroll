@@ -16,6 +16,7 @@ TBUS_STYLE = False
 
 TLE_BUFFER = {}
 
+
 def _get_tle_file(timestamp):
     # Find a not to old TLE file
     for path in TLE_DIRS:
@@ -27,7 +28,7 @@ def _get_tle_file(timestamp):
                     LOG.info("Found TLE file: '%s'" % fname)
                     return fname
     raise NoTleFile("Found no TLE file close in time to " + 
-                    str(tobj.strftime(TLE_FILE_FORMAT)))
+                    str(timestamp.strftime(TLE_FILE_FORMAT)))
 
 def get_tle(platform, timestamp=None):
     stamp = platform + timestamp.strftime('-%Y%m%d')
