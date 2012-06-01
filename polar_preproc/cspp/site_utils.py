@@ -20,7 +20,7 @@ def end_passage(work_dir, satname, orbit):
 _re_filename_replace = re.compile('_c\d+_')
 
 def notify(work_dir, product_times, out_dir='.', signal=''):
-    """ Get list of product files for a give granule (any h5 file is a product).
+    """ Get list of product files for a given granule (any h5 file is a product).
     Move files to out_dir.
     Write metadata to a json file.
     """
