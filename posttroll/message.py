@@ -92,7 +92,7 @@ class Message:
     - It will make a Message pickleable.
     """
 
-    def __init__(self, subject='', atype='', data='', rawstr=None):
+    def __init__(self, subject='', atype='', data='', binary=False, rawstr=None):
         """Initialize a Message from a subject, type and data ... 
         or from a raw string.
         """
@@ -104,6 +104,7 @@ class Message:
             self.sender = _getsender()
             self.time = datetime.utcnow()
             self.data = data
+            self.binary = binary
         self.version = _VERSION
         self._validate()
 
@@ -142,7 +143,7 @@ class Message:
         """Encode a Message to a raw string.
         """
         self._validate()
-        return _encode(self, raw=self.raw)
+        return _encode(self, binary=self.binary)
 
     def __repr__(self):
         return self.encode()
@@ -155,15 +156,12 @@ class Message:
         """
         if not is_valid_subject(self.subject):
             raise MessageError, "Invalid subject: '%s'" % self.subject
-        if not is_valid_subject(self.type):
+        if not is_valid_type(self.type):
             raise MessageError, "Invalid type: '%s'" % self.type
-        if not is_valid_subject(self.sender):
+        if not is_valid_sender(self.sender):
             raise MessageError, "Invalid sender: '%s'" % self.sender
-        if not is_valid_data(self.data):
-            self.raw = True
-        else:
-            self.raw = False
-            #raise MessageError, "Invalid data: data is not JSON serializable"
+        if not is_valid_data(self.data) and not self.binary:
+            raise MessageError, "Invalid data: data is not JSON serializable"
         
     #
     # Make it pickleable.
@@ -219,29 +217,38 @@ def _decode(rawstr):
 
     if mimetype == None:
         msg['data'] = ''
+        msg['binary'] = False
     elif mimetype == 'application/json':
         try:
             msg['data'] = json.loads(raw[6])
+            msg['binary'] = False
         except ValueError:
             del msg
             raise MessageError, "JSON decode failed on '%s ...'" % raw[6][:36]
     elif mimetype == 'text/ascii':
         msg['data'] = str(data)
+        msg['binary'] = False
+    elif mimetype == 'binary/octet-stream':
+        msg['data'] = data
+        msg['binary'] = True
     else:
         raise MessageError, "Unknown mime-type '%s'" % mimetype
 
     return msg
 
-def _encode(msg, head=False, raw=False):
+def _encode(msg, head=False, binary=False):
     """Convert a Message to a raw string.
     """
     rawstr = _MAGICK + "%s %s %s %s %s" % \
              (msg.subject, msg.type, msg.sender,
               msg.time.isoformat(), msg.version)
-    if not head and msg.data and not raw:
-        return rawstr + ' ' + 'application/json' + ' ' + json.dumps(msg.data)
-    if not head and msg.data and raw:
-        return rawstr + ' ' + 'text/ascii' + ' ' + msg.data
+    if not head and msg.data:
+        if not binary:
+            return (rawstr + ' ' +
+                    'application/json' + ' ' + json.dumps(msg.data))
+        else:
+            return (rawstr + ' ' +
+                    'binary/octet-stream' + ' ' + msg.data)
     return rawstr
 
 #-----------------------------------------------------------------------------
