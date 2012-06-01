@@ -72,12 +72,6 @@ Message::Message(const char* sub,
 }
 
 string
-json_encode(string data) {
-  cerr << "Warning: json encoding not implemented..." << endl;
-  return data;
-}
-
-string
 Message::toString() {
   string msg(_MAGICK);
   msg += subject;
@@ -93,13 +87,12 @@ Message::toString() {
 
   if(binary) {
     msg += "binary/octet-stream";
-    msg += " ";
-    msg += data;
   } else {
-    msg += "application/json";
-    msg += " ";
-    msg += json_encode(data);
+    msg += "text/ascii";
   }
+  msg += " ";
+  msg += data;
+
   return msg;
 }
 

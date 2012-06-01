@@ -26,7 +26,7 @@
 Publisher::Publisher(const char* hostname, int port) {
   context = new zmq::context_t(1);
   publisher = new zmq::socket_t(*context, ZMQ_PUB);
-  // TODO: change this to use hostname and port.
+
   string address("tcp://");
   address += hostname;
   address += ":";
@@ -55,7 +55,7 @@ int main() {
   /* wait a little to get the publisher started... */
   usleep(500 * 1000);
 
-  Message msg("/DC/juhu", "info", "jhuuuu !!!", true);
+  Message msg("/DC/juhu", "info", "jhuuuu !!!", false);
   cout << "the message is :" << endl;
   cout << msg.toString() << endl;
 
