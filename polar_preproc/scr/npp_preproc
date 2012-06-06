@@ -22,6 +22,9 @@ LV2_DIR = os.path.realpath(os.environ.get('NPP_LV2_DIR', '.'))
 WRK_DIR = WRK_DIR + "/preproc.%d" % os.getpid()
 remove_wrk_dir = True
 
+lv1_outdir = './.outdir.lv1'
+lv1_signaldir = './.signaldir.lv1'
+
 def usage():
     print >> sys.stderr, "usage: npp_preproc -c <cadu-file>"
     print >> sys.stderr, "usage: npp_preproc -r <rdr-file>"
@@ -96,14 +99,15 @@ if not os.path.isdir(outdir):
 if os.path.isfile(stop_file):
     os.remove(stop_file)
 
+# Specify level-1 output and signal directory
+os.symlink(outdir, lv1_outdir)
+os.symlink(LV1_DIR, lv1_signaldir)
+
 with open(start_file, 'w') as fp:
     print >> fp, datetime.now().utcnow(), '\n', cadu_file
 
 try:
-    lv1_files = cspp_prod.do_prod(viirs_file,
-                                  outdir=outdir,
-                                  signal=LV1_DIR,
-                                  logfile=logfile)
+    cspp_prod.do_prod(viirs_file, logfile=logfile)
 finally:
     if os.path.isfile(logfile):
         os.rename(logfile, os.path.join(outdir, 

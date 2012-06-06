@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-$Id: adl_viirs_sdr.py 8055 2012-05-13 13:54:17Z ras $
+$Id:$
+
+From CSPP v1.1
 
 Purpose: Run the VIIRS SDR using Raytheon ADL 3.1
 
@@ -33,26 +35,34 @@ Licensed under GNU GPLv3.
 
 import os, sys, logging, glob, traceback
 import datetime as dt
-import subprocess
+
 #import repair_metadata
 from subprocess import CalledProcessError, call
-from subprocess import Popen, PIPE, STDOUT 
+
 # skim and convert routines for reading .asc metadata fields of interest
-from adl_asc import skim_dir, contiguous_granule_groups, granule_groups_contain, effective_anc_contains, RDR_REQUIRED_KEYS, POLARWANDER_REQUIRED_KEYS
+from adl_asc import skim_dir, contiguous_granule_groups,  RDR_REQUIRED_KEYS
 
 import adl_log, adl_geo_ref
 import  adl_anc_retrieval 
 
 import xml.etree.ElementTree as ET
+from adl_common import status_line , configure_logging,get_return_code
+import shutil
 
-import site_utils # DMI utils
+# Site utils
+try:
+    from site_utils import site_notify
+except ImportError:
+    site_notify = None
 
 # maximum delay between granule end time and next granule start time to consider them contiguous
 MAX_CONTIGUOUS_SDR_DELTA=dt.timedelta(seconds = 600)
 
 
+
+
 # ancillary search and unpacker common routines
-from adl_common import sh, anc_files_needed, link_ancillary_to_work_dir, missing_granules_check, unpack, env, ADL_HOME, CSPP_ANC_PATH, CSPP_ANC_CACHE_DIR
+from adl_common import sh, anc_files_needed, link_ancillary_to_work_dir,  unpack, env, ADL_HOME, CSPP_ANC_PATH, CSPP_ANC_CACHE_DIR
 
 # every module should have a LOG object
 LOG = logging.getLogger('adl_viirs_sdr')
@@ -112,19 +122,16 @@ ADL_VIIRS_ANC_GLOBS =  (
 #  ProSdrCmnGeo   
     '*CMNGEO-PARAM-LUT_npp*',
     '*off_Planet-Eph-ANC*',
-    '*off_USNO-PolarWander*',
+    '*off_USNO-PolarWander*', 
     '*CmnGeo-SAA-AC_npp*',
-    '*Terrain-Eco-ANC-Tile*',
+#    '*Terrain-Eco-ANC-Tile*',
 # RDR processing
 
 # GEO processing
-    '*S-SDR-F-LUT*',
     '*VIIRS-SDR-GEO-DNB-PARAM-LUT_npp*',
     '*VIIRS-SDR-GEO-IMG-PARAM-LUT_npp*',   
     '*VIIRS-SDR-GEO-MOD-PARAM-LUT_npp*',
-    '*VIIRS-SDR-QA-LUT_npp*',
 ## CAL Processing
-
     '*VIIRS-SDR-DNB-DN0-LUT_npp*',
     '*VIIRS-SDR-DNB-RVF-LUT_npp*',
     '*VIIRS-SDR-DG-ANOMALY-DN-LIMITS-LUT_npp*',
@@ -278,7 +285,7 @@ XML_TMPL_VIIRS_SDR = """<InfTkConfig>
   <task>
     <taskType>SDR</taskType>
     <taskDetails1>%(N_Granule_ID)s</taskDetails1>
-    <taskDetails2>A1</taskDetails2>
+    <taskDetails2>%(N_Granule_Version)s</taskDetails2>
     <taskDetails3>NPP</taskDetails3>
     <taskDetails4>VIIRS</taskDetails4>
   </task>
@@ -305,47 +312,42 @@ def sift_metadata_for_viirs_sdr(work_dir='.'):
     """
     LOG.info('Collecting information for S/C diary RDRs')
 #    diaries = list(contiguous_granule_groups(skim_dir(work_dir, N_Collection_Short_Name='SPACECRAFT-DIARY-RDR')))
-    diaries = list(contiguous_granule_groups(skim_dir(work_dir,required_keys=RDR_REQUIRED_KEYS, N_Collection_Short_Name='SPACECRAFT-DIARY-RDR')))
+    
+    diaries = list(contiguous_granule_groups(skim_dir(work_dir,required_keys=RDR_REQUIRED_KEYS, N_Collection_Short_Name='SPACECRAFT-DIARY-RDR'),larger_granules_preferred=True))
 
     LOG.debug('sifting science RDR data for processing opportunities')
     Viirs_Science_RDRs = list(skim_dir(work_dir, N_Collection_Short_Name="VIIRS-SCIENCE-RDR"))
     
-    LOG.info("Total Viirs Science RDRs: "+ str(len(Viirs_Science_RDRs)))
+    status_line("Total Viirs Science RDRs: "+ str(len(Viirs_Science_RDRs)))
     
-    for group in contiguous_granule_groups(Viirs_Science_RDRs,MAX_CONTIGUOUS_SDR_DELTA):
-        
-        # for VIIRS, we can process everything but the first and last granule
-        # for CrIS, use [4:-4]
-        LOG.debug('contiguous granule group: %r' % (group,))
-#        for gran in group[1:-1]:
-        for gran in group:
-            if not granule_groups_contain(diaries, gran):
-                LOG.info("Insufficient S/C Diary RDR coverage to process %s @ %s (%s)" % (gran['N_Granule_ID'], gran['StartTime'], gran['URID']))
-            else:
-                LOG.info('Processing opportunity: %r at %s with uuid %s' % (gran['N_Granule_ID'], gran['StartTime'], gran['URID']))            
-            yield gran # FIXME DEBUG this shouldnt happen if we d on't have SC diary
 
+    for group in Viirs_Science_RDRs:
+            yield group           
 
 def generate_sdr_xml(work_dir,gran):
-        LOG.info("Generate ADL controller XML for "+gran['N_Granule_ID'])
         name = gran['N_Granule_ID']
         fnxml = 'sdr_viirs_%s.xml' % name
         LOG.debug('writing XML file %r' % fnxml)
         fpxml = file(os.path.join(work_dir, fnxml), 'wt')
         fpxml.write(XML_TMPL_VIIRS_SDR % gran)
-        return fnxml
+        status_line('Created ADL controller XML %s for %s' % (fnxml,gran['N_Granule_ID']))
 
+        return fnxml
+#Description: Required input not available for Shortname
 
 # table of ADL LOG error messages and the associated hint to correcting the problem
 viirs_sdr_log_check_table = [
-                             ("PRO_FAIL Required input not available","Missing or out of date ancillary input"), \
+                            ("ERROR - CMN GEO set up ephemeris and attitude failure","Check Polar and TLE data"), \
+    
+                             ("Required input not available","Missing or out of date ancillary input, Check effectivity for listed Shortname."), \
                              ("PRO_FAIL runAlgorithm()","Algorithm failed"),("Completed unsuccessfully","Algorithm failed"), \
                              ("The DMS directory is not valid:","Check configuration"), \
                              ("arbitrary time is invalid","Problem with input RDR,check NPP_GRANULE_ID_BASETIME"), \
                              ("Error retrieving data for USNO-POLARWANDER-UT1","POLAR WANDER file needs update,check NPP_GRANULE_ID_BASETIME"), \
                              ("Algorithm failed","Controller did not run, check log"), \
                              ("ERROR - CMN GEO satellite position and attitude failure","Problem with S/C Diary"), \
-                             ("PRO_CROSSGRAN_FAIL Required input not available for Shortname:","Prerequisite Missing")\
+#                             ("PRO_CROSSGRAN_FAIL Required input not available for Shortname:","Prerequisite Missing"), \
+                             ("Verified RDR has invalid mode for geolocation/calibration","Problem ")\
     ] 
 
 # Look through new log files for completed messages
@@ -363,29 +365,29 @@ def checkADLLogForSuccess(work_dir,pid,xml, remove_list) :
     
     
     files = glob.glob(os.path.join(logDir, logExpression))
-    
+    status_line("Checking "+str(len(files))+" log files for errors")
+   
     n_err=0
     for logFile in files :
         count=0
-        LOG.info( "Checking Log file " +logFile +" for errors.")
+        LOG.debug( "Checking Log file " +logFile +" for errors.")
         
-        count = adl_log.scan_log_file(viirs_sdr_log_check_table, logFile)
-        if count == 0 :
-            LOG.debug("Append:" + logFile)
-            remove_list.append(logFile)
+        count = adl_log.scan_log_file(viirs_sdr_log_check_table, logFile)            
+        remove_list.append(logFile)
             
         n_err += count
         
     if n_err == 0 :
-        LOG.info("Processing of file: "+ xml + " Completed successfully" )
+        status_line("Processing of file: "+ xml + " Completed successfully" )
 
 #        LOG.info("Log file: "+logFile)
         return True
     else :
-        LOG.error("Processing of file: "+ xml + " Completed unsuccessfully" )
-        LOG.error("Log file: "+logFile)
+        status_line("Processing of file: "+ xml + " Completed unsuccessfully, Look at previous message" )
+        LOG.debug("Log file: "+logFile)
 
         return False
+
 
 def is_granule_on_list(work_dir, wanted, found_granule_seq):
     """verify that granules matching an incoming sequence and specification were created
@@ -412,29 +414,28 @@ def check_for_products(work_dir, gran, remove_list) :
     """ Checks that proper products were produced.
     If product h5 file was produced blob and asc files are deleted
     If product was not produced files are left alone
-    
-    DMI, collect and return a set of product time stamps.
+
+    Site utils, collect and return a set of product time stamps.
     """
     # look for all products that should have been produced
     # convert the products to H5
     
-    LOG.info("Granule: "+gran['N_Granule_ID']+" complete, Check that all products were produced.")
+    LOG.info("Check for Granule: "+gran['N_Granule_ID']+" products.")
 
     gran_id=gran['N_Granule_ID']
     problem=True
-    product_times = set()
-    for short_name in  sorted (ADL_VIIRS_SDR_PRODUCT_SHORTNAMES) + \
-            sorted(ADL_VIIRS_GEO_PRODUCT_SHORTNAMES):
-
-        # must require granule id but I do not know it is used.  
-        gran_list = list(skim_dir(work_dir,
-                                  required_keys=CHECK_REQUIRED_KEYS,
-                                  N_Collection_Short_Name=short_name,
-                                  N_Granule_ID=gran_id))
+    total =0;
+    good=0;
+    # Site utils
+    granule_stamps = set()
+    for short_name in  sorted ( ADL_VIIRS_SDR_PRODUCT_SHORTNAMES) + sorted( ADL_VIIRS_GEO_PRODUCT_SHORTNAMES ) :
+        total = total + 1;
+# must require granule id but I do not know it is used.  
+        gran_list = list(skim_dir(work_dir,required_keys=CHECK_REQUIRED_KEYS,N_Collection_Short_Name=short_name,N_Granule_ID=gran_id))
         
         if len(gran_list) < 1 :
             try :
-                LOG.error("Problem : "+short_name+" No product produced.")
+                LOG.debug("Problem : "+short_name+" No product produced.")
                 SHORTNAME_2_PRODUCTID[short_name]
                 problem = True
             except KeyError:
@@ -444,17 +445,25 @@ def check_for_products(work_dir, gran, remove_list) :
                 LOG.debug( it )         
 
                 sdr_name=SHORTNAME_2_PRODUCTID[short_name]
-                dObj=it['ObservedStartTime']
+                try :
+                    dObj=it['ObservedStartTime' ]
+                except KeyError:  
+                    LOG.debug("Key error on blob property")
+                    print it
+                
+                
                 time_id_str  = dObj.strftime("_npp_d%Y%m%d_t%H%M%S")
          
-                #  Name Example: SVI04_npp_d20111121_t1805421_e1807062_b00346_c20120127203200212753_cspp_dev.h5
+                    #  Name Example: SVI04_npp_d20111121_t1805421_e1807062_b00346_c20120127203200212753_cspp_dev.h5
                 sdr_name=sdr_name+time_id_str+"*.h5"  
                 files = glob.glob(os.path.join(work_dir, sdr_name))
                 if  len( files ) == 1 :
                     fullname= files[0]
-                    product_times.add(dObj)
-                    LOG.info("Product: "+fullname+" produced.")
+                    # Site utils
+                    granule_stamps.add(dObj)
+                    LOG.debug("Product: "+fullname+" produced.")
                     problem = False;
+                    good = good + 1;
                     " Night passes do not create a blob file for all asc files." 
                     ascname="noproperty"
                     blobname="noproperty"
@@ -489,20 +498,16 @@ def check_for_products(work_dir, gran, remove_list) :
                     if 'BlobPath' in it.keys() :		
                         blobname=it['BlobPath']
                         b_exists=os.path.exists(blobname)
-                    LOG.error("Exists? "+a_exists+" "+ascname)
-                    LOG.error("Exists? "+b_exists+" "+blobname) 
-#                        LOG.info( it )
-                                          
-#                except KeyError:
-#                            LOG.info("H5 not produced for Short name:" + short_name+" "+sdr_name)
-#                    LOG.info( it )
+                    LOG.error("Exists? "+str(a_exists)+" "+ascname)
+                    LOG.error("Exists? "+str(b_exists)+" "+blobname) 
 
                 
-            
-    return problem, list(product_times)
+    LOG.info( str(good)+" out "+str(total)+" products produced for granule "+gran_id)
+    # Site utils
+    return problem, list(granule_stamps)
 
 
-def run_xml_file(work_dir, xml_file, remove_list, setup_only=False):
+def run_xml_file(work_dir, xml_file, remove_list ,gran,setup_only=False):
     "run each VIIRS SDR XML input in sequence"
     error_files=[]
     ran_ok=False
@@ -510,15 +515,14 @@ def run_xml_file(work_dir, xml_file, remove_list, setup_only=False):
     if setup_only:
         print ' '.join(cmd)
     else:
-        LOG.info('Executing %r with WORK_DIR=%r' % (cmd, work_dir))
+        status_line('Executing %r with WORK_DIR=%r ' % (cmd, work_dir))
         try:
-                #pid = sh(cmd, env=env(WORK_DIR=work_dir), cwd=work_dir)
                 
             pid = sh(cmd, env=env(WORK_DIR=work_dir, LINKED_ANCILLARY=ANCILLARY_SUB_DIR), cwd=work_dir)
             LOG.debug("%r ran as pid %d" % (cmd, pid))
             ran_ok=checkADLLogForSuccess(work_dir,pid,xml_file, remove_list)
-                
-                # FUTURE: check log files created for this PID
+            adl_log.find_inputs_used_for_granule(work_dir,pid,gran)
+            
         except CalledProcessError as oops:
             LOG.debug(traceback.format_exc())
             LOG.error('ProSdrViirsController.exe failed on %r: %r. Continuing...' % (xml_file, oops))
@@ -566,7 +570,7 @@ def get_created_blobs_list(work_dir, wanted, found_granule_seq):
         LOG.debug('found granule for %s' % name)
         it=found.get(name)
         try :
-            pa = it['BlobPath']
+#            pa = it['BlobPath']
             yield it
         except KeyError: 
             LOG.debug("No blob file for "+name)
@@ -583,16 +587,15 @@ def add_geo_attribute_to_h5(work_dir, gran) :
     # Do this for all inputs
    
 #    LOG.info( gran )
-
+    added=0
     # Every VIIRS SDR must have GEO location property added
     for short_name in sorted ( ADL_VIIRS_SDR_PRODUCT_SHORTNAMES ):
         LOG.debug("short name: "+ short_name +  " productId " + SHORTNAME_2_PRODUCTID[short_name] )
 
         #  need to use short name to build h5 file
         # for the give granules get asc files that have been produced
-        created_products = list(get_created_blobs_list(work_dir, gran, 
-                                                       skim_dir(work_dir, N_Collection_Short_Name=short_name)))
-        
+        created_products = list(get_created_blobs_list(work_dir, gran, skim_dir(work_dir, N_Collection_Short_Name=short_name)))
+
         for ascDics in created_products:
             # use the Observer start time of the data with the short name to create npp product file name
             dObj=ascDics['ObservedStartTime']
@@ -608,20 +611,24 @@ def add_geo_attribute_to_h5(work_dir, gran) :
                     adl_geo_ref.write_geo_ref(afile)
                     for filename in glob.glob(os.path.join(work_dir, SDR_name)):
                         # update the GEO property
-                        LOG.info("Add N_GEO_Ref property to: "+ filename)
+                        LOG.debug("Add N_GEO_Ref property to: "+ filename)
                         adl_geo_ref.write_geo_ref(filename)
+                        added = added + 1
             except KeyError:
                 LOG.eoor("No: "+short_name)
+    if  added > 0  :
+            LOG.info("Added N_GEO_Ref properties to "+str(added)+" files.")
+
  
-def check_for_intemidiate(work_dir, gran, remove_list) :
+def check_for_intermediate(work_dir, gran, remove_list) :
     """ Checks that proper products were produced.
     If product h5 file was produced blob and asc files are deleted
     If product was not produced files are left alone
     """
-       # look for all products that should have been produced
+    # look for all products that should have been produced
     # convert the products to H5
     
-    LOG.info("Granule: "+gran['N_Granule_ID']+" Clean up intermediate products")
+    LOG.info("Check for Granule: "+gran['N_Granule_ID']+" intermediate products.")
 
     gran_id=gran['N_Granule_ID']
     problem=True
@@ -659,18 +666,6 @@ def check_for_intemidiate(work_dir, gran, remove_list) :
     return problem
 
 
-def cleanup_intermediate_products(work_dir, remove_list) :
-    LOG.info("Clean up intermediate products")
-    for short_name in ADL_VIIRS_SDR_intermediate_SHORTNAMES:
-        pattern="*"+short_name
-        for blobname in glob.glob(os.path.join(work_dir, pattern)):
-            LOG.debug("Blob: "+blobname )
-            b=blobname.split( ".")    
-            ref=b[0]+".asc";
-            LOG.debug("Append:" + ref)
-            remove_list.append(blobname);
-            remove_list.append(ref);
-            LOG.debug("Append:" + blobname)
 
 
 def remove_inputs(work_dir) :
@@ -682,6 +677,10 @@ def remove_inputs(work_dir) :
             blob_id=b[0]+".asc"; 
             if os.path.exists(blob_id) :          
                 os.remove(blob_id)
+                
+            blob_id=b[0]+".asc_not"; 
+            if os.path.exists(blob_id) :          
+                os.remove(blob_id)
             if os.path.exists(fn ) :
                 os.remove(fn)
     
@@ -689,7 +688,6 @@ def setup_directories(work_dir,anc_dir):
     # create work directory
     
     "Create the working directory and a subdirectory for the logs"
-    log_dir = os.path.join(work_dir, 'log')
     
     if not os.path.isdir(work_dir):
         LOG.info('creating directory %s' % work_dir)
@@ -698,8 +696,7 @@ def setup_directories(work_dir,anc_dir):
     log_dir = os.path.join(work_dir, 'log')
     if not os.path.isdir(log_dir):
         LOG.info('creating log directory %s' % log_dir)
-        os.makedirs(log_dir)
-        
+        os.makedirs(log_dir)        
 
     if not os.path.exists( anc_dir ) :
         os.mkdir(anc_dir)
@@ -707,7 +704,7 @@ def setup_directories(work_dir,anc_dir):
         
     
 def unpack_inputs(work_dir, h5_names) :
-    problematic = False
+    problems = 0
     ## unpack HDF5 RDRs to work directory
     for fn in h5_names:
         try:
@@ -715,8 +712,8 @@ def unpack_inputs(work_dir, h5_names) :
         except CalledProcessError as oops:
             LOG.debug(traceback.format_exc())
             LOG.error('ADL_Unpacker failed on %r: %r . Continuing' % (fn, oops))
-            problematic = True   # My food is problematic.
-    return problematic
+            problems = problems + 1
+    return problems
 
 def find_granules_and_build_xml(work_dir):
     # read through ascii metadata and build up information table
@@ -732,9 +729,9 @@ def find_granules_and_build_xml(work_dir):
     LOG.debug(', '.join(x['N_Granule_ID'] for x in granules_to_process))
     if not granules_to_process:
         LOG.error("Found no granules to process!")
-        return 5
+        return []
     else :
-        LOG.info("Found %d granules to process.",len(granules_to_process))
+        LOG.info("Found %d granules to process."%(len(granules_to_process)))
     
     return granules_to_process
        
@@ -745,130 +742,141 @@ def stage_the_ancillary_data() :
     """
                  
 
-def viirs_sdr(work_dir, h5_names, setup_only=False, out_dir='.', signal=''):
+def viirs_sdr(work_dir, h5_names, setup_only=False, cleanup=True):
     "process VIIRS RDR data in HDF5 format (any aggregation) to SDRs in an arbitrary work directory"
 
-    problematic = False 
-    
+    cleanup_after_running = cleanup
     anc_dir=os.path.join(work_dir,ANCILLARY_SUB_DIR)
      
     "Create the working directory and a subdirectory for the logs" 
     setup_directories(work_dir, anc_dir)
     
-    LOG.info("Unpack the supplied inputs")
-    problematic =  unpack_inputs(work_dir, h5_names) 
+    status_line("Unpack the supplied inputs")
+    num_unpacking_problems =  unpack_inputs(work_dir, h5_names) 
      
-    LOG.info("Search through the inputs for legal granule combinations")
+    status_line("Search through the inputs for legal granule combinations")
     granules_to_process = find_granules_and_build_xml(work_dir)
-    try:
-        len(granules_to_process)
-    except TypeError:
-        return 5
     
     # used to create H5 file names
     build_product_name_maps()
   
     ####   EVALUATE AND RETRIEVE ANCILLARY DATA ##################
-    LOG.info("Link the required ancillary data into the workspace")
+    status_line("Link the required ancillary data into the workspace")
         
     search_dirs = [CSPP_ANC_CACHE_DIR if CSPP_ANC_CACHE_DIR is not None else anc_dir] + ADL_ANC_DIRS
     problems_detected=0
+    good_granules=0
+    processed=0
     problem=False
     try:
+
+        if len( granules_to_process ) > 0 :
+            # get list of dynamic ancillary files.  Servicing may pull files from remote server.
+            dynamic_ancillary_file_list = adl_anc_retrieval.service_remote_ancillary(work_dir,granules_to_process,adl_anc_retrieval.kPOLAR)
        
-        # get list of dynamic ancillary files.  Servicing may pull files from remote server.
-        dynamic_ancillary_file_list = adl_anc_retrieval.service_remote_ancillary(work_dir,granules_to_process,adl_anc_retrieval.kPOLAR)
-       
-        dynamic_ancillary_file_list2 = adl_anc_retrieval.service_remote_ancillary(work_dir,granules_to_process,adl_anc_retrieval.kTLE)
-        for src_path in dynamic_ancillary_file_list2:
-           dynamic_ancillary_file_list.append( src_path )
+            dynamic_ancillary_file_list2 = adl_anc_retrieval.service_remote_ancillary(work_dir,granules_to_process,adl_anc_retrieval.kTLE)
+            for src_path in dynamic_ancillary_file_list2:
+                dynamic_ancillary_file_list.append( src_path )
         
         
-        # get the static ancillary files needed
-        ancillary_files_neeeded=anc_files_needed(ADL_VIIRS_ANC_GLOBS, search_dirs, granules_to_process)
+            # get the static ancillary files needed
+            ancillary_files_neeeded=anc_files_needed(ADL_VIIRS_ANC_GLOBS, search_dirs, granules_to_process)
         
-        # create list of all ancillary needed
-        for src_path in ancillary_files_neeeded:
-           dynamic_ancillary_file_list.append( src_path )
+            # create list of all ancillary needed
+            for src_path in ancillary_files_neeeded:
+                dynamic_ancillary_file_list.append( src_path )
         
-        # link all the ancillary files to the ancillary directory.
-        link_ancillary_to_work_dir(anc_dir, dynamic_ancillary_file_list)
+            # link all the ancillary files to the ancillary directory.
+            link_ancillary_to_work_dir(anc_dir, dynamic_ancillary_file_list)
         
         ##########  RUN THE VIIRS SDR  ##################3
         files_to_remove=[]
         file_that_will_be_removed  = []
 
    
-        
+
         for gran in granules_to_process:
             " For VIIRS files from previous granule need to stay around for next"
             " However we can remove then after they have been used to reduce parse time"
             " For ADL and error checking"
-            LOG.info("")
-            
-            for file in files_to_remove:
-                LOG.debug("Remove: "+ file)
-                if os.path.exists(file) :
-                	os.remove(file)
-                else :
-                    LOG.debug("Unable to remove:"+file)
+            processed = processed + 1
+            if  cleanup_after_running == True :
+                for file_to_remove in files_to_remove:
+                    LOG.debug("Remove: "+ file_to_remove)
+                    if os.path.exists(file_to_remove)   :
+                        os.remove(file_to_remove)
+                    else :
+                        LOG.debug("Unable to remove:"+file_to_remove)
                 
            
-            files_to_remove = file_that_will_be_removed
-            file_that_will_be_removed = []
+            files_to_remove            = file_that_will_be_removed
+            file_that_will_be_removed  = []
             
-            LOG.debug("Process: " + str(gran))
-            viirs_sdr_xml = generate_sdr_xml(work_dir,gran)
-            
-            ran_ok = run_xml_file(work_dir, viirs_sdr_xml,
-                                  file_that_will_be_removed,
-                                  setup_only=setup_only)
+            LOG.debug("Process: "+ str( gran))
+            viirs_sdr_xml=generate_sdr_xml(work_dir,gran)
+            file_that_will_be_removed.append(viirs_sdr_xml)    
+ 
+            ran_ok = run_xml_file(work_dir, viirs_sdr_xml,file_that_will_be_removed,gran, setup_only = setup_only)
             if ran_ok == False :
                 LOG.info("Log indicates some problems.")
                 
 
-            LOG.debug("Checking that output granule blobs exist for granule: "+ gran['N_Granule_ID'])
-            ################   Check For Products/ Errors  #####################3
-            problem, product_times = check_for_products(work_dir, gran, file_that_will_be_removed)
-            ###############   PATCH THE OUTPUTS ####################3  
-                     
-            add_geo_attribute_to_h5(work_dir, gran)     
-    
-            if problem == False :
-                check_for_intemidiate(work_dir,gran,file_that_will_be_removed)
-                os.remove(viirs_sdr_xml)
+            if ran_ok == True:
+   
+                LOG.debug("Checking that output granule blobs exist for granule: "+ gran['N_Granule_ID'])
+                ################   Check For Products/ Errors  #####################3
+                # Site utils, return list of product time stamps.
+                problem, granule_stamps = check_for_products(work_dir, gran,file_that_will_be_removed)
+                ###############   PATCH THE OUTPUTS ####################3  
+   
+                if problem == False :
+                    add_geo_attribute_to_h5(work_dir, gran)     
+
+                    check_for_intermediate(work_dir,gran,file_that_will_be_removed)
+
+                    good_granules += 1
+                    status_line( 'Processing of %s Completed without problems'%viirs_sdr_xml)
                 
             if ran_ok == False or problem == True  :   
-                LOG.info("Run problem with: "+ gran['N_Granule_ID'])
+                status_line( 'Processing of %s Completed with problems'%viirs_sdr_xml)
+
                 " Do not clean up files "
-                file_that_will_be_removed=[]
+#                file_that_will_be_removed=[]
                 problems_detected+=1
-                    
+
             ################   Notify  #####################3
-            # DMI, signal
-            site_utils.notify(work_dir, product_times, out_dir=out_dir, signal=signal)
+            # Site utils
+            if site_notify:
+                site_notify(work_dir, granule_stamps)
+              
+            status_line('%d out of %d granules processed, %d successfully'%(processed,len(granules_to_process),good_granules))
+           
                     
-        for file in files_to_remove + file_that_will_be_removed:      
-            if os.path.exists(file) :
-                LOG.debug( "Remove: " + file )
-                os.remove( file )
-            else :
-                LOG.debug("Unable to remove:"+file)
-
-
-        if problem or problematic or (problems_detected>0) : 
-            LOG.warning("Done, but problems occurred. Review logs."+str(problem)+" "+str(problematic))
-            return 5
+        if len( granules_to_process ) > 0 and cleanup_after_running == True :
+            for file in files_to_remove + file_that_will_be_removed:      
+                if os.path.exists( file)  :
+                    LOG.debug( "Remove: "+file )
+                    os.remove( file )
+                else :
+                    LOG.debug("Unable to remove:"+file)
         
-        if problem == False :
+        status_line('Final %d out of %d granules processed, %d successfully'%(processed,len(granules_to_process),good_granules))
+        if cleanup_after_running == True  :
             remove_inputs(work_dir)
         
     except EnvironmentError:
         LOG.warning("Environment Error, Done, but problems occurred. Review logs.")
-        return 5
-    if problem == False and (problems_detected == 0):
-        LOG.info("Done; no problems detected.")
-    return 0  
+
+    dir_to_go=os.path.join(work_dir,"log")
+    shutil.rmtree(dir_to_go)
+    dir_to_go=os.path.join(work_dir,ANCILLARY_SUB_DIR)
+    shutil.rmtree(dir_to_go)
+
+    gran_failure =  len(granules_to_process) - good_granules
+    noncritical_problem = 0   
+    rc = get_return_code(num_unpacking_problems, len(granules_to_process), gran_failure, noncritical_problem)   
+        
+    return rc  
 
 def _test_anc_names():
     "list ancillary files that would be processed"
@@ -897,10 +905,13 @@ def main():
                     action="store_true", default=False, help="run self-tests")  
     parser.add_argument('-W', '--work-dir', metavar='work_dir', default='.',
                     help='work directory which all activity will occur in, defaults to current dir')
-    parser.add_argument('-O', '--out-dir', metavar='out_dir', default=None,
-                    help='out directory where final h5 files will be moved to')
-    parser.add_argument('-S', '--signal', metavar='signal', default='',
-                    help='signal option')
+    
+#    parser.add_argument('-d', '--debug',metavar='debug'  , default=False,
+#                   help='Clean up files produced by processing')
+    
+    parser.add_argument('-d', '--debug',
+                    action="store_true", default=False, help="always retain intermediate files")
+    
     parser.add_argument('-v', '--verbosity', action="count", default=0,
                     help='each occurrence increases verbosity 1 level through ERROR-WARNING-INFO-DEBUG')
     parser.add_argument('filenames', metavar='filename', type=str, nargs='+',
@@ -909,16 +920,23 @@ def main():
     args = parser.parse_args()
 
     levels = [logging.ERROR, logging.WARN, logging.INFO, logging.DEBUG]
-    logging.basicConfig(level = levels[args.verbosity if args.verbosity<4 else 3])
+    level = levels[args.verbosity if args.verbosity<4 else 3]
+
+    docleanup = True
+    configure_logging(level)
+    if  args.debug == True:
+        docleanup = False
+    
+    LOG.info("Clean up: "+str(docleanup))
 
     work_dir = os.path.abspath(args.work_dir)
-    out_dir = os.path.abspath(args.out_dir or work_dir)
-    signal = args.signal
+    
 
     LOG.info('CSPP execution work directory is %r' % work_dir)
-    LOG.info('Final H5 files will be moved to %r' % out_dir)
-    LOG.info('Signal option is %r' % signal)
 
+    if site_notify:
+        LOG.info('Site notify module is loaded %r' % site_notify)
+    
     if args.test:
         _check_env()
  #       _test_anc_names()
@@ -930,10 +948,11 @@ def main():
 
     if not args: 
         parser.print_help()
-        return 9
+        return 1
 
     _check_env()
-    return viirs_sdr(work_dir, args.filenames, out_dir=out_dir, signal=signal)
+    return viirs_sdr( work_dir, args.filenames ,cleanup=docleanup)
+
 
 if __name__=='__main__':
     sys.exit(main())
