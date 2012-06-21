@@ -48,6 +48,11 @@ Message::Message(const char* sub,
   sender += "@";
   sender += hostname;
 
+  /* protocol version */
+
+  version = _VERSION;
+
+
   /* utc time in isoformat */
 
 

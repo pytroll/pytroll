@@ -18,6 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __message_h__
+#define __message_h__
+
 #include <string>
 
 #define _MAGICK  "pytroll:/"
@@ -37,3 +40,5 @@ public:
   Message(const char*, const char*, const char*, bool);
   string toString();
 };
+
+#endif

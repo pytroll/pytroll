@@ -7,17 +7,17 @@ OBJECTS = $(SOURCES:.cpp=.o)
 LIB	= libposttroll.so
 SLIB    = libposttroll.a
 
-all: $(TARGET) $(LIB) $(SLIB)
+all: $(LIB) $(SLIB)
 
 $(TARGET): $(OBJECTS)
 	$(CC) $(LDFLAGS) $^ -o $@
 
 $(LIB): $(OBJECTS)
-	ld -shared -soname $@ $^
+	ld -shared -o $@ $^
 
 $(SLIB): $(OBJECTS)
-	ar -ur $@ $^
-
+	ar -r $@ $^
+	ranlib $@
 
 .cpp.o:
 	$(CC) -c $(CFLAGS) $<

@@ -50,19 +50,15 @@ Publisher::send(Message msg) {
   send(msg.toString().c_str());
 }
 
-int main() {
-  Publisher pub("*", 9332);
-  /* wait a little to get the publisher started... */
-  usleep(500 * 1000);
+// int main() {
+//   Publisher pub("*", 9332);
+//   /* wait a little to get the publisher started... */
+//   usleep(500 * 1000);
 
-  Message msg("/DC/juhu", "info", "jhuuuu !!!", false);
-  cout << "the message is :" << endl;
-  cout << msg.toString() << endl;
+//   Message msg("/DC/juhu", "info", "jhuuuu !!!", false);
 
-  for(int i=0; i < 1; i++) {
-    cout << "publishing " << msg.toString() << endl;
-    pub.send(msg);
-    usleep(100 * 1000);
-  }
-  return 1;
-}
+//   cout << "publishing " << msg.toString() << endl;
+//   pub.send(msg);
+
+//   return 1;
+// }
