@@ -6,6 +6,7 @@ import re
 import shutil
 from subprocess import call
 import glob
+import getopt
 from datetime import datetime
 
 import loggers.simple as loggers
@@ -20,26 +21,30 @@ LV1_DIR = os.path.realpath(os.environ.get('NPP_LV1_DIR', '.'))
 LV2_DIR = os.path.realpath(os.environ.get('NPP_LV2_DIR', '.'))
 
 WRK_DIR = WRK_DIR + "/preproc.%d" % os.getpid()
-remove_wrk_dir = True
-
-lv1_outdir = './.outdir.lv1'
-lv1_signaldir = './.signaldir.lv1'
+remove_wrk_dir = False
 
 def usage():
-    print >> sys.stderr, "usage: npp_preproc -c <cadu-file>"
-    print >> sys.stderr, "usage: npp_preproc -r <rdr-file>"
+    print >> sys.stderr, """usage: npp_preproc [-s] -c <cadu-file>
+       npp_preproc [-s] -r <rdr-file>
+   -s: generate a signal file"""
     sys.exit(2)
-    
+
+do_signal = False
 cadu_file, lv0_file = '', ''
+opts, argv = getopt.getopt(sys.argv[1:], 'crs')
 try:
-    file_type = sys.argv[1]
-    if file_type == '-c':
-        cadu_file = os.path.realpath(sys.argv[2])
-    elif file_type == '-r':
-        lv0_file = os.path.realpath(sys.argv[2])
-    else:
-        usage()
+    filename = os.path.realpath(argv[0])
 except IndexError:
+    usage()
+for k, v in opts:
+    if k == '-c':
+        cadu_file = filename
+    elif k == '-r':
+        lv0_file = filename
+    elif k == '-s':
+        do_signal = True
+
+if (not cadu_file and not lv0_file) or (cadu_file and lv0_file):
     usage()
 
 parent_dir = os.getcwd()
@@ -70,7 +75,7 @@ if cadu_file:
     LOG.info("---- RT-STPS")
 else:
     lv0_files = (lv0_file,)
-        
+
 #-------------------------------------------------------------------------------
 #
 # CSPP
@@ -87,9 +92,7 @@ except IndexError:
 
 stamp = get_npp_stamp(viirs_file)
 outdir = os.path.join(LV1_DIR,
-                      '%s_%s_%05d'%(stamp.platform, 
-                                    stamp.start_time.strftime("%Y%m%d_%H%M"),
-                                    stamp.orbit_number))
+                      '%s_%05d'%(stamp.platform, stamp.orbit_number))
 logfile = './CSPP.out'
 start_file = os.path.join(outdir, '.started')
 stop_file = os.path.join(outdir, '.stopped')
@@ -99,10 +102,6 @@ if not os.path.isdir(outdir):
 if os.path.isfile(stop_file):
     os.remove(stop_file)
 
-# Specify level-1 output and signal directory
-os.symlink(outdir, lv1_outdir)
-os.symlink(LV1_DIR, lv1_signaldir)
-
 with open(start_file, 'w') as fp:
     print >> fp, datetime.now().utcnow(), '\n', cadu_file
 
@@ -110,17 +109,20 @@ try:
     cspp_prod.do_prod(viirs_file, logfile=logfile)
 finally:
     if os.path.isfile(logfile):
-        os.rename(logfile, os.path.join(outdir, 
+        os.rename(logfile, os.path.join(LV1_DIR, 
                                         'CSPP_' + str(stamp) + '.log'))
     if os.path.isdir('./log'):
         import tarfile
-        fp = tarfile.open(os.path.join(outdir, 'CSPP_' + str(stamp) + 
+        fp = tarfile.open(os.path.join(LV1_DIR, 'CSPP_' + str(stamp) + 
                                        '_log.tar'), 'w')
         try:
             fp.add('./log', recursive=True)
         finally:
             fp.close()
 
+if do_signal:
+    with open(outdir + '.signal', 'w') as fp:
+        print >>fp, outdir
 if cadu_file.endswith('_last'):
     with open(stop_file, 'w') as fp:
         print >> fp, datetime.now().utcnow(), '\n', cadu_file

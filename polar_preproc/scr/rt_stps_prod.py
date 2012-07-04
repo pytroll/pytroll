@@ -60,7 +60,7 @@ def do_prod(filename, outdir='.', logfile=None):
             if retcode < 0:
                 text = "rt-stps was terminated by signal %d" % -retcode
             else:
-                text = "rt-stps returned" % retcode
+                text = "rt-stps returned %d" % retcode
             raise OSError(text)
     finally:
         if stderr.name == logfile:
