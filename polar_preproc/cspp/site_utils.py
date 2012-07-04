@@ -8,35 +8,20 @@ import re
 from polar_preproc import LOG, get_npp_stamp
 from polar_preproc.npp_granule import NPPGranule
 
-_lv1_outdir = './.outdir.lv1'
-_lv1_signaldir = './.signaldir.lv1'
-
 # Removing creation time in filenames
 _re_filename_replace = re.compile('_c\d+_')
 
-def site_notify(work_dir, product_times, outdir=None, signaldir=None):
+def site_notify(work_dir, product_times):
     """ Get list of product files for a given granule (any h5 file is a product).
     Move files to outdir and write a json metadata to signaldir.
 
     In the operational environment 'outdir' and 'signaldir' can be defined by
     symbolic links in the working directory'
     """
-    # anything overwrite workdir symlinks.
-    signaldir = signaldir or outdir
-
     if not isinstance(product_times, (list, tuple)):
         product_times = [product_times]
 
-    if outdir == None and os.path.isdir(_lv1_outdir):
-        outdir = _lv1_outdir
-    else:
-        outdir = '.'
-    outdir = os.path.realpath(outdir)
-    if signaldir == None and os.path.isdir(_lv1_signaldir):
-        signaldir = _lv1_signaldir
-    else:
-        signaldir = '.'
-    signaldir = os.path.realpath(signaldir)
+    lv1dir = os.path.realpath(os.environ.get('NPP_LV1_DIR', '.'))
 
     for time in sorted(product_times):
         time = time.strftime('d%Y%m%d_t%H%M%S')
@@ -47,21 +32,27 @@ def site_notify(work_dir, product_times, outdir=None, signaldir=None):
 
         lv1_files = []
         for fin in files:
-            fout = os.path.join(outdir, 
-                                _re_filename_replace.sub('_', os.path.basename(fin)))
+            stamp = get_npp_stamp(fin)
+            outdir = os.path.join(lv1dir, "%s_%05d"%(
+                    stamp.platform, stamp.orbit_number))
+            if not os.path.isdir(outdir):
+                os.mkdir(outdir)
+            fout = os.path.join(outdir, _re_filename_replace.sub(
+                    '_', os.path.basename(fin)))
+
             LOG.info("Moving %s to %s" % (fin, fout))
             correct_georef(fin)
             os.rename(fin, fout)
             lv1_files.append('file://' + fout)
 
-        if lv1_files and os.path.isdir(signaldir):
+        if lv1_files:
             stamp = get_npp_stamp(lv1_files[0])
             grn = NPPGranule(stamp.platform,
                              stamp.start_time,
                              end_time=stamp.end_time,
                              orbit_number=stamp.orbit_number,
                              items=lv1_files)
-            jsfile = os.path.join(signaldir, 
+            jsfile = os.path.join(lv1dir, 
                                   "SDR_%s_%s_%s.json" % (grn.stamp,
                                                          grn.site,
                                                          grn.domain))
@@ -91,15 +82,11 @@ if __name__ == '__main__':
         _time_stamp = sys.argv[2]
     except IndexError:
         print >> sys.stderr, \
-            'usage: python site_utils.py <data-dir> <time-stamp> [<out-dir>]'
-    try:
-        _outdir = sys.argv[3]
-    except IndexError:
-        _outdir = '.'
+            'usage: python site_utils.py <data-dir> <time-stamp>'
 
     if _time_stamp[0] == 'd':
         _time_fmt = 'd%Y%m%d_t%H%M%S'
     else:
         _time_fmt = '%Y%m%d_%H%M%S'
     _time_stamp = datetime.strptime(_time_stamp, _time_fmt)
-    notify(_datadir, _time_stamp, outdir=_outdir)
+    site_notify(_datadir, _time_stamp)

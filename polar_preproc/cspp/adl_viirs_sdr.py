@@ -837,6 +837,11 @@ def viirs_sdr(work_dir, h5_names, setup_only=False, cleanup=True):
                     good_granules += 1
                     status_line( 'Processing of %s Completed without problems'%viirs_sdr_xml)
                 
+                ################   Notify  #####################3
+                # Site utils
+                if site_notify:
+                    site_notify(work_dir, granule_stamps)
+              
             if ran_ok == False or problem == True  :   
                 status_line( 'Processing of %s Completed with problems'%viirs_sdr_xml)
 
@@ -844,11 +849,6 @@ def viirs_sdr(work_dir, h5_names, setup_only=False, cleanup=True):
 #                file_that_will_be_removed=[]
                 problems_detected+=1
 
-            ################   Notify  #####################3
-            # Site utils
-            if site_notify:
-                site_notify(work_dir, granule_stamps)
-              
             status_line('%d out of %d granules processed, %d successfully'%(processed,len(granules_to_process),good_granules))
            
                     
