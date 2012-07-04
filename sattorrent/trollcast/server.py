@@ -34,6 +34,7 @@ TODO:
  - Implement choking
  - de-hardcode filename
 """
+from __future__ import with_statement 
 
 from pyinotify import (ProcessEvent, Notifier, WatchManager,
                        IN_OPEN, IN_MODIFY, IN_CREATE, IN_CLOSE_WRITE)

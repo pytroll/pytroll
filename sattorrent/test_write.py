@@ -22,6 +22,7 @@
 
 """Continuous writing to test inotify
 """
+from __future__ import with_statement 
 
 import time
 import os
