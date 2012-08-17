@@ -34,11 +34,14 @@ import copy
 
 from posttroll.message import Message
 from posttroll.bbmcast import MulticastReceiver, SocketTimeout
+from posttroll.publisher import Publish
 
 __all__ = ('AddressReceiver', 'getaddress')
 
 debug = os.environ.get('DEBUG', False)
 broadcast_port = 21200
+
+default_publish_port = 16543
 
 #-----------------------------------------------------------------------------
 #
@@ -46,8 +49,9 @@ broadcast_port = 21200
 #
 #-----------------------------------------------------------------------------
 class AddressReceiver(object):
-    def __init__(self, name="", max_age=timedelta(hours=1)):
+    def __init__(self, name="", max_age=timedelta(hours=1), port=None):
         self._max_age = max_age
+        self._port = port or default_publish_port 
         self._address_lock = thread.allocate_lock()
         self._addresses = {}
         self._subject = '/address'
@@ -93,25 +97,29 @@ class AddressReceiver(object):
         port = broadcast_port
         recv = MulticastReceiver(port).settimeout(2.0)
         self._is_running = True
-        try:
-            while self._do_run:
-                try:
-                    data, fromaddr = recv()
-                    del fromaddr
-                except SocketTimeout:
-                    continue
-                msg = Message.decode(data)
-                name = msg.subject.split("/")[1]
-                if msg.type == 'info' and msg.subject.lower().endswith(self._subject):
-                    addr = msg.data["URI"]
-                    metadata = copy.copy(msg.data)
-                    metadata["name"] = name
-                    if debug:
-                        print 'receiving address', addr, name, metadata
-                    self._add(addr, metadata)
-        finally:
-            self._is_running = False
-            recv.close()
+        with Publish("address_receiver", "addresses", self._port) as pub:
+            try:
+                while self._do_run:
+                    try:
+                        data, fromaddr = recv()
+                        del fromaddr
+                    except SocketTimeout:
+                        continue
+                    msg = Message.decode(data)
+                    name = msg.subject.split("/")[1]
+                    if(msg.type == 'info' and
+                       msg.subject.lower().endswith(self._subject)):
+                        addr = msg.data["URI"]
+                        metadata = copy.copy(msg.data)
+                        metadata["name"] = name
+                        if debug:
+                            print 'receiving address', addr, name, metadata
+                        if addr not in self._addresses:
+                            pub.send(str(msg))
+                        self._add(addr, metadata)
+            finally:
+                self._is_running = False
+                recv.close()
 
     def _add(self, adr, metadata):
         self._address_lock.acquire()
