@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2010-2011.
+# Copyright (c) 2010-2012.
 
 # Author(s):
  
@@ -82,10 +82,11 @@ def send_new_files():
         yield Message('/oper/geo/0deg', 'file', metadata)
 
 
-/oper/geo/rss
+"""/oper/geo/rss
 /test/polar/regional/norrköping
 /dev
 /db
+"""
 try:
     with Publish("zero_degree_datasource", "HRIT lvl1.5", 9010) as pub:
         time.sleep(10)
