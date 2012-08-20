@@ -27,11 +27,14 @@ from __future__ import with_statement
 from ConfigParser import ConfigParser
 from posttroll.subscriber import Subscriber
 from posttroll.message import Message, strp_isoformat
-from zmq import Context, REQ
+from zmq import Context, REQ, LINGER, Poller, POLLIN
 from threading import Thread, Timer
 import numpy as np
 from Queue import Queue, Empty
 from datetime import timedelta, datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 # TODO: what if a scanline never arrives ? do we wait for it forever ?
 
@@ -56,8 +59,8 @@ def create_subscriber(cfgfile):
     addrs.append("tcp://" +
                  cfg.get(localhost, "hostname") + ":" +
                  cfg.get(localhost, "pubport"))
-    print addrs
-    return Subscriber(addrs, "hrpt 0")
+    logger.debug("Subscribing to " + str(addrs))
+    return Subscriber(addrs, "hrpt 0", translate=True)
 
 
 def create_requesters(cfgfile):
@@ -80,9 +83,14 @@ class Requester(object):
     """
     
     def __init__(self, host, port):
+        self._host = host
+        self._port = port
         self._context = Context()
         self._socket = self._context.socket(REQ)
+        self._socket.setsockopt(LINGER, 1)
         self._socket.connect("tcp://"+host+":"+str(port))
+        self._poller = Poller()
+        self._poller.register(self._socket, POLLIN)
 
     def stop(self):
         """Close the socket.
@@ -91,6 +99,20 @@ class Requester(object):
 
     def __del__(self, *args, **kwargs):
         self.stop()
+
+    def send(self, msg):
+        """Send a message.
+        """
+        return self._socket.send(str(msg))
+
+    def recv(self, timeout=None):
+        """Receive a message. *timeout* in ms.
+        """
+        if self._poller.poll(timeout):
+            return Message(rawstr=self._socket.recv())
+        else:
+            raise IOError("Timeout from " + str(self._host) +
+                          ":" + str(self._port))
         
     def get_line(self, satellite, utctime):
         """Get the scanline of *satellite* at *utctime*.
@@ -98,8 +120,21 @@ class Requester(object):
         msg = Message('/oper/polar/direct_readout/norrköping',
                       'request',
                       'scanline ' + satellite + ' ' + utctime.isoformat())
-        self._socket.send(str(msg))
-        return Message(rawstr=self._socket.recv()).data
+        self.send(msg)
+        return self.recv(1000).data
+
+
+    def get_slice(self, satellite, start_time, end_time):
+        msg = Message('/oper/polar/direct_readout/norrköping',
+                      'request',
+                      'scanlines '
+                      + satellite
+                      + ' '
+                      + start_time.isoformat()
+                      + ' '
+                      + end_time.isoformat())
+        self.send(msg)
+        return self.recv(1000).data
 
     def send_lineinfo(self, sat, utctime, elevation, filename, pos):
         """Send information to our own server.
@@ -112,47 +147,8 @@ class Requester(object):
                       ' ' + str(elevation) +
                       ' ' + filename +
                       ' ' + str(pos))
-        self._socket.send(str(msg))
+        self.send(msg)
         self._socket.recv()         
-
-class HaveListener(Thread):
-    """Listen to incomming have messages.
-    """
-
-    def __init__(self, cfgfile="sattorrent.cfg"):
-        Thread.__init__(self)
-        self._sub = create_subscriber(cfgfile)
-        self.scanlines = {}
-        self._queues = []
-
-    def add_queue(self, queue):
-        """Adds a queue to dispatch have messages to
-        """
-        self._queues.append(queue)
-
-    def del_queue(self, queue):
-        """Deletes a dispatch queue.
-        """
-        self._queues.remove(queue)
-
-    def run(self):
-        # handshake ? get available lines first ?
-
-        for message in self._sub.recv():
-            if(message.type == "have"):
-                sat = message.data["satellite"]
-                utctime = strp_isoformat(message.data["timecode"])
-                sender = message.data["origin"]
-                elevation = message.data["elevation"]
-                
-                self.scanlines.setdefault(sat, {})
-                self.scanlines[sat].setdefault(utctime, []).append(
-                    (sender, elevation))
-                for queue in self._queues:
-                    queue.put_nowait((sat, utctime, [(sender, elevation)]))
-                    
-    def stop(self):
-        self._sub.stop()
 
 class HaveBuffer(Thread):
     """Listen to incomming have messages.
@@ -183,13 +179,16 @@ class HaveBuffer(Thread):
         
 
     def run(self):
-        # handshake ? get available lines first ?
 
-        for message in self._sub.recv():
+        for message in self._sub.recv(1):
+            if message is None:
+                continue
             if(message.type == "have"):
                 sat = message.data["satellite"]
                 utctime = strp_isoformat(message.data["timecode"])
-                sender = message.data["origin"]
+                # This should take care of address translation.
+                sender = (message.sender.split("@")[1] + ":" +
+                          message.data["origin"].split(":")[1])
                 elevation = message.data["elevation"]
                 
                 self.scanlines.setdefault(sat, {})
@@ -237,6 +236,23 @@ class Client(HaveBuffer):
         self._requesters = create_requesters(cfgfile)
         self.cfgfile = cfgfile
 
+    def get_lines(self, satellite, scanline_dict):
+        """Retrieve the best (highest elevation) lines of *scanline_dict*.
+        """
+
+        for utctime, hosts in scanline_dict.iteritems():
+            hostname, elevation = max(hosts, key=(lambda x: x[1]))
+            host = hostname.split(":")[0]
+
+            logger.debug("requesting " +  " ".join([str(satellite),
+                                                    str(utctime),
+                                                    str(host)]))
+            data = self._requesters[host].get_line(satellite, utctime)
+
+            yield utctime, data, elevation
+
+
+
     def order(self, time_slice, satellite, filename):
         """Get all the scanlines for a *satellite* within a *time_slice* and
         save them in *filename*. The scanlines will be saved in a contiguous
@@ -247,65 +263,78 @@ class Client(HaveBuffer):
 
         saved = []
 
+
+        # Create a file of the right length, filled with zeros. The alternative
+        # would be to store all the scanlines in memory.
         tsize = (end_time - start_time).seconds * LINES_PER_SECOND * LINE_SIZE
         with open(filename, "wb") as fp_:
             fp_.write("\x00" * (tsize))
+            
+        # Do the retrieval.
         with open(filename, "r+b") as fp_:
 
             queue = Queue()
             self.add_queue(queue)
 
             linepos = None
-            # first, get the existing scanlines
-            print "getting existing scanlines"
-            for utctime, hosts in self.scanlines.get(satellite, {}).items():
-                if linepos is None:
-                    linepos = compute_line_times(utctime, start_time, end_time)
 
+            lines_to_get = {}
+
+            # first, get the existing scanlines from self (client)
+            logger.info("Getting list of existing scanlines from client.")
+            for utctime, hosts in self.scanlines.get(satellite, {}).iteritems():
                 if(utctime >= start_time and
                    utctime < end_time and
                    utctime not in saved):
-                    saved.append(utctime)
-                    # choose the highest elevation
-                    elevation = -1
-                    sender = None
-                    for snd, elev in hosts:
-                        if elev > elevation:
-                            elevation = elev
-                            sender = snd
-                    host, port = sender.split(":")
-                    time_diff = utctime - start_time
-                    time_diff = time_diff.seconds + time_diff.microseconds / 1000000.0
-                    pos = LINE_SIZE * int(np.floor(time_diff * LINES_PER_SECOND))
-                    fp_.seek(pos, 0)
-                    print "requesting", satellite, utctime
-                    # TODO: this should be parallelized !
-                    fp_.write(self._requesters[host].get_line(satellite, utctime))
-                    self.send_lineinfo_to_server(satellite, utctime, elevation,
-                                                 filename, pos)
-
-                    linepos -= set([utctime])
+                    lines_to_get[utctime] = hosts
+                    
+            # then, get scanlines from the server
+            logger.info("Getting list of existing scanlines from server.")
+            for host, req in self._requesters.iteritems():
+                try:
+                    response = req.get_slice(satellite, start_time, end_time)
+                    for utcstr, elevation in response:
+                        utctime = strp_isoformat(utcstr)
+                        lines_to_get.setdefault(utctime, []).append((host,
+                                                                     elevation))
+                except IOError, e:
+                    logger.warning(e)
 
 
+                    
+            # get lines with highest elevation and add them to current scene
+            logger.info("Getting old scanlines.")
+            for utctime, data, elevation in self.get_lines(satellite,
+                                                           lines_to_get):
+                if linepos is None:
+                    linepos = compute_line_times(utctime, start_time, end_time)
+                
+                time_diff = utctime - start_time
+                time_diff = (time_diff.seconds
+                             + time_diff.microseconds / 1000000.0)
+                pos = LINE_SIZE * int(np.floor(time_diff * LINES_PER_SECOND))
+                fp_.seek(pos, 0)
+                fp_.write(data)
+                self.send_lineinfo_to_server(satellite, utctime, elevation,
+                                             filename, pos)
+                saved.append(utctime)
+                linepos -= set([utctime])
+            
             # then, get the newly arrived scanlines
-            print "getting new scanlines"
+            logger.info("Getting new scanlines")
             #timethres = datetime.utcnow() + CLIENT_TIMEOUT
             delay = timedelta(days=1000)
             timethres = datetime.utcnow() + delay
             while ((start_time > datetime.utcnow()
                     or timethres > datetime.utcnow())
-                   and (linepos is None or len(linepos) > 0)):
+                   and ((linepos is None) or (len(linepos) > 0))):
                 try:
                     sat, utctime, senders = queue.get(True,
                                                       CLIENT_TIMEOUT.seconds)
-                    print "working on ", utctime, senders
+                    logger.debug("Picking line " + " ".join([str(utctime),
+                                                             str(senders)]))
                     # choose the highest elevation
-                    elevation = -1
-                    sender = None
-                    for snd, elev in senders:
-                        if elev > elevation:
-                            elevation = elev
-                            sender = snd
+                    sender, elevation = max(senders, key=(lambda x: x[1]))
 
                 except Empty:
                     continue
@@ -320,23 +349,24 @@ class Client(HaveBuffer):
                     saved.append(utctime)
 
                     # getting line
-                    print "requesting", satellite, utctime, sender, elevation
-                    host, port = sender.split(":")
+                    logger.debug("requesting " +
+                                 " ".join([str(satellite), str(utctime),
+                                           str(sender), str(elevation)]))
+                    host = sender.split(":")[0]
                     # TODO: this should be parallelized, and timed. I case of
-                    # failure, another source should be used.
+                    # failure, another source should be used. Choking ?
                     line = self._requesters[host].get_line(satellite, utctime)
 
                     # compute line position in file
                     time_diff = utctime - start_time
-                    time_diff = time_diff.seconds + time_diff.microseconds / 1000000.0
-                    pos = LINE_SIZE * int(np.floor(time_diff * LINES_PER_SECOND))
+                    time_diff = (time_diff.seconds
+                                 + time_diff.microseconds / 1000000.0)
+                    pos = LINE_SIZE * int(np.floor(time_diff *
+                                                   LINES_PER_SECOND))
                     fp_.seek(pos, 0)
-                    print "writing", utctime, "at", pos
                     fp_.write(line)
-                    print "done writing"
                     self.send_lineinfo_to_server(satellite, utctime, elevation,
                                                  filename, pos)
-                    print "done"
                     # removing from line check list
                     linepos -= set([utctime])
 
@@ -348,6 +378,7 @@ class Client(HaveBuffer):
 
             # shut down
             self.del_queue(queue)
+            print "Thanks for using pytroll/trollcast. See you soon on www.pytroll.org!"
             
     def send_lineinfo_to_server(self, *args, **kwargs):
         """Send information to our own server.

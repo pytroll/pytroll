@@ -40,7 +40,8 @@ from pyinotify import (ProcessEvent, Notifier, WatchManager,
                        IN_OPEN, IN_MODIFY, IN_CREATE, IN_CLOSE_WRITE)
 from ConfigParser import ConfigParser
 from zmq import Context, Poller, PUB, REP, POLLIN, NOBLOCK
-from posttroll.message import Message, strp_isoformat
+from posttroll.message import Message
+from posttroll import strp_isoformat
 from threading import Thread
 import numpy as np
 import os
@@ -141,13 +142,12 @@ class FileStreamer(ProcessEvent):
             utctime = datetime(year, 1, 1) + timecode(array["timecode"][0])
             print "Got line", utctime, self._satellite
 
+            # FIXME: get real elevation
+            elevation = uniform(5, 90)
             # TODO:
             # - serve also already present files
-            self.scanlines.setdefault(self._satellite, {})[utctime] = \
-                                                       (line_start,
-                                                        self._filename)
-            # FIXME: get real elevation
-            self.send_have(self._satellite, utctime, uniform(5, 90))
+            self.add_scanline(self._satellite, utctime,
+                              elevation, line_start, self._filename)
 
             line = self._file.read(LINE_SIZE)
 
@@ -182,7 +182,8 @@ class FileStreamer(ProcessEvent):
            utctime not in self.scanlines[satellite]):
             self.scanlines.setdefault(satellite,
                                       {})[utctime] = (line_start,
-                                                      filename)
+                                                      filename,
+                                                      elevation)
             self.send_have(satellite, utctime, elevation)
 
 class Looper(object):
@@ -255,17 +256,19 @@ class Responder(SocketLooperThread):
                         end_time = strp_isoformat(elts[3])
                     else:
                         end_time = datetime(19500, 1, 1)
+                    print self._holder.get(sat, [])
                     resp = Message('/oper/polar/direct_readout/' + self._station,
                                    "scanlines",
-                                   [utctime.isoformat()
+                                   [(utctime.isoformat(),
+                                     self._holder[sat][utctime][2])
                                     for utctime in self._holder.get(sat, [])
                                     if utctime >= start_time
                                     and utctime <= end_time])
                     self._socket.send(str(resp))
 
                 # send one scanline
-                if(message.type == "request" and
-                   message.data.startswith("scanline")):
+                elif(message.type == "request" and
+                     message.data.startswith("scanline")):
                     sat = message.data.split(" ")[1]
                     utctime = strp_isoformat(message.data.split(" ")[2])
                     with open(self._holder[sat][utctime][1], "rb") as fp_:
@@ -278,8 +281,8 @@ class Responder(SocketLooperThread):
                     self._socket.send(str(resp))
 
                 # take in a new scanline
-                if(message.type == "notice" and
-                   message.data.startswith("scanline")):
+                elif(message.type == "notice" and
+                     message.data.startswith("scanline")):
                     sat, utctime, elevation, filename, line_start = \
                          message.data.split(' ')[1:]
                     utctime = strp_isoformat(utctime)

@@ -29,6 +29,31 @@
 
 from trollcast.client import Client
 
+import logging
+
+from datetime import datetime
+
+logger = logging.getLogger("")
+logger.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+
+class MyFormatter(logging.Formatter):
+    converter = datetime.fromtimestamp
+    def formatTime(self, record, datefmt=None):
+        ct = self.converter(record.created)
+        if datefmt:
+            s = ct.strftime(datefmt)
+        else:
+            t = ct.strftime("%Y-%m-%d %H:%M:%S")
+            s = "%s.%03d" % (t, record.msecs)
+        return s
+
+
+formatter = MyFormatter('[ %(levelname)s %(name)s %(asctime)s] %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+
 if __name__ == '__main__':
     import sys
 
@@ -36,7 +61,7 @@ if __name__ == '__main__':
     client.start()
     try:
         from datetime import datetime
-        time_slice = slice(datetime(2012, 1, 30, 13, 46, 35), datetime(2012, 1, 30, 13, 46, 40))
+        time_slice = slice(datetime(2012, 1, 30, 13, 46, 32), datetime(2012, 1, 30, 13, 46, 35))
         client.order(time_slice, "NOAA18", "result.hrpt")
     finally:
         client.stop()
