@@ -97,7 +97,7 @@ class AddressReceiver(object):
         port = broadcast_port
         recv = MulticastReceiver(port).settimeout(2.0)
         self._is_running = True
-        with Publish("address_receiver", "addresses", self._port) as pub:
+        with Publish("address_receiver", ["addresses"], self._port) as pub:
             try:
                 while self._do_run:
                     try:
@@ -116,6 +116,8 @@ class AddressReceiver(object):
                             print 'receiving address', addr, name, metadata
                         if addr not in self._addresses:
                             pub.send(str(msg))
+                            if debug:
+                                print 'publishing address', addr, name, metadata
                         self._add(addr, metadata)
             finally:
                 self._is_running = False

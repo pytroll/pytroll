@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2011 SMHI
+# Copyright (c) 2011, 2012 SMHI
 
 # Author(s):
 
@@ -29,46 +29,73 @@ from posttroll.message import Message
 import np.nameclient as nc
 import time
 from datetime import datetime, timedelta
+from urlparse import urlsplit
 
 class Subscriber(object):
-    def __init__(self, addresses, data_types):
+    """Subscriber
+
+    Subscribes to addresses for data_type, and perform address translation of
+    *translate* is true.
+    """
+    def __init__(self, addresses, data_types, translate=False):
         self._context = zmq.Context()
         self._addresses = addresses
         self._data_types = data_types
+        self._translate = translate
         self.subscribers = []
-        for a in addresses:
+        for a__ in self._addresses:
             subscriber = self._context.socket(zmq.SUB)
             subscriber.setsockopt(zmq.SUBSCRIBE, "pytroll")
-            subscriber.connect(a)
+            subscriber.connect(a__)
             self.subscribers.append(subscriber)
 
+        self.sub_addr = dict(zip(self.subscribers, addresses))
+
+        self.poller = zmq.Poller()
         self._loop = True
+
+    def add(self, address, data_types):
+        """Adds the *address* to the subscribing list for *data_types*.
+        """
+        subscriber = self._context.socket(zmq.SUB)
+        subscriber.setsockopt(zmq.SUBSCRIBE, "pytroll")
+        subscriber.connect(address)
+        self._addresses.append(address)
+        self._data_types.extend(data_types)
+        self.poller.register(subscriber, zmq.POLLIN)
+        self.subscribers.append(subscriber)
+        self.sub_addr = dict(zip(self.subscribers, self._addresses))
         
     def recv(self, timeout=None):
         if timeout:
             timeout *= 1000.
 
-        poller = zmq.Poller()
         for sub in self.subscribers:
-            poller.register(sub, zmq.POLLIN)
+            self.poller.register(sub, zmq.POLLIN)
         self._loop = True
         try:
             while(self._loop):
                 try:
-                    s = dict(poller.poll(timeout=timeout))
+                    s = dict(self.poller.poll(timeout=timeout))
                     if s:
                         for sub in self.subscribers:
                             if sub in s and s[sub] == zmq.POLLIN:
-                                m = Message.decode(sub.recv(zmq.NOBLOCK))
-                                
+                                m__ = Message.decode(sub.recv(zmq.NOBLOCK))
+                                if self._translate:
+                                    url = urlsplit(self.sub_addr[sub])
+                                    host = url[1].split(":")[0]
+                                    m__.sender = (m__.sender.split("@")[0]
+                                                  + "@" + host)
                                 # Only accept pre-defined data types 
                                 try:
-                                    if m.data['type'] not in self._data_types:
+                                    if (self._data_types and
+                                        (m__.data['type'] not in
+                                         self._data_types)):
                                         continue
-                                except KeyError:
+                                except (KeyError, TypeError):
                                     pass
 
-                                yield m
+                                yield m__
                     else:
                         # timeout
                         yield None
@@ -76,7 +103,7 @@ class Subscriber(object):
                     print >>sys.stderr, 'receive failed'
         finally:
             for sub in self.subscribers:
-                poller.unregister(sub)
+                self.poller.unregister(sub)
             
     def __call__(self, **kwargs):
         self.messages(**kwargs)
@@ -103,6 +130,7 @@ class Subscribe(object):
     def __init__(self, *data_types, **kwargs):
         self._data_types = data_types
         self._timeout = kwargs.get("timeout", 2)
+        self._translate = kwargs.get("translate", False)
         self._subscriber = None
 
     def __enter__(self):
@@ -124,7 +152,9 @@ class Subscribe(object):
             addresses.append(addr)
 
         # subscribe to those data types
-        self._subscriber = Subscriber(addresses, self._data_types)
+        self._subscriber = Subscriber(addresses,
+                                      self._data_types,
+                                      self._translate)
         return self._subscriber
 
     def __exit__(self, exc_type, exc_val, exc_tb):

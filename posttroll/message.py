@@ -243,7 +243,10 @@ def _encode(msg, head=False, binary=False):
              (msg.subject, msg.type, msg.sender,
               msg.time.isoformat(), msg.version)
     if not head and msg.data:
-        if not binary:
+        if not binary and isinstance(msg.data, str):
+            return (rawstr + ' ' +
+                    'text/ascii' + ' ' + msg.data)
+        elif not binary:
             return (rawstr + ' ' +
                     'application/json' + ' ' + json.dumps(msg.data))
         else:
