@@ -104,7 +104,7 @@ class DBRecorder(object):
                         if key == "filename":
                             continue
                         if key == "uri":
-                            file_obj["URIs"] += val
+                            file_obj["URIs"] += [val]
                             continue
                         try:
                             file_obj[key] = val
