@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2010-2011.
+# Copyright (c) 2010-2012.
 
 # Author(s):
 
@@ -487,7 +487,7 @@ class DCManager(object):
 
     def get_file_format(self, file_format_name):
         return self._session.query(FileFormat).\
-               filter(FileFormat.file_format_name7 == file_format_name).one()
+               filter(FileFormat.file_format_name == file_format_name).one()
 
     def get_parameter(self, parameter_name):
         return self._session.query(Parameter).\
