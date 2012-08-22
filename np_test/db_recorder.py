@@ -68,7 +68,7 @@ class DBRecorder(object):
     def start(self):
         """Starts the logging.
         """
-        self.dbm = DCManager('postgresql://polar:polar@safe:5432/sat_db')
+        self.dbm = DCManager('postgresql://polar:polar@localhost:5432/sat_db')
         self.listener_thread.start()
         self.db_thread.start()
         
