@@ -30,13 +30,14 @@ from posttroll.subscriber import Subscriber
 from db.pytroll_db import DCManager
 from db.hl_file import File
 
+from sqlalchemy.orm.exc import NoResultFound
 import np.nameclient as nc
 from threading import Thread
 
 import logging
 from logger import ColoredFormatter
 
-LOG = logging.getLogger("pytroll")
+LOG = logging.getLogger("db_recorder")
 LOG.setLevel(logging.DEBUG)
 
 ch = logging.StreamHandler()
@@ -102,7 +103,15 @@ class DBRecorder(object):
                     for key, val in msg.data.items():
                         if key == "filename":
                             continue
-                        file_obj[key] = val
+                        if key == "uri":
+                            file_obj["URIs"] += val
+                            continue
+                        try:
+                            file_obj[key] = val
+                        except NoResultFound:
+                            LOG.warning("Cannot add: " + str((key, val))) 
+                            
+                    LOG.debug("adding :" + str(msg))
                 
             if not self.loop:
                 LOG.info("Stop recording")
