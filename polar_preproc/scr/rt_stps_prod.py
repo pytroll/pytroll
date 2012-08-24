@@ -14,19 +14,17 @@ from polar_preproc.orbitno import replace_orbitno
 from polar_preproc import (RT_STPS_BATCH, 
                            RT_STPS_NPP_TEMPLATE_CONFIG_FILE)
 
-_NO_RENAMING = False
-
-def _generate_stps_config_file(outdir='.'):
-    _re_output_line = re.compile('\s*<rdr label="\w+" directory="[/a-z0-9]+" .*')
-    _re_output_replace = re.compile(' directory="[/A-Za-z0-9]+" ')
-    config_file = outdir + '/npp.xml'
+def _generate_stps_config_file(wrkdir='.'):
+    _re_output_line = re.compile('\s*<rdr label="\w+" directory="[\./a-z0-9]+" .*')
+    _re_output_replace = re.compile(' directory="[\./A-Za-z0-9]+" ')
+    config_file = wrkdir + '/npp.xml'
     counter = 0
     with open(config_file, 'w') as fp_out:
         with open(RT_STPS_NPP_TEMPLATE_CONFIG_FILE) as fp_in:
             for line in fp_in.readlines():
                 if _re_output_line.match(line.lower()):
                     line, n =_re_output_replace.subn(' directory="%s" ' % 
-                                                     outdir, line)
+                                                     wrkdir, line)
                     counter += n
                 fp_out.write(line)
     if counter == 0:
@@ -55,22 +53,20 @@ def do_prod(filename, outdir='.', logfile=None):
     else:
         stderr = sys.stderr
     try:
-        cmd = RT_STPS_BATCH + ' ' + config_file + ' ' + filename
+        cmd = 'time ' + RT_STPS_BATCH + ' ' + config_file + ' ' + filename
         LOG.info("Running '%s'" % cmd)
         retcode = call(cmd, stdout=stderr, stderr=stderr, shell=True)
         if retcode != 0:
             if retcode < 0:
                 text = "rt-stps was terminated by signal %d" % -retcode
             else:
-                text = "rt-stps returned" % retcode
+                text = "rt-stps returned %d" % retcode
             raise OSError(text)
     finally:
         if stderr.name == logfile:
             stderr.close()
 
     files = sorted(glob.glob('./*.h5'))
-    if _NO_RENAMING:
-        return files
     return _renaming(files, outdir=outdir)
 
 if __name__ == '__main__':

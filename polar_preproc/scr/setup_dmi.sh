@@ -1,3 +1,5 @@
+export http_proxy=http://wwwproxy.dmi.dk:3128
+
 #
 # CSPP
 #
