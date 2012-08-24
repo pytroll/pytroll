@@ -4,7 +4,7 @@ Listen for pytroll messages from nimbus (NPP file dispatch) and trigger
 processing on direct readout data
 """
 
-# Doesn not handle the execution of several instances of CSPP at the same time
+# Does not handle the execution of several instances of CSPP at the same time
 # So, it assumes CSPP is finished before the next pass arrives, which will also
 # normally (hopefullye) always be the case.
 # FIXME!
