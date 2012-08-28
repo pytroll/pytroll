@@ -135,8 +135,8 @@ class FileStreamer(ProcessEvent):
 
 
             array = np.fromstring(line, dtype=dtype)
-            if not np.allclose(np.array((644, 367, 860, 413, 527, 149)),
-                               array["frame_sync"]):
+            if all(abs(np.array((644, 367, 860, 413, 527, 149)) - 
+                       array["frame_sync"]) > 1):
                 array = array.newbyteorder()
             year = int(os.path.split(event.pathname)[1][:4])
             utctime = datetime(year, 1, 1) + timecode(array["timecode"][0])
