@@ -363,17 +363,14 @@ class Responder(SocketLooperThread):
                 
                 # send list of scanlines
                 if(message.type == "request" and
-                   message.data.startswith("scanlines")):
-                    elts = message.data.split(" ")
-                    sat = elts[1]
-                    if len(elts) > 2:
-                        start_time = strp_isoformat(elts[2])
-                    else:
-                        start_time = datetime(1950, 1, 1)
-                    if len(elts) > 3:
-                        end_time = strp_isoformat(elts[3])
-                    else:
-                        end_time = datetime(19500, 1, 1)
+                   message.data["type"] == "scanlines"):
+                    sat = message.data["satellite"]
+                    epoch = "1950-01-01T00:00:00"
+                    start_time = strp_isoformat(message.data.get("start_time",
+                                                                 epoch))
+                    end_time = strp_isoformat(message.data.get("end_time",
+                                                               epoch))
+
                     logger.debug(str(self._holder.get(sat, [])))
                     resp = Message('/oper/polar/direct_readout/' + self._station,
                                    "scanlines",
@@ -386,9 +383,9 @@ class Responder(SocketLooperThread):
 
                 # send one scanline
                 elif(message.type == "request" and
-                     message.data.startswith("scanline")):
-                    sat = message.data.split(" ")[1]
-                    utctime = strp_isoformat(message.data.split(" ")[2])
+                     message.data["type"] == "scanline"):
+                    sat = message.data["satellite"]
+                    utctime = strp_isoformat(message.data["utctime"])
                     url = urlparse(self._holder[sat][utctime][1])
                     if url.scheme in ["", "file"]: # data is locally stored.
                         with open(url.path, "rb") as fp_:
@@ -405,12 +402,15 @@ class Responder(SocketLooperThread):
 
                 # take in a new scanline
                 elif(message.type == "notice" and
-                     message.data.startswith("scanline")):
-                    sat, utctime, elevation, filename, line_start = \
-                         message.data.split(' ')[1:]
+                     message.data["type"] == "scanline"):
+                    sat = message.data["satellite"]
+                    utctime = message.data["utctime"]
+                    elevation = message.data["elevation"]
+                    filename = message.data["filename"]
+                    line_start = message.data["file_position"]
                     utctime = strp_isoformat(utctime)
-                    self._holder.add_scanline(sat, utctime, float(elevation),
-                                              int(line_start), filename)
+                    self._holder.add_scanline(sat, utctime, elevation,
+                                              line_start, filename)
                     resp = Message('/oper/polar/direct_readout/'
                                        + self._station,
                                        "notice",

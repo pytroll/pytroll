@@ -119,7 +119,9 @@ class Requester(object):
         """
         msg = Message('/oper/polar/direct_readout/norrköping',
                       'request',
-                      'scanline ' + satellite + ' ' + utctime.isoformat())
+                      {"type": "scanline",
+                       "satellite": satellite,
+                       "utctime": utctime.isoformat()})
         self.send(msg)
         return self.recv(1000).data
 
@@ -127,12 +129,10 @@ class Requester(object):
     def get_slice(self, satellite, start_time, end_time):
         msg = Message('/oper/polar/direct_readout/norrköping',
                       'request',
-                      'scanlines '
-                      + satellite
-                      + ' '
-                      + start_time.isoformat()
-                      + ' '
-                      + end_time.isoformat())
+                      {"type": 'scanlines',
+                       "satellite": satellite,
+                       "start_time": start_time.isoformat(),
+                       "end_time": end_time.isoformat()})
         self.send(msg)
         return self.recv(1000).data
 
@@ -142,11 +142,12 @@ class Requester(object):
 
         msg = Message('/oper/polar/direct_readout/norrköping',
                       'notice',
-                      'scanline ' + sat +
-                      ' ' + utctime.isoformat() +
-                      ' ' + str(elevation) +
-                      ' ' + filename +
-                      ' ' + str(pos))
+                      {"type": 'scanline',
+                       "satellite": sat,
+                       "utctime": utctime.isoformat(),
+                       "elevation": elevation,
+                       "filename": filename,
+                       "file_position": pos})
         self.send(msg)
         self._socket.recv()         
 
