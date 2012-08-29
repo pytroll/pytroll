@@ -7,6 +7,7 @@ import re
 
 from polar_preproc import LOG, get_npp_stamp
 from polar_preproc.npp_granule import NPPGranule
+from polar_preproc.instrument import get_instrument
 
 # Removing creation time in filenames
 _re_filename_replace = re.compile('_c\d+_')
@@ -14,9 +15,6 @@ _re_filename_replace = re.compile('_c\d+_')
 def site_notify(work_dir, product_times):
     """ Get list of product files for a given granule (any h5 file is a product).
     Move files to outdir and write a json metadata to signaldir.
-
-    In the operational environment 'outdir' and 'signaldir' can be defined by
-    symbolic links in the working directory'
     """
     if not isinstance(product_times, (list, tuple)):
         product_times = [product_times]
@@ -31,12 +29,20 @@ def site_notify(work_dir, product_times):
             continue
 
         lv1_files = []
+        instrument = set()
         for fin in files:
             stamp = get_npp_stamp(fin)
-            outdir = os.path.join(lv1dir, "%s_%05d"%(
-                    stamp.platform, stamp.orbit_number))
+            outdir = os.path.join(lv1dir, "%s_%05d"%(stamp.platform,
+                                                     stamp.orbit_number))
+            inst = get_instrument(fin)
+            if inst:
+                if instrument and (inst not in instrument):
+                    LOG.warning("Mixing instruments, reading '%s' but expected '%s'" % (
+                            inst, ', '.join(instrument)))
+                instrument.add(inst)
+                outdir = os.path.join(outdir, inst)
             if not os.path.isdir(outdir):
-                os.mkdir(outdir)
+                os.makedirs(outdir)
             fout = os.path.join(outdir, _re_filename_replace.sub(
                     '_', os.path.basename(fin)))
 
@@ -47,15 +53,25 @@ def site_notify(work_dir, product_times):
 
         if lv1_files:
             stamp = get_npp_stamp(lv1_files[0])
+            if instrument:
+                inst=', '.join(instrument)
+            else:
+                inst = None
             grn = NPPGranule(stamp.platform,
                              stamp.start_time,
                              end_time=stamp.end_time,
                              orbit_number=stamp.orbit_number,
+                             instrument=inst,
                              items=lv1_files)
+
+            head = 'SDR'
+            if len(instrument) == 1:
+                head += '-%s'%instrument.pop()
             jsfile = os.path.join(lv1dir, 
-                                  "SDR_%s_%s_%s.json" % (grn.stamp,
-                                                         grn.site,
-                                                         grn.domain))
+                                  "%s_%s_%s_%s.json" % (head,
+                                                        grn.stamp,
+                                                        grn.site,
+                                                        grn.domain))
             LOG.info("Writing %s", jsfile)
             grn.dump(jsfile)
 
@@ -83,7 +99,6 @@ if __name__ == '__main__':
     except IndexError:
         print >> sys.stderr, \
             'usage: python site_utils.py <data-dir> <time-stamp>'
-
     if _time_stamp[0] == 'd':
         _time_fmt = 'd%Y%m%d_t%H%M%S'
     else:
