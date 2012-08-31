@@ -50,7 +50,7 @@ ch.setFormatter(formatter)
 LOG.addHandler(ch)
 
 
-sat_lookup = {"NOAA 18": "NOAA18",
+sat_lookup = {
               }
 
 class DBRecorder(object):
@@ -133,7 +133,11 @@ class DBRecorder(object):
                         lonlat_list.append(pos[:2])
                         current_time += dt_
 
+                    LOG.debug("Computed sub-satellite track")
+                
                     file_obj["sub_satellite_track"] = lonlat_list
+
+                    LOG.debug("Added sub-satellite track")
                 
             if not self.loop:
                 LOG.info("Stop recording")
