@@ -29,6 +29,8 @@
 from posttroll.subscriber import Subscriber
 from db.pytroll_db import DCManager
 from db.hl_file import File
+from pyorbital.orbital import Orbital
+from datetime import datetime, timedelta
 
 from sqlalchemy.orm.exc import NoResultFound
 import np.nameclient as nc
@@ -47,6 +49,9 @@ formatter = ColoredFormatter("[%(asctime)s %(levelname)-19s] %(message)s")
 ch.setFormatter(formatter)
 LOG.addHandler(ch)
 
+
+sat_lookup = {"NOAA 18": "NOAA18",
+              }
 
 class DBRecorder(object):
 
@@ -112,9 +117,23 @@ class DBRecorder(object):
                         try:
                             file_obj[key] = val
                         except NoResultFound:
-                            LOG.warning("Cannot add: " + str((key, val))) 
-                            
+                            LOG.warning("Cannot add: " + str((key, val)))
+
                     LOG.debug("adding :" + str(msg))
+
+
+                    # compute sub_satellite_track
+                    satname = msg.data["satellite"]
+                    sat = Orbital(sat_lookup.get(satname, satname))
+                    dt_ = timedelta(seconds=10)
+                    current_time = msg.data["start_time"] 
+                    lonlat_list = []
+                    while current_time <= msg.data["end_time"]:
+                        pos = sat.get_lonlatalt(current_time)
+                        lonlat_list.append(pos[:2])
+                        current_time += dt_
+
+                    file_obj["sub_satellite_track"] = lonlat_list
                 
             if not self.loop:
                 LOG.info("Stop recording")
