@@ -85,7 +85,7 @@ class File(object):
             
         else:
             try:
-                self.dbm.session.query(db.ParameterValue).join(db.Parameter).filter(db.ParameterValue.filename==self.filename).filter(db.Parameter.parameter_name==key).one().data_value = val
+                self.dbm.session.query(db.ParameterValue).join(db.Parameter).filter(db.ParameterValue.filename==self.filename).filter(db.Parameter.parameter_name==key).one().data_value
             except NoResultFound:
                 self.dbm.create_parameter_value(filename=self.filename,
                                                 parameter_name=key,
