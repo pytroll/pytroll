@@ -73,7 +73,7 @@ def is_valid_data(obj):
     """
     if obj:
         try:
-            tmp = json.dumps(obj)
+            tmp = json.dumps(obj, default=datetime_encoder)
             del tmp
         except (TypeError, UnicodeDecodeError):
             return False
@@ -183,6 +183,28 @@ def _is_valid_version(version):
     """
     return version == _VERSION
 
+def datetime_decoder(dct):
+    """decode datetimes to python objects.
+    """
+    if isinstance(dct, list):
+        pairs = enumerate(dct)
+    elif isinstance(dct, dict):
+        pairs = dct.items()
+    result = []
+    for key, val in pairs:
+        if isinstance(val, basestring):
+            try:
+                val = strp_isoformat(val)
+            except ValueError:
+                pass
+        elif isinstance(val, (dict, list)):
+            val = datetime_decoder(val)
+        result.append((key, val))
+    if isinstance(dct, list):
+        return [x[1] for x in result]
+    elif isinstance(dct, dict):
+        return dict(result)
+
 def _decode(rawstr):
     """Convert a raw string to a Message.
     """
@@ -220,7 +242,7 @@ def _decode(rawstr):
         msg['binary'] = False
     elif mimetype == 'application/json':
         try:
-            msg['data'] = json.loads(raw[6])
+            msg['data'] = json.loads(raw[6], object_hook=datetime_decoder)
             msg['binary'] = False
         except ValueError:
             del msg
@@ -236,6 +258,14 @@ def _decode(rawstr):
 
     return msg
 
+def datetime_encoder(obj):
+    """Encodes datetimes into iso format.
+    """
+    try:
+        return obj.isoformat()
+    except AttributeError:
+        raise TypeError(repr(obj) + " is not JSON serializable")
+
 def _encode(msg, head=False, binary=False):
     """Convert a Message to a raw string.
     """
@@ -248,7 +278,8 @@ def _encode(msg, head=False, binary=False):
                     'text/ascii' + ' ' + msg.data)
         elif not binary:
             return (rawstr + ' ' +
-                    'application/json' + ' ' + json.dumps(msg.data))
+                    'application/json' + ' ' +
+                    json.dumps(msg.data, default=datetime_encoder))
         else:
             return (rawstr + ' ' +
                     'binary/octet-stream' + ' ' + msg.data)
