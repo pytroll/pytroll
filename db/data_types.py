@@ -44,6 +44,7 @@ dbm.create_parameter(6, 1, "satellite", "")
 dbm.create_parameter(7, 1, "format", "")
 dbm.create_parameter(8, 1, "type", "")
 dbm.create_parameter(9, 1, "uri", "")
+dbm.create_parameter(10, 1, "sub_satellite_track", "")
 
 
 

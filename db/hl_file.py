@@ -76,9 +76,12 @@ class File(object):
 
             wkt_o = shapely.wkt.loads(value)
             p_track = self.dbm.get_parameter('sub_satellite_track')
-            self.dbm.create_parameter_linestring(wkt_o,
-                                                 filename=self.filename,
-                                                 parameter=p_track)
+            try:
+                self.dbm.session.query(db.ParameterLinestring).join(db.Parameter).filter(db.ParameterLinestring.filename==self.filename).filter(db.Parameter.parameter_name==key).one().data_value = val
+            except NoResultFound:
+                self.dbm.create_parameter_linestring(wkt_o,
+                                                     filename=self.filename,
+                                                     parameter=p_track)
             
         else:
             try:
