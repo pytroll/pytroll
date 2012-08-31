@@ -96,10 +96,13 @@ class DBRecorder(object):
         for msg in self.subscriber.recv(1):
             if msg:
                 if msg.type == "file":
-                    
-                    file_obj = File(msg.data["filename"], self.dbm,
-                                    filetype=msg.data.get("type", None),
-                                    fileformat=msg.data.get("format", None))
+                    try:
+                        file_obj = File(msg.data["filename"], self.dbm,
+                                        filetype=msg.data.get("type", None),
+                                        fileformat=msg.data.get("format", None))
+                    except NoResultFound:
+                        LOG.warning("Cannot process: " + str(msg))
+                        continue
                     for key, val in msg.data.items():
                         if key == "filename":
                             continue
