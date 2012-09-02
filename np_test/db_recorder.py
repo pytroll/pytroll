@@ -50,9 +50,10 @@ LOG.addHandler(ch)
 
 class DBRecorder(object):
 
-    """The logging machine.
+    """The database recording machine.
 
-    Contains a thread listening to incomming messages, and a thread logging.
+    Contains a thread listening to incomming messages, and a thread recording
+    to the database.
     """
 
     def __init__(self,

@@ -83,11 +83,20 @@ class MessageReceiver(object):
         pass_info = {}
         for key, val in info.items():
             pass_info[key.lower()] = val
+
         pass_info["start_time"] = datetime.strptime(pass_info["risetime"],
                                                   "%Y-%m-%d %H:%M:%S")
+        del pass_info['risetime']
         pass_info["end_time"] = datetime.strptime(pass_info["falltime"],
                                                   "%Y-%m-%d %H:%M:%S")
+        del pass_info['falltime']
 
+        if 'orbit number' in pass_info:
+            pass_info['orbit_number'] = pass_info['orbit number']
+        else:
+            LOG.warning("No 'orbit number' in message!")
+
+        
         pname = pass_name(pass_info["start_time"], pass_info["satellite"])
         self._received_passes[pname] = pass_info
 
