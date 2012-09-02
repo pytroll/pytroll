@@ -43,6 +43,8 @@ from zmq import Context, Poller, LINGER, PUB, REP, REQ, POLLIN, NOBLOCK
 from posttroll.message import Message
 from posttroll import strp_isoformat
 from posttroll.subscriber import Subscriber
+from pyorbital.orbital import Orbital
+
 
 from urlparse import urlparse, urlunparse
 from threading import Thread, Lock
@@ -50,6 +52,13 @@ import numpy as np
 import os
 from datetime import datetime, timedelta
 from random import uniform
+from glob import glob
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("trollcast/server")
+logger.setLevel(logging.DEBUG)
+
 
 LINE_SIZE = 11090 * 2
 
@@ -127,25 +136,46 @@ class FileStreamer(ProcessEvent):
 
     TODO: separate holder from file handling.
     """
-    def __init__(self, holder, *args, **kwargs):
+    def __init__(self, holder, configfile, *args, **kwargs):
         ProcessEvent.__init__(self, *args, **kwargs)
         self._file = None
         self._filename = ""
         self._where = 0
         self._satellite = ""
-
+        self._orbital = None
+        cfg = ConfigParser()
+        cfg.read(configfile)
+        self._coords = cfg.get("local_reception", "coordinates").split(" ")
+        self._coords = [float(self._coords[0]),
+                        float(self._coords[1]),
+                        float(self._coords[2])]
+        logger.debug(self._coords)
+        try:
+            self._tle_dir = cfg.get("local_reception", "tle_dir")
+        except NoOptionError:
+            self._tle_dir = None
+        
         self.scanlines = holder
 
     def process_IN_CREATE(self, event):
-        print "Creating:", event.pathname
+        logger.debug("Creating: " + event.pathname)
 
     def process_IN_OPEN(self, event):
         if self._file is None and event.pathname.endswith(".temp"):
-            print "Opening:", event.pathname
+            logger.debug("Opening: " + event.pathname)
             self._filename = event.pathname
             self._file = open(event.pathname, "rb")
             self._where = 0
-            self._satellite = "".join(event.pathname.split("_")[1:3])[:-5]
+            self._satellite = " ".join(event.pathname.split("_")[1:3])[:-5]
+
+            if self._tle_dir is not None:
+                filelist = glob(os.path.join(self._tle_dir, "*.tle"))
+                tle_file = max(filelist, key=lambda x: os.stat(x).st_mtime)
+            else:
+                tle_file = None
+
+            self._orbital = Orbital(self._satellite, tle_file)
+            
 
     def process_IN_MODIFY(self, event):
         self.process_IN_OPEN(event)
@@ -176,15 +206,29 @@ class FileStreamer(ProcessEvent):
 
 
             array = np.fromstring(line, dtype=dtype)
-            if all(abs(np.array((644, 367, 860, 413, 527, 149)) - 
-                       array["frame_sync"]) > 1):
+            if np.all(abs(np.array((644, 367, 860, 413, 527, 149)) - 
+                          array["frame_sync"]) > 1):
                 array = array.newbyteorder()
             year = int(os.path.split(event.pathname)[1][:4])
             utctime = datetime(year, 1, 1) + timecode(array["timecode"][0])
-            print "Got line", utctime, self._satellite
+
+            # Check that we receive real-time data
+            if ((abs(utctime - datetime.utcnow())).days > 0 or
+                (abs(utctime - datetime.utcnow())).seconds > 1000):
+                logger.info("Garbage line: " + str(utctime))
+                line = self._file.read(LINE_SIZE)
+                continue
 
             # FIXME: get real elevation
-            elevation = uniform(5, 90)
+            #elevation = uniform(5, 90)
+
+            elevation = self._orbital.get_observer_look(utctime, *self._coords)[1]
+            logger.info("Got line " + utctime.isoformat() + " "
+                        + self._satellite + " "
+                        + str(elevation))
+
+
+            
             # TODO:
             # - serve also already present files
             self.scanlines.add_scanline(self._satellite, utctime,
@@ -196,7 +240,7 @@ class FileStreamer(ProcessEvent):
 
     def process_IN_CLOSE_WRITE(self, event):
         if event.pathname == self._filename:
-            print "Closing:", event.pathname
+            logger.debug("Closing: " + event.pathname)
             self._file.close()
             self._file = None
             self._filename = ""
@@ -319,18 +363,15 @@ class Responder(SocketLooperThread):
                 
                 # send list of scanlines
                 if(message.type == "request" and
-                   message.data.startswith("scanlines")):
-                    elts = message.data.split(" ")
-                    sat = elts[1]
-                    if len(elts) > 2:
-                        start_time = strp_isoformat(elts[2])
-                    else:
-                        start_time = datetime(1950, 1, 1)
-                    if len(elts) > 3:
-                        end_time = strp_isoformat(elts[3])
-                    else:
-                        end_time = datetime(19500, 1, 1)
-                    print self._holder.get(sat, [])
+                   message.data["type"] == "scanlines"):
+                    sat = message.data["satellite"]
+                    epoch = "1950-01-01T00:00:00"
+                    start_time = strp_isoformat(message.data.get("start_time",
+                                                                 epoch))
+                    end_time = strp_isoformat(message.data.get("end_time",
+                                                               epoch))
+
+                    logger.debug(str(self._holder.get(sat, [])))
                     resp = Message('/oper/polar/direct_readout/' + self._station,
                                    "scanlines",
                                    [(utctime.isoformat(),
@@ -342,9 +383,9 @@ class Responder(SocketLooperThread):
 
                 # send one scanline
                 elif(message.type == "request" and
-                     message.data.startswith("scanline")):
-                    sat = message.data.split(" ")[1]
-                    utctime = strp_isoformat(message.data.split(" ")[2])
+                     message.data["type"] == "scanline"):
+                    sat = message.data["satellite"]
+                    utctime = strp_isoformat(message.data["utctime"])
                     url = urlparse(self._holder[sat][utctime][1])
                     if url.scheme in ["", "file"]: # data is locally stored.
                         with open(url.path, "rb") as fp_:
@@ -361,12 +402,15 @@ class Responder(SocketLooperThread):
 
                 # take in a new scanline
                 elif(message.type == "notice" and
-                     message.data.startswith("scanline")):
-                    sat, utctime, elevation, filename, line_start = \
-                         message.data.split(' ')[1:]
+                     message.data["type"] == "scanline"):
+                    sat = message.data["satellite"]
+                    utctime = message.data["utctime"]
+                    elevation = message.data["elevation"]
+                    filename = message.data["filename"]
+                    line_start = message.data["file_position"]
                     utctime = strp_isoformat(utctime)
-                    self._holder.add_scanline(sat, utctime, float(elevation),
-                                              int(line_start), filename)
+                    self._holder.add_scanline(sat, utctime, elevation,
+                                              line_start, filename)
                     resp = Message('/oper/polar/direct_readout/'
                                        + self._station,
                                        "notice",
@@ -385,7 +429,7 @@ def main(configfile):
     mask = IN_CREATE | IN_OPEN | IN_CLOSE_WRITE | IN_MODIFY
 
     scanlines = Holder(configfile)
-    fstreamer = FileStreamer(scanlines)
+    fstreamer = FileStreamer(scanlines, configfile)
     notifier = Notifier(wm_, fstreamer)
     cfg = ConfigParser()
     cfg.read(configfile)

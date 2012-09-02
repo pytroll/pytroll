@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2010-2011.
+# Copyright (c) 2010-2012.
 
 # Author(s):
  
@@ -31,6 +31,8 @@ def strp_isoformat(strg):
 
     We handle input like: 2011-11-14T12:51:25.123456
     """
+    if isinstance(strg, datetime):
+        return strg
     if len(strg) < 19 or len(strg) > 26:
         if len(strg) > 30:
             strg = strg[:30] + '...'
