@@ -50,7 +50,7 @@ ch.setFormatter(formatter)
 LOG.addHandler(ch)
 
 
-sat_lookup = {
+sat_lookup = {"NPP": "SUOMI NPP",
               }
 
 class DBRecorder(object):
