@@ -511,8 +511,9 @@ class DCManager(object):
             filter(File.creation_time < newest_creation_time).all() 
 
     def get_within_area_of_interest(self, boundingbox, file_type_name=None, distance=0):
-        """Get all files within area of interest.
-        E.g.: boundingbox = 'POLYGON ((1.7  54.8, 28.7 54.9, 34.8 71.2, 2.3 71.7, 1.7  54.8))'
+        """Get all files within *distance* of area of interest.
+        E.g.: boundingbox = [(1.7, 54.8), (28.7, 54.9), (34.8, 71.2), (2.3, 71.7)]'
+        distance in km.
         """
 
         #retv = self._session.query(ParameterLinestring).\
@@ -529,6 +530,7 @@ class DCManager(object):
         #    params(bbox=boundingbox).all()
         #retv = self._session.query(File).from_statement(
         #    "select * from (select filename, ST_Distance(data_value, 'POLYGON ((1.7  54.8, 28.7 54.9, 34.8 71.2, 2.3 71.7, 1.7  54.8))':: geography)/1000. as dist from parameter_linestring) dlist where dlist.dist < 1000").all()
+
         polypoints = boundingbox + [boundingbox[0]]
 
         poly = "POLYGON ((" + ", ".join(str(item[0]) + " " + str(item[1])
