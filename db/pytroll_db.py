@@ -533,14 +533,13 @@ class DCManager(object):
 
         polypoints = boundingbox + [boundingbox[0]]
 
-        poly = "POLYGON (" + ", ".join(str(item[0]) + " " + str(item[1])
-                                       for item in polypoints) + ")"
+        poly = "POLYGON ((" + ", ".join(str(item[0]) + " " + str(item[1])
+                                        for item in polypoints) + "))"
         
         retv = self._session.query(File).from_statement(
             "select * from (select filename, ST_Distance(data_value, '" +
             poly + "':: geography)/1000. as dist from parameter_linestring) " +
-            "dlist where dlist.dist < " + str(distance)).all()
-
+            "dlist where dlist.dist <= " + str(distance)).all()
 
         return retv
 

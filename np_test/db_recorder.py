@@ -50,14 +50,15 @@ ch.setFormatter(formatter)
 LOG.addHandler(ch)
 
 
-sat_lookup = {
+sat_lookup = {"NPP": "SUOMI NPP",
               }
 
 class DBRecorder(object):
 
-    """The logging machine.
+    """The database recording machine.
 
-    Contains a thread listening to incomming messages, and a thread logging.
+    Contains a thread listening to incomming messages, and a thread recording
+    to the database.
     """
 
     def __init__(self,
