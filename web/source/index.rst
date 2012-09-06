@@ -15,6 +15,9 @@ reading, interpretation, and writing of weather satellite data.
 The provided python packages are designed to be used both in R&D environments
 and in 24/7 operational production.
 
+.. note::
+   A Pytroll workshop will be held in Norrköping, Sweden in November. Please send a message on the pytroll mailing list (pytroll@googlegroups.com) if you are interested.
+
 The available python packages at the moment are:
 
 * pyresample_ for resampling satellite data
@@ -27,7 +30,8 @@ Some more packages are in the process of being developped (you're very welcome
 to have a look and give us a hand):
 
 * pyorbital_ for computing satellite orbital parameters and reading TLE's
-* python-geotiepoints_ for interpolating (and extrapolation) geographic tiepoints.
+* python-geotiepoints_ for interpolating (and extrapolation) geographic tiepoints
+* posttroll_ for a higher-level messaging library for pytroll
 
 .. _DMI: http://www.dmi.dk
 .. _SMHI: http://www.smhi.se
@@ -38,6 +42,7 @@ to have a look and give us a hand):
 .. _pyorbital: http://www.github.com/mraspaud/pyorbital
 .. _pycoast: http://pycoast.googlecode.com
 .. _python-geotiepoints: http://www.github.com/adybbroe/python-geotiepoints
+.. _posttroll: http://github.com/mraspaud/posttroll
 
 Contents:
 
