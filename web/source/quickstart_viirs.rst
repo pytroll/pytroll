@@ -211,7 +211,7 @@ The VIIRS Day/Night band draws heritage from the DMSP Operational Linescan
 System (OLS) and is a broad band channel in the Visible and Near-Infrared
 spectral range. It operates with three different gains to optimise the
 sensitivity independant of illumination. We find a nighttime case with some
-moonlight, and make a histogram stretched display:
+moonlight, and make a stretched black and white image for display:
 
     >>> time_slot = datetime(2012, 8, 31, 1, 8)
     >>> orbit = "04365"
@@ -221,10 +221,10 @@ moonlight, and make a histogram stretched display:
     >>> img =  geo_image.GeoImage(global_data['DNB'].data, 
     ...                           None, time_slot,
     ...                           fill_value=None, mode='L')
-    >>> img.enhance(stretch='histogram')
+    >>> img.enhance(stretch='linear')
     >>> img.show()
 
-.. image:: images/npp_20120831_0108_04365_dnb_histogram.png
+.. image:: images/npp_20120831_0108_04365_dnb_linear.png
 
 During nighttime it is sufficiently sensitive so that useful information on
 clouds and surfaces may be deduced from reflected moonlight. Naturally the
@@ -271,8 +271,9 @@ given in the input file if we like:
 Let us load a few granules and assemble them and reproject them to get an image
 covering Scandinavia:
 
-    >>> tslots = [datetime(2012, 8, 31, 1, 4), datetime(2012, 8, 31, 1, 5), 
-    ...           datetime(2012, 8, 31, 1, 7), datetime(2012, 8, 31, 1, 8)]
+    >>> tslots = [datetime(2012, 8, 31, 1, 5), 
+    ...           datetime(2012, 8, 31, 1, 7), 
+    ...           datetime(2012, 8, 31, 1, 8)]
     >>> global_data = []
     >>> for time_slot in tslots:
     ...     global_data.append(PolarFactory.create_scene("npp", "", "viirs", time_slot, orbit))
@@ -284,12 +285,12 @@ covering Scandinavia:
     >>> from mpop.imageo import geo_image
     >>> img =  geo_image.GeoImage(local_data['DNB'].data, 
     ...                           areaid, tslots[0],
-    ...                           fill_value=None, mode='L')
-    >>> img.enhance(stretch='histogram')
+    ...                           fill_value=0, mode='L')
+    >>> img.enhance(stretch='linear')
     >>> img.show()
 
 
-.. image:: images/npp_20120831_0104_04365_scan500m_dnb.png
+.. image:: images/npp_20120831_0105_04365_scan500m_dnb.png
 
 
 
