@@ -62,7 +62,7 @@ Loading
     'I05: (10.500,11.450,12.300)μm, resolution 371m, not loaded'
     'DNB: (0.500,0.700,0.900)μm, resolution 742m, not loaded'
 
-We have now loaded the VIIRS M14 band, and we can display it if we want:
+We have now loaded the VIIRS M14 band. Now let us look at the data:
  
     >>> global_data[8.6].show()
 
@@ -70,7 +70,7 @@ We have now loaded the VIIRS M14 band, and we can display it if we want:
 
 
 The black stripes are due to the so called *bowtie deletion*, which is handled
-onboard the satellite. The bowtie effect is a geometric feature of the VIIRS
+onboard the satellite. The *bowtie* effect is a geometric feature of the VIIRS
 scan. Similar to the MODIS sensor individual VIIRS lines will overlap as one
 approach the edge of the swath.  These overlapping samples/pixels have been
 removed onboard in order to minimise the bandwidth usage on the broadcast. Thus
@@ -121,9 +121,9 @@ boarders, so lets do that with PIL and pycoast_:
 But what we actually wanted was to load all the available data (VIIRS granules)
 received that covers the area. To do this in a smart and economical way we only
 load the granules that are inside the area of interest. But to do this we need
-functionality provided by pyorbital and pyresample. We leave this for an other
-time, and instead we just load the granules we have and assemble them to a full
-swath that we can project:
+functionality provided by pyorbital_ and pyresample_. We leave this for an
+other time, and instead we just load the granules we have and assemble them to
+a full swath that we can project:
 
     >>> from mpop.satellites import PolarFactory
     >>> import mpop.scene
@@ -210,12 +210,21 @@ The Day/Night Band
 The VIIRS Day/Night band draws heritage from the DMSP Operational Linescan
 System (OLS) and is a broad band channel in the Visible and Near-Infrared
 spectral range. It operates with three different gains to optimise the
-sensitivity independant of illumination:
+sensitivity independant of illumination. We find a nighttime case with some
+moonlight, and make a histogram stretched display:
 
+    >>> time_slot = datetime(2012, 8, 31, 1, 8)
+    >>> orbit = "04365"
+    >>> global_data = PolarFactory.create_scene("npp", "", "viirs", time_slot, orbit)
     >>> global_data.load(['DNB'])
-    >>> global_data['DNB'].show()
+    >>> from mpop.imageo import geo_image
+    >>> img =  geo_image.GeoImage(global_data['DNB'].data, 
+    ...                           None, time_slot,
+    ...                           fill_value=None, mode='L')
+    >>> img.enhance(stretch='histogram')
+    >>> img.show()
 
-.. image:: images/viirs_dnb.png
+.. image:: images/npp_20120831_0108_04365_dnb_histogram.png
 
 During nighttime it is sufficiently sensitive so that useful information on
 clouds and surfaces may be deduced from reflected moonlight. Naturally the
@@ -233,32 +242,61 @@ No. A014). But in pytroll we keep to the physical units dictated by the netCDF
 Observe that this is really the spectral radiance *integrated* over the entire
 band of wavelengths from 500 to 900 nm, and *not* a spectral radiance
 (e.g. unit W/(sr*m²*μm) which is otherwise common for narrow band channels.
- 
 
     >>> print global_data['DNB'].data
-    [[-- 25.2138214111 24.7121238708 ..., 34.5851135254 36.7595329285
-      36.4250068665]
-     [-- 25.3448677063 24.8431777954 ..., 36.0533599854 37.0569000244
-      37.3914108276]
-     [-- 24.6817951202 25.1834983826 ..., 36.3937034607 36.8954811096
-      36.8954811096]
-     ..., 
-     [-- 36.6459617615 35.9773178101 ..., 80.6140975952 80.7809295654
-      82.6159896851]
-     [-- 39.8229789734 40.4916000366 ..., 77.9451217651 78.2787780762
-      78.2787780762]
-     [-- 33.1762428284 39.5281829834 ..., 76.9774246216 78.8123092651
-     78.3118972778]]
+    [[-- 0.000143815428601 0.000137543844176 ..., 5.96219324507e-05
+      6.98243966326e-05 6.63427781546e-05]
+    [-- 0.00012907088967 0.000129589330754 ..., 6.90672313794e-05
+      7.38868257031e-05 6.24534804956e-05]
+    [-- 0.000128909057821 0.000106329993287 ..., 5.41356857866e-05
+      5.57483508601e-05 6.56180200167e-05]
+    ..., 
+    [-- 0.000109558059194 0.00010228647443 ..., 5.17666267115e-05
+      5.57982966711e-05 6.32165756542e-05]
+    [-- 8.80592560861e-05 7.66862649471e-05 ..., 5.8231256844e-05
+      5.83717919653e-05 5.45613984286e-05]
+    [-- 7.60749680921e-05 7.15407004463e-05 ..., 6.299688539e-05
+      5.79845655011e-05 6.03307526035e-05]]
 
-We can check the range of radiaces in the granule and in print it in the units given in the input file if we like:
+
+We can check the range of radiaces in the granule and in print it in the units
+given in the input file if we like:
 
     >>> print (global_data['DNB'].data * 10000).min()
-    21831.6
+    0.257498
     >>> print (global_data['DNB'].data * 10000).max()
-    4e+06
+    1928.75
+
+
+Let us load a few granules and assemble them and reproject them to get an image
+covering Scandinavia:
+
+    >>> tslots = [datetime(2012, 8, 31, 1, 4), datetime(2012, 8, 31, 1, 5), 
+    ...           datetime(2012, 8, 31, 1, 7), datetime(2012, 8, 31, 1, 8)]
+    >>> global_data = []
+    >>> for time_slot in tslots:
+    ...     global_data.append(PolarFactory.create_scene("npp", "", "viirs", time_slot, orbit))
+    >>> for glbd in global_data:
+    ...     glbd.load(['DNB'])
+    ...     glbd.area = glbd['DNB'].area
+    >>> global_data = mpop.scene.assemble_segments(global_data)
+    >>> local_data = global_data.project(areaid, mode="nearest", radius=2000)
+    >>> from mpop.imageo import geo_image
+    >>> img =  geo_image.GeoImage(local_data['DNB'].data, 
+    ...                           areaid, tslots[0],
+    ...                           fill_value=None, mode='L')
+    >>> img.enhance(stretch='histogram')
+    >>> img.show()
+
+
+.. image:: images/npp_20120831_0104_04365_scan500m_dnb.png
+
+
 
 .. _`CF convention`: http://cf-pcmdi.llnl.gov/
 .. _`NPP sample`: http://npp.gsfc.nasa.gov/NPP_NCT4_SAMPLE_PRODUCTS.zip
 .. _mpop: http://www.github.com/mraspaud/mpop
 .. _cspp: http://cimss.ssec.wisc.edu/cspp
 .. _pycoast: http://pycoast.googlecode.com
+.. _pyresample: http://pyresample.googlecode.com
+.. _pyorbital: http://www.github.com/mraspaud/pyorbital
