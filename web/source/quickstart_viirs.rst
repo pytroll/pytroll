@@ -1,20 +1,29 @@
 ==================
-Pytroll goes VIIRS
+VIIRS with Pytroll
 ==================
-The NOAA/NASA weather satellite NPOESS Preparatory Project (NPP) satellite is due for 
-launch October 25th, 2011. `NPP sample`_ data have now finally been made 
-available to the public. NPP has a MODIS/AVHRR like imager 
-onboard, called the Visible Infrared Imager Radiometer Suite (VIIRS).
+The NOAA/NASA weather satellite Suomi National Polar Partnership (NPP) satellite was 
+successfully launched October 28th, 2011. 
 
-In preparation for the upcoming VIIRS data we have made a plugin reader and custom 
-compositer to mpop_.
-Thus it is now possible to generate RGB image composites also for VIIRS.
+Suomi NPP carries the Visible Infrared Imaging Radiometer Suite (VIIRS) which
+is a moderate resolution Imager with herritage from MODIS onboard the EOS
+satellites Aqua and Terra, the AVHRR onboard the NOAA and Metop platforms, and
+the OLS onboard the DMSP satellites. VIIRS has a nearly constant spatial
+resolution across a very large swath (width is around 3000km).
 
-For this tutorial template config files (see :doc:`install`) can be used. 
-These are located in the *etc* dir of the mpop_ source. Copy *mpop.cfg.template*, *areas.def.template* 
-and *npp1.cfg.template* to another dir and remove the *.template* extension. In the config file 
-*npp1.cfg* locate the section :attr:`viirs-level2` and modify the defined :attr:`dir` 
-to point to the dir of your NPP sample SDR data.
+In preparation for VIIRS we made a plugin reader and custom compositer to
+mpop_. This was tested on synthetic (sample) data prior to launch, allowing us
+to produce VIIRS imagery as soon as Direct Readout was turned on.
+
+The example images below have been generated from direct readout data from the
+station in Norrköping. We have been using the Community Satellite Processing
+Package (CSPP) to go from RDR to SDR - see cspp_
+
+For this tutorial template config files (see :doc:`install`) can be used.
+These are located in the *etc* dir of the mpop_ source. Copy
+*mpop.cfg.template*, *areas.def.template* and *npp.cfg.template* to another dir
+and remove the *.template* extension. In the config file *npp.cfg* locate the
+section :attr:`viirs-level2` and modify the defined :attr:`dir` to point to the
+directory where you keep the SDR data.
 
 Set PPP_CONFIG_DIR to the directory containing your modified mpop_ config files.
 
@@ -23,13 +32,13 @@ Loading
 =======
 
     >>> from mpop.satellites import PolarFactory
-    >>> import datetime
-    >>> time_slot = datetime.datetime(2010, 9, 6, 21, 5)
-    >>> orbit = "00012"
-    >>> global_data = PolarFactory.create_scene("npp", "1", "viirs", time_slot, orbit)
+    >>> from datetime import datetime
+    >>> time_slot = datetime(2012, 5, 18, 12, 9)
+    >>> orbit = "02882"
+    >>> global_data = PolarFactory.create_scene("npp", "", "viirs", time_slot, orbit)
     >>> global_data.load([8.6])
     >>> print global_data
-    -------> print(global_data)
+     -------> print(global_data)
     'M01: (0.402,0.412,0.422)μm, resolution 742m, not loaded'
     'M02: (0.436,0.445,0.454)μm, resolution 742m, not loaded'
     'M03: (0.478,0.488,0.498)μm, resolution 742m, not loaded'
@@ -53,18 +62,20 @@ Loading
     'I05: (10.500,11.450,12.300)μm, resolution 371m, not loaded'
     'DNB: (0.500,0.700,0.900)μm, resolution 742m, not loaded'
 
-
 We have now loaded the VIIRS M14 band, and we can display it if we want:
  
     >>> global_data[8.6].show()
 
 .. image:: images/viirs_tb86.png
 
-The black stripes are due to the so called *bowtie deletion*, which is handled onboard the
-satellite. The bowtie effect is a geometric feature of the VIIRS scan. Similar to the MODIS
-sensor individual VIIRS lines will overlap as one approach the edge of the swath.
-These overlapping samples/pixels have been removed, and thus when data are displayed 
-un-projected these no-data lines will appear. 
+
+The black stripes are due to the so called *bowtie deletion*, which is handled
+onboard the satellite. The bowtie effect is a geometric feature of the VIIRS
+scan. Similar to the MODIS sensor individual VIIRS lines will overlap as one
+approach the edge of the swath.  These overlapping samples/pixels have been
+removed onboard in order to minimise the bandwidth usage on the broadcast. Thus
+when data are displayed un-projected these no-data lines will appear in the
+image.
 
 
 Making RGB's
@@ -85,22 +96,87 @@ Map projection
 Reprojecting data is done in exactly the same way the AVHRR data was reprojected in 
 the :doc:`quickstart_avhrr` tutorial:
 
-    >>> local_data = global_data.project("npp_sample_m", mode="nearest")
+    >>> local_data = global_data.project("scan500m", mode="nearest")
     >>> img = local_data.image.truecolor()
     >>> img.save('./viirs_truecolor_proj.png')
 
-.. image:: images/viirs_truecolor_proj.png
+Here we have defined an area called *area500m* covering Scandinavia, and with a
+pixel resolution of 500 meters. This definition is stored in the
+*areas.def.template* file. See the :doc:`quickstart_avhrr` tutorial.
 
-Here we have defined an area called *npp_sample_m* covering parts of western central US. 
-This definition is stored in the *areas.def.template* file. See 
-the :doc:`quickstart_avhrr` tutorial.
+It is easier to navigate in the image if we add coastlines and poltical
+boarders, so lets do that with PIL and pycoast_:
+
+    >>> from PIL import Image
+    >>> from pycoast import ContourWriter
+    >>> from mpop.projector import get_area_def
+    >>> cw = ContourWriter('/local_disk/data/shapes')
+    >>> img = Image.open('./viirs_truecolor_proj.png')
+    >>> area_def = get_area_def("scan500m")
+    >>> cw.add_coastlines(img, area_def, resolution='i', level=3)
+    >>> img.save('./viirs_truecolor_proj_with_overlay.png')
+
+.. image:: images/viirs_truecolor_proj_with_overlay.png
+
+But what we actually wanted was to load all the available data (VIIRS granules)
+received that covers the area. To do this in a smart and economical way we only
+load the granules that are inside the area of interest. But to do this we need
+functionality provided by pyorbital and pyresample. We leave this for an other
+time, and instead we just load the granules we have and assemble them to a full
+swath that we can project:
+
+    >>> from mpop.satellites import PolarFactory
+    >>> import mpop.scene
+    >>> from datetime import datetime, timedelta
+    >>> tstep = timedelta(seconds=60) # granules are 85 seconds long
+    >>> start_time = datetime(2012, 5, 18, 11, 55) # Approximate start time
+    >>> end_time = start_time + timedelta(seconds=1200) # 20 minutes for the swath to be on the safe side...
+    >>> orbit = "02882"
+    >>> areaid = 'scan500m'
+    >>> global_data = []
+    >>> tslot = start_time
+    >>> while tslot < end_time:
+    ...     global_data.append(PolarFactory.create_scene("npp", "", "viirs", tslot, orbit))
+    ...     tslot = tslot + tstep
+    >>> gldata = []
+    >>> for glbd in global_data:
+    ...     try:
+    ...         glbd.load(glbd.image.green_snow.prerequisites |
+    ...                   glbd.image.natural.prerequisites
+    ...                   )
+    ...         gldata.append(glbd)
+    ...     except IOError:
+    ...         pass
+    >>> for glbd in gldata:
+    ...     glbd.area = glbd['M16'].area
+    >>> glb_data = mpop.scene.assemble_segments(gldata)
+    >>> img = glb_data.image.natural()
+    >>> img.show()
+
+.. image:: images/npp_20120518_1202_02882_natural.png
+
+And now lets project it to the area:
+
+    >>> local_data = glb_data.project(areaid, mode="nearest", radius=2000)
+
+We can display the *green_snow* composite as we already made sure to load the
+necessary channels earlier (see code above):
+
+    >>> img = local_data.image.green_snow()
+    >>> img.show()
+
+.. image:: images/npp_20120518_1202_02882_scan500m_green_snow.png
+
 
 High resolution images
 ======================
-The VIIRS sensor have 5 AVHRR-like channels with a resolution almost 3 times better.
-These are the I-bands seen in the list above. Making imagery from these goes exactly the same 
-way as for the M-bands. However, since there is overlap in the spectral range between I-bands and
-M-bands, you need to specify also the resolution or use the band name when loading:
+
+The VIIRS sensor have 5 AVHRR-like channels with a resolution 3 times higher or
+even better (at edge of swath). These are the I-bands seen in the list
+above. Making imagery from these goes exactly the same way as for the
+M-bands. However, since there is overlap in the spectral range between I-bands
+and M-bands, you need to specify also the resolution or use the band name when
+loading:
 
     >>> global_data.load(['I03'])
     >>> global_data['I03'].show()
@@ -108,41 +184,55 @@ M-bands, you need to specify also the resolution or use the band name when loadi
 .. image:: images/viirs_i03.png
 
 
-Generating and mapping the overview of the I-bands is done in the same way as for the M-bands of course.
-Here we have made a specific I-band overview method called *hr_overview*:
+Generating and mapping the overview of the I-bands is done in the same way as
+for the M-bands of course.  Here we have made a specific I-band overview method
+called *hr_overview*:
 
     >>> from mpop.satellites import PolarFactory
-    >>> import datetime
-    >>> time_slot = datetime.datetime(2010, 9, 6, 21, 5)
-    >>> orbit = "00012"
-    >>> global_data = PolarFactory.create_scene("npp", "1", "viirs", time_slot, orbit)
+    >>> from datetime import datetime
+    >>> time_slot = datetime(2012, 5, 18, 12, 9)
+    >>> orbit = "02882"
+    >>> global_data = PolarFactory.create_scene("npp", "", "viirs", time_slot, orbit)
     >>> global_data.load(global_data.image.hr_overview.prerequisites)
-    >>> local_data = global_data.project("npp_sample_i", mode="nearest")
+    >>> local_data = global_data.project("scan500m", mode="nearest")
     >>> img = local_data.image.hr_overview()
     >>> img.show()
 
+
 .. image:: images/viirs_hr_overview_proj.png
+
+
 
 
 The Day/Night Band
 ==================
 
-The VIIRS Day/Night band draws heritage from the DMSP Operational Linescan System (OLS) and is a broad band channel in the Visible and Near-Infrared spectral range. It operates with three different gains to optimise the sensitivity independant of illumination:
+The VIIRS Day/Night band draws heritage from the DMSP Operational Linescan
+System (OLS) and is a broad band channel in the Visible and Near-Infrared
+spectral range. It operates with three different gains to optimise the
+sensitivity independant of illumination:
 
     >>> global_data.load(['DNB'])
     >>> global_data['DNB'].show()
 
 .. image:: images/viirs_dnb.png
 
-During nighttime it is sufficiently sensitive so that useful information on clouds and surfaces may be deduced from reflected moonlight. Naturally the units of this band cannot be given as a solar reflectance factor, but instead the radiance is provided:
+During nighttime it is sufficiently sensitive so that useful information on
+clouds and surfaces may be deduced from reflected moonlight. Naturally the
+units of this band cannot be given as a solar reflectance factor, but instead
+the radiance is provided:
 
     >>> print global_data['DNB'].info
         {'units': 'W sr-1 m-2', 'band_id': 'DNB'}
 
-The units in the HDF5 SDR file is W/(sr*cm²) (see table 2.18.2-1, page 355 of the NPOESS Common Data Format Control Book - Volume III - D34862-03 Rev E CDRL No. A014). But in pytroll we keep to the physical units 
-dictated by the netCDF `CF convention`_ on metadata, which is W/(sr*m²). 
+The units in the HDF5 SDR file is W/(sr*cm²) (see table 2.18.2-1, page 355 of
+the NPOESS Common Data Format Control Book - Volume III - D34862-03 Rev E CDRL
+No. A014). But in pytroll we keep to the physical units dictated by the netCDF
+`CF convention`_ on metadata, which is W/(sr*m²).
 
-Observe that this is really the spectral radiance *integrated* over the entire band of wavelengths from 500 to 900 nm, and *not* a spectral radiance (e.g. unit W/(sr*m²*μm) which is otherwise common for narrow band channels.
+Observe that this is really the spectral radiance *integrated* over the entire
+band of wavelengths from 500 to 900 nm, and *not* a spectral radiance
+(e.g. unit W/(sr*m²*μm) which is otherwise common for narrow band channels.
  
 
     >>> print global_data['DNB'].data
@@ -170,4 +260,5 @@ We can check the range of radiaces in the granule and in print it in the units g
 .. _`CF convention`: http://cf-pcmdi.llnl.gov/
 .. _`NPP sample`: http://npp.gsfc.nasa.gov/NPP_NCT4_SAMPLE_PRODUCTS.zip
 .. _mpop: http://www.github.com/mraspaud/mpop
-
+.. _cspp: http://cimss.ssec.wisc.edu/cspp
+.. _pycoast: http://pycoast.googlecode.com
