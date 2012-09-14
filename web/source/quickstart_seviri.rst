@@ -129,8 +129,8 @@ and add as many :attr:`| global_data.image.mymethod.prerequisites` as needed.
 
 A description of the available builtin composites for SEVIRI and VISIR derived sensors can be seen using::
 
-    >>> from mpop.instruments.visir import VisirScene
-    >>> help(VisirScene)
+    >>> from mpop.instruments.visir import VisirCompositer
+    >>> help(VisirCompositer)
 
 The builtin composites are recommendations from the `MSG Interpretation Guide`_
 
