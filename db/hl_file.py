@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2010-2011.
+# Copyright (c) 2010-2012.
 
 # Author(s):
  
@@ -24,6 +24,7 @@
 import pytroll_db as db
 from sqlalchemy.orm.exc import NoResultFound
 from datetime import datetime
+import shapely
 
 class File(object):
 
@@ -57,23 +58,40 @@ class File(object):
                     self.dbm.session.delete(uri_obj)
                     
         elif key == "format":
-            fileformat = self.dbm.session.query(db.FileFormat).\
-                         filter(db.FileFormat.file_format_name==val).one()
+            fileformat = self.dbm.get_file_format(val)
             self._file.file_format = fileformat
 
         elif key == "type":
-            filetype = self.dbm.session.query(db.FileType).\
-                       filter(db.FileType.file_type_name==val).one()
+            filetype = self.dbm.get_file_format(val)
             self._file.file_type = filetype
 
+        elif key == "sub_satellite_track":
+            value = 'LINESTRING ('
+            for i, item in enumerate(val):
+                if i == 0:
+                    value += '%s %s' % (item[0], item[1])
+                else:
+                    value += ', %s %s' % (item[0], item[1])
+            value += ')'
+
+            wkt_o = shapely.wkt.loads(value)
+            p_track = self.dbm.get_parameter('sub_satellite_track')
+            try:
+                self.dbm.session.query(db.ParameterLinestring).join(db.Parameter).filter(db.ParameterLinestring.filename==self.filename).filter(db.Parameter.parameter_name==key).one().data_value
+            except NoResultFound:
+                self.dbm.create_parameter_linestring(wkt_o,
+                                                     filename=self.filename,
+                                                     parameter=p_track)
+            
         else:
             try:
-                self.dbm.session.query(db.ParameterValue).join(db.Parameter).filter(db.ParameterValue.filename==self.filename).filter(db.Parameter.parameter_name==key).one().data_value = val
+                self.dbm.session.query(db.ParameterValue).join(db.Parameter).filter(db.ParameterValue.filename==self.filename).filter(db.Parameter.parameter_name==key).one().data_value
             except NoResultFound:
                 self.dbm.create_parameter_value(filename=self.filename,
                                                 parameter_name=key,
                                                 data_value=val,
                                                 creation_time=datetime.utcnow())
+                
         self.dbm.session.commit()
 
     def __getitem__(self, key):

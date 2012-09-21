@@ -1,0 +1,32 @@
+=========================================
+ Sattorrent: Trollcasting at its best :)
+=========================================
+
+Server serve it's file(s) all the time. As soon at new scanlines come in,
+publish 'have' messages.
+
+Client listens to new have messages, and get all scanlines upon connection.
+
+The sattorrent.cfg holds info on the local host and the remote hosts. The local
+host should also be configured as a remote host in order to receive one's own
+data.
+
+
+Status
+======
+
+server.py is functional. However, it lacks support for multiple files and
+choking.
+
+client.py is functional. Lack buffured listening to account for agregating
+several sources.
+
+Protocol
+========
+
+requests:
+scanline : get the data of a specific scanline
+scanlines : get the times of the available scanlines for a given satellite::
+
+  scanlines NOAA18
+  scanline NOAA18 time_start time_end
