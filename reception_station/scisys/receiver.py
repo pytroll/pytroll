@@ -23,15 +23,14 @@
 """Receiver for 2met messages, through zeromq.
 """
 import os
-import zmq
 from datetime import datetime
-from urlparse import urlsplit, urlunsplit, urlparse, SplitResult
-from socket import gethostname
+from urlparse import urlsplit, urlunsplit, SplitResult
 from posttroll.publisher import Publish
+from posttroll.subscriber import Subscriber
 from posttroll.message import Message
 import logging
 
-logging.basicConfig(filename='mylog_npp.log',level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 EMITTER = "nimbus.smhi.se"
 
@@ -64,8 +63,20 @@ class TwoMetMessage(object):
 def pass_name(utctime, satellite):
     """Construct a unique pass name from a risetime and a satellite name.
     """
-    return utctime.strftime("%Y%m%dT%H%M%S") + "_".join(satellite.split(" "))
+    #return utctime.strftime("%Y%m%dT%H%M%S") + "_".join(satellite.split(" "))
+    return utctime, "_".join(satellite.split(" "))
 
+class PassRecorder(dict):
+    def get(self, key, default=None):
+        utctime, satellite = key
+        for (rectime, recsat), val in self.iteritems():
+            if(recsat == satellite and
+               (abs(rectime - utctime)).seconds < 5 and
+               (abs(rectime - utctime)).days == 0):
+                return val
+        return default
+            
+            
 
 
 class MessageReceiver(object):
@@ -73,7 +84,7 @@ class MessageReceiver(object):
     """
 
     def __init__(self):
-        self._received_passes = {}
+        self._received_passes = PassRecorder()
         self._distributed_files = {}
 
     def add_pass(self, message):
@@ -92,13 +103,24 @@ class MessageReceiver(object):
         del pass_info['falltime']
 
         if 'orbit number' in pass_info:
-            pass_info['orbit_number'] = pass_info['orbit number']
+            pass_info['orbit_number'] = int(pass_info['orbit number'])
+            del pass_info['orbit number']
         else:
             LOG.warning("No 'orbit number' in message!")
 
         
         pname = pass_name(pass_info["start_time"], pass_info["satellite"])
         self._received_passes[pname] = pass_info
+
+    def clean_passes(self, days=1):
+        oldies = []
+
+        for key, val in self._received_passes.iteritems():
+            if (datetime.utcnow() - val["start_time"]).days >= days:
+                oldies.append(key)
+
+        for key in oldies:
+            del self._received_passes[key]
 
     def handle_distrib(self, message):
         """React to a file dispatch message.
@@ -119,10 +141,6 @@ class MessageReceiver(object):
                 swath["format"] = "CHRPT"
             else:
                 swath["format"] = "16-bit HRPT Minor Frame"
-            if pathname2.endswith(".hmf"):
-                uri = pathname2
-            else:
-                uri = os.path.join(pathname2, filename)
 
         elif filename.startswith("P042") or filename.startswith("P154"):
             pds = {}
@@ -144,13 +162,28 @@ class MessageReceiver(object):
             pname = pass_name(risetime, satellite)
             swath = self._received_passes.get(pname, {"satellite": satellite,
                                                       "start_time": risetime})
-            instruments = {"0064": "modis"}
+            instruments = {"0064": "modis",
+                           "0141": "ceres+y",
+                           "0157": "ceres-y",
+                           "0261": "amsu-a1",
+                           "0262": "amsu-a1",
+                           "0290": "amsu-a2",
+                           "0342": "hsb",
+                           "0402": "amsr-e",
+                           "0404": "airs",
+                           "0405": "airs",
+                           "0406": "airs",
+                           "0407": "airs",
+                           "0414": "airs",
+                           "0415": "airs",
+                           "0419": "airs",
+                           "0957": "gbad",
+                           }
             swath["instrument"] = instruments.get(pds["apid1"][3:],
                                                   pds["apid1"][3:])
             swath["format"] = "PDS"
             swath["type"] = "EOS 0"
             swath["number"] = int(pds["ufn"])
-            uri = os.path.join(pathname2, filename)
 
         elif filename.startswith("R") and filename.endswith(".h5"):
             mda = {}
@@ -166,15 +199,21 @@ class MessageReceiver(object):
             satellite = "NPP"
             risetime = mda["time"]
             pname = pass_name(risetime, satellite)
+
             swath = self._received_passes.get(pname, {"satellite": satellite,
                                                       "start_time": risetime})
+
             swath["instrument"] = mda["instrument"]
-            swath["format"] = "HDF"
+            swath["format"] = "HDF5"
             swath["type"] = "RDR"
-            uri = os.path.join(pathname2, filename)
 
         else:
             return
+
+        if pathname2.endswith(filename):
+            uri = pathname2
+        else:
+            uri = os.path.join(pathname2, filename)
 
         url = urlsplit(uri)
         if url.scheme in ["", "file"]:
@@ -197,8 +236,6 @@ class MessageReceiver(object):
         swath["uri"] = uri
         return swath
 
-        # TODO: remove pass when all file dispatches have been send, or after a timeout ?
-        
     def receive(self, message):
         """Receive the messages and triage them.
         """
@@ -211,19 +248,14 @@ class MessageReceiver(object):
         elif message.body.startswith(dispatch_prefix):
             return self.handle_distrib(message.body[len(dispatch_prefix):])
             
-def receive_from_zmq():
+def receive_from_zmq(days=1):
     """Receive 2met! messages from zeromq.
     """
     
-    # Socket to talk to server
-    context = zmq.Context()
-    socket = context.socket(zmq.SUB)
-    socket.connect("tcp://localhost:9331")
-
-    #filter = "Message"
-    socket.setsockopt(zmq.SUBSCRIBE, "")
+    socket = Subscriber(["tcp://localhost:9331"], ["2met!"])
+    
     mr = MessageReceiver()
-    logging.debug("setting up publishers")
+    logger.debug("setting up publishers")
     print "setting up publishers"
     import sys
     sys.stdout.flush()
@@ -231,37 +263,35 @@ def receive_from_zmq():
     with Publish("receiver", "HRPT 0", 9000) as hrpt_pub:
         with Publish("receiver", "EOS 0", 9001) as pds_pub:
             with Publish("receiver", "RDR", 9002) as npp_pub:
-                while True:
-                    logging.debug("waiting for messages")
+                for rawmsg in socket.recv():
                     # TODO:
                     # - Watch for idle time in order to detect a hangout
                     # - make recv interruptible.
-                    rawmsg = socket.recv()
-                    logging.debug("receive from 2met! " + str(rawmsg))
-                    string = TwoMetMessage(rawmsg)
+                    logger.debug("receive from 2met! " + str(rawmsg))
+                    string = TwoMetMessage(rawmsg.data)
                     to_send = mr.receive(string)
                     if to_send is None:
                         continue
-                    try:
-                        logging.debug(to_send)
-                        to_send["start_time"] = to_send["start_time"].isoformat()
-                        to_send["end_time"] = to_send["end_time"].isoformat()
-                    except AttributeError:
-                        pass
-                    except KeyError:
-                        pass
                     msg = Message('/oper/polar/direct_readout/norrköping', "file",
                                   to_send).encode()
-                    logging.debug("publishing " + str(msg))
+                    logger.debug("publishing " + str(msg))
                     if to_send["type"] == "HRPT 0":
                         hrpt_pub.send(msg)
                     if to_send["type"] == "EOS 0":
                         pds_pub.send(msg)
                     if to_send["type"] == "RDR":
                         npp_pub.send(msg)
+                    if days:
+                        mr.clean_passes(days)
 
 if __name__ == '__main__':
-    receive_from_zmq()
+    logging.basicConfig(filename='mylog_npp.log',level=logging.DEBUG)
+    logger = logging.getLogger("Receiver")
+    try:
+        receive_from_zmq(1)
+    except KeyboardInterrupt:
+        print ("Thank you for using pytroll/receiver."
+               " See you soon on pytroll.org!")
 
 
 
