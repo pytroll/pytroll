@@ -3,9 +3,11 @@ and move the SDR granules into the PPS directory structure"""
 
 import os, shutil
 from glob import glob
-import h5py
 
+
+# Harcoded path to PPS files! FIXME!
 PPS_SOURCE = "/san1/pps/import/PPS_data/source"
+
 
 def cleanup_cspp_workdir(workdir):
     """Clean up the CSPP working dir after processing"""
@@ -66,11 +68,7 @@ def pack_sdr_files4pps(sdrfiles, subdir):
         os.mkdir(path)
 
     print "SDR files: ", sdrfiles
-
     for sdrfile in sdrfiles:
-        #orbits = pre_cspp.get_orbitnumbers_to_nppfile(sdrfile)
-        #res_filename = pre_cspp.fix_nppfile4orbitnumber(orbits, sdrfile, path)
-        #print "sdr file stored: ", os.path.basename(res_filename)
 	newfilename = os.path.join(path, os.path.basename(sdrfile))
 	print "Copy sdrfile for PPS: ", newfilename
 	shutil.copy(sdrfile, newfilename)

@@ -4,14 +4,14 @@ import re
 import ConfigParser
 
 import logging
-LOG = logging.getLogger('npp_lvl1proc')
+LOG = logging.getLogger('npp_sdr_proc')
 
 _RE_NPP_STAMP = re.compile('.*?(([A-Za-z0-9]+)_d(\d+)_t(\d+)_e(\d+)_b(\d+)).*')
 
 try:
-    config_dir = os.environ['NPP_LVL1PREPROC_CONFIG_DIR']
+    config_dir = os.environ['NPP_SDRPROC_CONFIG_DIR']
 except KeyError:
-    LOG.error('NPP_LVL1PREPROC_CONFIG_DIR is not defined')
+    LOG.error('NPP_SDRPROC_CONFIG_DIR is not defined')
     raise
 
 #

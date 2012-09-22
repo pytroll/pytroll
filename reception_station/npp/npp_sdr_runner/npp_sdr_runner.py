@@ -13,16 +13,16 @@ import os, glob
 
 CSPP_HOME = os.environ.get("CSPP_HOME", '')
 CSPP_WORKDIR = os.environ.get("CSPP_WORKDIR", '')
-APPL_HOME = os.environ.get('NPP_LVL1PROC', '')
-# Use config file from application dir: FIXME!
-ETC_DIR = "%s/etc" % CSPP_HOME
+APPL_HOME = os.environ.get('NPP_SDRPROC', '')
+ETC_DIR = os.environ.get('NPP_SDRPROC_CONFIG_DIR', '')
+
 
 import ConfigParser
 CONFIG_PATH = "%s/etc" % os.environ.get('CSPP_HOME', '')
 print "CONFIG_PATH: ", CONFIG_PATH 
 
 CONF = ConfigParser.ConfigParser()
-CONF.read(os.path.join(CONFIG_PATH, "npp_dr_config.cfg"))
+CONF.read(os.path.join(CONFIG_PATH, "npp_sdr_config.cfg"))
 
 MODE = os.getenv("SMHI_MODE")
 if MODE is None:
@@ -32,8 +32,6 @@ OPTIONS = {}
 for option, value in CONF.items(MODE, raw = True):
     OPTIONS[option] = value
  
-
-from datetime import datetime
 
 # Safe:
 addr_npp = "tcp://safe.smhi.se:9002"
@@ -63,7 +61,7 @@ _DEFAULT_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 _DEFAULT_LOG_FORMAT = '[%(levelname)s: %(asctime)s : %(name)s] %(message)s'
 
 import os, sys
-_NPP_PREPROC_LOG_FILE = os.environ.get('NPP_PREPROC_LOG_FILE', None)
+_NPP_SDRPROC_LOG_FILE = os.environ.get('NPP_SDRPROC_LOG_FILE', None)
 import logging
 
 if _NPP_PREPROC_LOG_FILE:
@@ -78,7 +76,6 @@ handler.setFormatter(formatter)
 handler.setLevel(10)
 LOG.setLevel(10)
 LOG.addHandler(handler)
-
 
 
 CSPP_ENVS = {"CSPP_HOME": CSPP_HOME,
@@ -122,7 +119,7 @@ def run_cspp(viirs_rdr_file):
     t0_wall = time.time()
     subprocess.call(["viirs_sdr.sh", viirs_rdr_file])
     print time.clock() - t0_clock, "seconds process time"
-    print time.time() - t0_wall, "seconds wall time"
+    print time.time() - t0_wall, "seconds wall clock time"
 
     # Close working directory:
     os.close(fdwork)
@@ -192,9 +189,7 @@ def npp_runner():
                             LOG.warning("No SDR files available. CSPP probably failed!")
                             continue
 
-                        #start_time = get_datetime(result_files[0])
                         # Use the start time from the RDR message!:
-                        #tobj = datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S")
                         tobj = start_time
                         LOG.info("Time used in sub-dir name: " + str(tobj.strftime("%Y-%m-%d %H:%M")))
                         subd = create_pps_subdirname(tobj)

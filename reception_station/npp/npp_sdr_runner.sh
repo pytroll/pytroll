@@ -24,7 +24,7 @@ utv)
 CSPP_HOME="/local_disk/opt/CSPP/1_1"
 CSPP_WORKDIR="/san1/cspp_work"
 APPL_HOME="${HOME}/usr"
-POLAR_PREPROC_CONFIG_DIR="${HOME}/dev/npp_pytroll/pytroll/polar_preproc/etc"
+NPP_SDRPROC_CONFIG_DIR="/data/proj/safutv/dev/npp_dev/pytroll/reception_station/etc/"
 
         ;;
 
@@ -69,12 +69,12 @@ esac
 
 
 export CSPP_HOME
-NPP_LVL1PROC=${APPL_HOME}
-export NPP_LVL1PROC
+NPP_SDRPROC=${APPL_HOME}
+export NPP_SDRPROC
 export CSPP_WORKDIR
-export POLAR_PREPROC_CONFIG_DIR
+export NPP_SDRPROC_CONFIG_DIR
 
 source ${CSPP_HOME}/cspp_env.sh
 
-python ${APPL_HOME}/bin/npp_dr_runner.py
+python ${APPL_HOME}/bin/npp_sdr_runner.py
 

@@ -10,7 +10,7 @@ expects messages in pytroll format from the reception station telling when a
 file is being dispatched to the server.
 """ 
 
-setup(name='npp_lvl1proc',
+setup(name='npp_sdr_proc',
       description="Run scripts for Suomi NPP RDR to SDR processing",
       author="Adam Dybbroe",
       author_email="adam.dybbroe@smhi.se",
