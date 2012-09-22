@@ -194,7 +194,9 @@ def start_npp_sdr_processing(level1_home, mypublisher, message):
             LOG.info("Create sub-directory for sdr files: %s" % str(subd))
             pack_sdr_files(result_files, level1_home, subd)
             make_okay_files(level1_home, subd)
-            
+
+            cleanup_cspp_workdir(working_dir)
+
             # Now publish:
             filename = result_files[0]
             LOG.info("Filename = %s" % filename)
@@ -239,8 +241,10 @@ if __name__ == "__main__":
     from glob import glob
     rdrlist = glob('%s/RNSCA-RVIRS_*' % rdr_home)
     rdr_filename = rdrlist[0]
-    rdr_filename = fix_rdrfile(rdr_filename)
-    wrkdir = run_cspp(rdr_filename)
+    #rdr_filename = fix_rdrfile(rdr_filename)
+    #wrkdir = run_cspp(rdr_filename)
+    #result_files = get_sdr_files(wrkdir)
+    wrkdir = "/san1/wrk_cspp/tmpujTkcm"
     result_files = get_sdr_files(wrkdir)
 
     tobj = get_datetime_from_filename(rdr_filename)

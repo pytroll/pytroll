@@ -3,11 +3,11 @@ and move the SDR granules to a destination directory"""
 
 import os, shutil
 from glob import glob
-
+from sdr_runner.orbitno import TBUS_STYLE
 
 def cleanup_cspp_workdir(workdir):
     """Clean up the CSPP working dir after processing"""
-    import os
+
     filelist = glob('%s/*' % workdir)
     this = [ os.remove(s) for s in filelist if os.path.isfile(s) ]
     print "Number of files left after cleaning working dir = ", len(this)
