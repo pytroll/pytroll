@@ -22,7 +22,7 @@ case $SMHI_MODE in
 utv)
 
 CSPP_HOME="/local_disk/opt/CSPP/1_1"
-CSPP_WORKDIR="/san1/cspp_work"
+CSPP_WORKDIR="/san1/wrk_cspp"
 APPL_HOME="${HOME}/usr"
 NPP_SDRPROC_CONFIG_DIR="/data/proj/safutv/dev/npp_dev/pytroll/reception_station/etc/"
 
@@ -50,7 +50,6 @@ offline)
 
 CSPP_HOME="/local_disk/opt/CSPP/1_1"
 APPL_HOME="${HOME}/usr"
-CSPP_WORKDIR="/san1/cspp_work"
 
         ;;
 

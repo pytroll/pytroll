@@ -19,8 +19,8 @@ setup(name='npp_sdr_proc',
       license='GPLv3',
       version='0.11',
       #packages = find_packages(),
-      scripts = ['npp_dr_runner.sh'],
-      packages=['npp_dr_runner'],
+      scripts = ['npp_sdr_runner.sh'],
+      packages=['npp_sdr_runner'],
       
       # Project should use reStructuredText, so ensure that the docutils get
       # installed or upgraded on the target machine
@@ -30,7 +30,7 @@ setup(name='npp_sdr_proc',
                           'pyorbital'
                           ],
 
-      data_files=[('etc', ['etc/npp_dr_config.cfg'])],
+      data_files=[('etc', ['etc/npp_sdr_config.cfg'])],
       test_suite="nose.collector",
       tests_require=[],
       zip_safe=False

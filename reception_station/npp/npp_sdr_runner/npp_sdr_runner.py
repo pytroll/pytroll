@@ -18,7 +18,8 @@ ETC_DIR = os.environ.get('NPP_SDRPROC_CONFIG_DIR', '')
 
 
 import ConfigParser
-CONFIG_PATH = "%s/etc" % os.environ.get('CSPP_HOME', '')
+#CONFIG_PATH = "%s/etc" % os.environ.get('CSPP_HOME', '')
+CONFIG_PATH = "%s" % ETC_DIR
 print "CONFIG_PATH: ", CONFIG_PATH 
 
 CONF = ConfigParser.ConfigParser()
@@ -101,8 +102,13 @@ def run_cspp(viirs_rdr_file):
     import subprocess
     #from subprocess import Popen
     import time
+    import tempfile
 
-    working_dir = OPTIONS['working_dir']
+    try:
+        working_dir = tempfile.mkdtemp(dir=CSPP_WORKDIR)
+    except OSError:
+        working_dir = tempfile.mkdtemp()
+
     # Change working directory:
     fdwork = os.open(working_dir, os.O_RDONLY)
     os.fchdir(fdwork)
@@ -123,102 +129,112 @@ def run_cspp(viirs_rdr_file):
 
     # Close working directory:
     os.close(fdwork)
+    return working_dir
+
+# ---------------------------------------------------------------------------
+def start_npp_sdr_processing(level1_home, mypublisher, message):
+    """From a posttroll message start the npp processing"""
+
+    LOG.info("")
+    LOG.info("\tMessage:")
+    LOG.info(str(message))
+    urlobj = urlparse(message.data['uri'])
+    LOG.info("Server = " + str(urlobj.netloc))
+    if urlobj.netloc != servername:
+        continue
+    LOG.info("Ok... " + str(urlobj.netloc))
+    LOG.info("Sat and Instrument: " + str(message.data['satellite']) 
+             + " " + str(message.data['instrument']))
+
+    if (message.data['satellite'] == "NPP" and 
+        message.data['instrument'] == 'viirs'):
+        start_time = message.data['start_time']
+        try:
+            orbnum = int(message.data['orbit_number'])            
+        except KeyError:
+            orbnum = None
+        path, fname =  os.path.split(urlobj.path)
+        if fname.endswith('.h5'):
+            # Check if the file exists:
+            if not os.path.exists(urlobj.path):
+                raise IOError("File is reported to be dispatched " + 
+                              "but is not there! File = " + 
+                              urlobj.path)
+
+            # Do processing:
+            LOG.info("RDR to SDR processing on npp/viirs with CSPP start!" + 
+                     " Start time = ", start_time)
+            if orbnum:
+                LOG.info("Orb = %d" % orbnum)
+            LOG.info("File = %s" % str(urlobj.path))
+            # Fix orbit number in RDR file:
+            try:
+                rdr_filename = fix_rdrfile(urlobj.path)
+            except IOError:
+                LOG.error('Failed to fix orbit number in RDR file = ' + str(urlobj.path))
+                import traceback
+                traceback.print_exc(file=sys.stderr)
+
+            LOG.info("Start CSPP: RDR file = " + str(rdr_filename))
+            working_dir = run_cspp(rdr_filename)
+            LOG.info("CSPP SDR processing finished...")
+            # Assume everything has gone well! 
+            # Move the files from working dir:
+            result_files = get_files4pps(working_dir)
+            if len(result_files) == 0:
+                LOG.warning("No SDR files available. CSPP probably failed!")
+                continue
+
+            # Use the start time from the RDR message!:
+            tobj = start_time
+            LOG.info("Time used in sub-dir name: " + str(tobj.strftime("%Y-%m-%d %H:%M")))
+            subd = create_pps_subdirname(tobj)
+            LOG.info("Create sub-directory for sdr files: %s" % str(subd))
+            pack_sdr_files4pps(result_files, subd)
+            make_okay_files(subd)
+            
+            # Now publish:
+            filename = result_files[0]
+            LOG.info("Filename = %s" % filename)
+            to_send = {}
+            to_send['uri'] = ('ssh://safe.smhi.se/' +  
+                              os.path.join(level1_home, 
+                                           filename))
+            to_send['filename'] = filename
+            to_send['instrument'] = 'viirs'
+            to_send['satellite'] = 'NPP'
+            to_send['format'] = 'HDF5'
+            to_send['type'] = 'SDR'
+            to_send['start_time'] = start_time #start_time.isoformat()
+            message = Message('/oper/polar/direct_readout/norrkoping',
+                          "file", to_send).encode()
+            mypublisher.send(message)
 
     return
+
 
 # ---------------------------------------------------------------------------
 def npp_runner():
     """The NPP/VIIRS runner. Listens and triggers processing"""
 
-    level1_home = OPTIONS['level1_home']
-    working_dir = OPTIONS['working_dir']
+    sdr_home = OPTIONS['level1_home']
 
     with posttroll.subscriber.Subscribe('RDR') as subscr:
         with Publish('npp_dr_runner', 'SDR', 
                      LEVEL1_PUBLISH_PORT) as publisher:        
             for msg in subscr.recv():
-                LOG.info("")
-                LOG.info("\tMessage:")
-                LOG.info(str(msg))
-                urlobj = urlparse(msg.data['uri'])
-                LOG.info("Server = " + str(urlobj.netloc))
-                if urlobj.netloc != servername:
-                    continue
-                LOG.info("Ok... " + str(urlobj.netloc))
-                LOG.info("Sat and Instrument: " + str(msg.data['satellite']) 
-                         + " " + str(msg.data['instrument']))
-
-                if (msg.data['satellite'] == "NPP" and 
-                    msg.data['instrument'] == 'viirs'):
-                    start_time = msg.data['start_time']
-                    try:
-                        orbnum = int(msg.data['orbit_number'])            
-                    except KeyError:
-                        orbnum = None
-                    path, fname =  os.path.split(urlobj.path)
-                    if fname.endswith('.h5'):
-                        # Check if the file exists:
-                        if not os.path.exists(urlobj.path):
-                            raise IOError("File is reported to be dispatched " + 
-                                          "but is not there! File = " + 
-                                          urlobj.path)
-
-                        # Do processing:
-                        LOG.info("RDR to SDR processing on npp/viirs with CSPP start!" + 
-                                 " Start time = ", start_time)
-                        if orbnum:
-                            LOG.info("Orb = %d" % orbnum)
-                        LOG.info("File = %s" % str(urlobj.path))
-                        LOG.info("Cleanup working dir before CSPP start...")
-                        cleanup_cspp_workdir(working_dir)
-                        # Fix orbit number in RDR file:
-                        try:
-                            rdr_filename = fix_rdrfile(urlobj.path)
-                        except IOError:
-                            LOG.error('Failed to fix orbit number in RDR file = ' + str(urlobj.path))
-                            import traceback
-                            traceback.print_exc(file=sys.stderr)
-
-                        LOG.info("Start CSPP: RDR file = " + str(rdr_filename))
-                        run_cspp(rdr_filename)
-                        LOG.info("CSPP SDR processing finished...")
-                        # Assume everything has gone well! 
-                        # Move the files from working dir:
-                        result_files = get_files4pps(working_dir)
-                        if len(result_files) == 0:
-                            LOG.warning("No SDR files available. CSPP probably failed!")
-                            continue
-
-                        # Use the start time from the RDR message!:
-                        tobj = start_time
-                        LOG.info("Time used in sub-dir name: " + str(tobj.strftime("%Y-%m-%d %H:%M")))
-                        subd = create_pps_subdirname(tobj)
-                        LOG.info("Crate sub-directory for sdr files: %s" % str(subd))
-                        pack_sdr_files4pps(result_files, subd)
-                        make_okay_files(subd)
-
-                        # Now publish:
-                        filename = result_files[0]
-                        LOG.info("Filename = %s" % filename)
-                        to_send = {}
-                        to_send['uri'] = ('ssh://safe.smhi.se/' +  
-                                          os.path.join(level1_home, 
-                                                       filename))
-                        to_send['filename'] = filename
-                        to_send['instrument'] = 'viirs'
-                        to_send['satellite'] = 'NPP'
-                        to_send['format'] = 'HDF5'
-                        to_send['type'] = 'SDR'
-                        to_send['start_time'] = start_time #start_time.isoformat()
-                        msg = Message('/oper/polar/direct_readout/norrkoping',
-                                      "file", to_send).encode()
-                        publisher.send(msg)
-
+                start_npp_sdr_processing(sdr_home, publisher, msg)
 
     return
 
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    npp_runner()
-    #rdr_dir = "/san1/polar_in/direct_readout/npp"
-    #run_cspp("%s/RNSCA-RVIRS_npp_d20120506_t1228116_e1242435_b00001_c20120506124759680000_nfts_drl.h5" % (rdr_dir))
+    #npp_runner()
+
+    rdr_home = OPTIONS['level0_home']
+
+    from glob import glob
+    rdrlist = glob.glob('%s/RNSCA-RVIRS_*' % rdr_home)
+    rdr_filename = rdrlist[0]
+    rdr_filename = fix_rdrfile(rdr_filename)
+    run_cspp(rdr_filename)
