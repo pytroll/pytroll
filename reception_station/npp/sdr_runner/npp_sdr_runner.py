@@ -233,21 +233,21 @@ def npp_runner():
 
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
+
     #npp_runner()
 
-    rdr_home = OPTIONS['level0_home']
-    sdr_home = OPTIONS['level1_home']
+    rdr_home_dir = OPTIONS['level0_home']
+    sdr_home_dir = OPTIONS['level1_home']
 
     from glob import glob
-    rdrlist = glob('%s/RNSCA-RVIRS_*' % rdr_home)
+    rdrlist = glob('%s/RNSCA-RVIRS_*' % rdr_home_dir)
     rdr_filename = rdrlist[0]
-    #rdr_filename = fix_rdrfile(rdr_filename)
-    #wrkdir = run_cspp(rdr_filename)
-    #result_files = get_sdr_files(wrkdir)
-    wrkdir = "/san1/wrk_cspp/tmpujTkcm"
+    rdr_filename = fix_rdrfile(rdr_filename)
+    wrkdir = run_cspp(rdr_filename)
+    #wrkdir = "/san1/wrk_cspp/tmpujTkcm"
     result_files = get_sdr_files(wrkdir)
-
     tobj = get_datetime_from_filename(rdr_filename)
     subd = create_subdirname(tobj)
-    pack_sdr_files(result_files, sdr_home, subd)
-    make_okay_files(sdr_home, subd)
+    pack_sdr_files(result_files, sdr_home_dir, subd)
+    make_okay_files(sdr_home_dir, subd)
+    cleanup_cspp_workdir(wrkdir)
