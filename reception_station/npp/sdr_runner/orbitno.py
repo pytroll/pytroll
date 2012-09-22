@@ -5,8 +5,8 @@ import re
 
 from pyorbital.orbital import Orbital
 from pyorbital.tlefile import Tle
-from npp_dr_runner import TLE_DIRS, TLE_FILE_FORMAT, LOG
-import npp_dr_runner
+from sdr_runner import TLE_DIRS, TLE_FILE_FORMAT, LOG
+from sdr_runner import get_npp_stamp
 
 class NoTleFile(Exception):
     pass
@@ -41,7 +41,7 @@ def get_tle(platform, timestamp=None):
 
 _re_replace_orbitno = re.compile("_b(\d{5})")
 def replace_orbitno(filename):
-    stamp = npp_dr_runner.get_npp_stamp(filename)
+    stamp = get_npp_stamp(filename)
 
     # Correct h5 attributes
     no_date = datetime(1958, 1, 1)

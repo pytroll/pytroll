@@ -234,7 +234,7 @@ if __name__ == "__main__":
     rdr_home = OPTIONS['level0_home']
 
     from glob import glob
-    rdrlist = glob.glob('%s/RNSCA-RVIRS_*' % rdr_home)
+    rdrlist = glob('%s/RNSCA-RVIRS_*' % rdr_home)
     rdr_filename = rdrlist[0]
     rdr_filename = fix_rdrfile(rdr_filename)
     run_cspp(rdr_filename)
