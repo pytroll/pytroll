@@ -183,7 +183,7 @@ def start_npp_sdr_processing(level1_home, mypublisher, message):
             result_files = get_files4pps(working_dir)
             if len(result_files) == 0:
                 LOG.warning("No SDR files available. CSPP probably failed!")
-                continue
+                return
 
             # Use the start time from the RDR message!:
             tobj = start_time
