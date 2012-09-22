@@ -19,7 +19,8 @@ setup(name='npp_sdr_proc',
       license='GPLv3',
       version='0.11',
       #packages = find_packages(),
-      scripts = ['npp_sdr_runner.sh'],
+      scripts = ['npp_sdr_runner.sh', 
+                 'npp_sdr_runner/npp_sdr_runner.py'],
       packages=['npp_sdr_runner'],
       
       # Project should use reStructuredText, so ensure that the docutils get

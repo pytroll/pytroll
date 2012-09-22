@@ -39,7 +39,7 @@ addr_npp = "tcp://safe.smhi.se:9002"
 
 LEVEL1_PUBLISH_PORT = 9020
 
-servername = "safe.smhi.se"
+SERVERNAME = OPTIONS['servername']
 
 from urlparse import urlparse
 import posttroll.subscriber
@@ -140,8 +140,8 @@ def start_npp_sdr_processing(level1_home, mypublisher, message):
     LOG.info(str(message))
     urlobj = urlparse(message.data['uri'])
     LOG.info("Server = " + str(urlobj.netloc))
-    if urlobj.netloc != servername:
-        continue
+    if urlobj.netloc != SERVERNAME:
+        return
     LOG.info("Ok... " + str(urlobj.netloc))
     LOG.info("Sat and Instrument: " + str(message.data['satellite']) 
              + " " + str(message.data['instrument']))
