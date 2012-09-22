@@ -6,10 +6,10 @@ processing on direct readout data
 
 # Does'nt handle the execution of several instances of CSPP at the same time
 # So, it assumes CSPP is finished before the next pass arrives, which will also
-# normally (hopefullye) always be the case.
+# normally (hopefully!) always be the case.
 # FIXME!
 
-import os, glob
+import os
 
 CSPP_HOME = os.environ.get("CSPP_HOME", '')
 CSPP_WORKDIR = os.environ.get("CSPP_WORKDIR", '')
@@ -234,9 +234,16 @@ if __name__ == "__main__":
     #npp_runner()
 
     rdr_home = OPTIONS['level0_home']
+    sdr_home = OPTIONS['level1_home']
 
     from glob import glob
     rdrlist = glob('%s/RNSCA-RVIRS_*' % rdr_home)
     rdr_filename = rdrlist[0]
     rdr_filename = fix_rdrfile(rdr_filename)
-    run_cspp(rdr_filename)
+    wrkdir = run_cspp(rdr_filename)
+    result_files = get_sdr_files(wrkdir)
+
+    tobj = get_datetime_from_filename(rdr_filename)
+    subd = create_subdirname(tobj)
+    pack_sdr_files(result_files, sdr_home, subd)
+    make_okay_files(sdr_home, subd)
