@@ -29,10 +29,10 @@ for option, value in CONF.items(MODE, raw = True):
     OPTIONS[option] = value
 
 
-SITE = OPTIONS['site']
-DOMAIN = OPTIONS['domain']
-TLE_DIRS = OPTIONS['tle_dirs']
-TLE_FILE_FORMAT = OPTIONS['tle_file_format']
+SITE = eval(CONF.get(MODE, 'site'))
+DOMAIN = eval(CONF.get(MODE, 'domain'))
+TLE_DIRS = eval(CONF.get(MODE, 'tle_dirs'))
+TLE_FILE_FORMAT = eval(CONF.get(MODE, 'tle_file_format'))
 
 
 
@@ -78,3 +78,14 @@ def _dte2time(date, start_time, end_time):
     if start_time > end_time:
         end_time += timedelta(days=1)
     return start_time, end_time
+
+
+def get_datetime_from_filename(filename):
+    """Get start observation time from the filename. Example:
+    'GMODO_npp_d20120405_t0037099_e0038341_b00001_c20120405124731856767_cspp_dev.h5'
+    """
+
+    bname = os.path.basename(filename)
+    sll = bname.split('_')
+    return datetime.strptime(sll[2] + sll[3][:-1], 
+                             "d%Y%m%dt%H%M%S")

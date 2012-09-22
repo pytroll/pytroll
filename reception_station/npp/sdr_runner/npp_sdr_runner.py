@@ -46,10 +46,11 @@ import posttroll.subscriber
 from posttroll.publisher import Publish
 from posttroll.message import Message
 
-from sdr_runner.cspp2pps import (get_files4pps, get_datetime, 
-                                 create_pps_subdirname, 
-                                 pack_sdr_files4pps, make_okay_files,
-                                 cleanup_cspp_workdir)
+from sdr_runner import get_datetime_from_filename
+from sdr_runner.post_cspp import (get_sdr_files, 
+                                  create_subdirname, 
+                                  pack_sdr_files, make_okay_files,
+                                  cleanup_cspp_workdir)
 
 from sdr_runner.pre_cspp import fix_rdrfile
 
@@ -129,6 +130,7 @@ def run_cspp(viirs_rdr_file):
 
     # Close working directory:
     os.close(fdwork)
+
     return working_dir
 
 # ---------------------------------------------------------------------------
@@ -180,7 +182,7 @@ def start_npp_sdr_processing(level1_home, mypublisher, message):
             LOG.info("CSPP SDR processing finished...")
             # Assume everything has gone well! 
             # Move the files from working dir:
-            result_files = get_files4pps(working_dir)
+            result_files = get_sdr_files(working_dir)
             if len(result_files) == 0:
                 LOG.warning("No SDR files available. CSPP probably failed!")
                 return
@@ -188,10 +190,10 @@ def start_npp_sdr_processing(level1_home, mypublisher, message):
             # Use the start time from the RDR message!:
             tobj = start_time
             LOG.info("Time used in sub-dir name: " + str(tobj.strftime("%Y-%m-%d %H:%M")))
-            subd = create_pps_subdirname(tobj)
+            subd = create_subdirname(tobj)
             LOG.info("Create sub-directory for sdr files: %s" % str(subd))
-            pack_sdr_files4pps(result_files, subd)
-            make_okay_files(subd)
+            pack_sdr_files(result_files, level1_home, subd)
+            make_okay_files(level1_home, subd)
             
             # Now publish:
             filename = result_files[0]
