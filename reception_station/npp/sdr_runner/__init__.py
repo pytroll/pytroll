@@ -4,12 +4,12 @@ import re
 import ConfigParser
 
 import logging
-LOG = logging.getLogger('npp_sdr_proc')
+LOG = logging.getLogger('npp-sdr-processing')
 
 _RE_NPP_STAMP = re.compile('.*?(([A-Za-z0-9]+)_d(\d+)_t(\d+)_e(\d+)_b(\d+)).*')
 
 try:
-    config_dir = os.environ['NPP_SDRPROC_CONFIG_DIR']
+    CONFIG_PATH = os.environ['NPP_SDRPROC_CONFIG_DIR']
 except KeyError:
     LOG.error('NPP_SDRPROC_CONFIG_DIR is not defined')
     raise
@@ -17,16 +17,23 @@ except KeyError:
 #
 # Read config file (SITE and DOMAIN)
 #
-_conf = ConfigParser.ConfigParser()
-_conf.read(os.path.join(config_dir, 'npp_dr_config.cfg'))
-SITE = eval(_conf.get('general', 'site'))
-DOMAIN = eval(_conf.get('general', 'domain'))
-TLE_DIRS = eval(_conf.get('general', 'tle_dirs'))
-TLE_FILE_FORMAT = eval(_conf.get('general', 'tle_file_format'))
+CONF = ConfigParser.ConfigParser()
+CONF.read(os.path.join(CONFIG_PATH, "npp_sdr_config.cfg"))
 
-# NPP stuff:
-RT_STPS_BATCH = eval(_conf.get('npp', 'rt_stps_batch'))
-RT_STPS_NPP_TEMPLATE_CONFIG_FILE = eval(_conf.get('npp', 'rt_stps_npp_template_config_file'))
+MODE = os.getenv("SMHI_MODE")
+if MODE is None:
+    MODE = "offline"
+
+OPTIONS = {}
+for option, value in CONF.items(MODE, raw = True):
+    OPTIONS[option] = value
+
+
+SITE = OPTIONS['site']
+DOMAIN = OPTIONS['domain']
+TLE_DIRS = OPTIONS['tle_dirs']
+TLE_FILE_FORMAT = OPTIONS['tle_file_format']
+
 
 
 class NPPStamp(object):

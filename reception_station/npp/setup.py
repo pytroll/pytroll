@@ -20,8 +20,8 @@ setup(name='npp_sdr_proc',
       version='0.11',
       #packages = find_packages(),
       scripts = ['npp_sdr_runner.sh', 
-                 'npp_sdr_runner/npp_sdr_runner.py'],
-      packages=['npp_sdr_runner'],
+                 'sdr_runner/npp_sdr_runner.py'],
+      packages=['sdr_runner'],
       
       # Project should use reStructuredText, so ensure that the docutils get
       # installed or upgraded on the target machine

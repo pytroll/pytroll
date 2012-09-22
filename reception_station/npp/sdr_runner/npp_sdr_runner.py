@@ -46,14 +46,14 @@ import posttroll.subscriber
 from posttroll.publisher import Publish
 from posttroll.message import Message
 
-from cspp2pps import (get_files4pps, get_datetime, 
-                      create_pps_subdirname, 
-                      pack_sdr_files4pps, make_okay_files,
-                      cleanup_cspp_workdir)
+from sdr_runner.cspp2pps import (get_files4pps, get_datetime, 
+                                 create_pps_subdirname, 
+                                 pack_sdr_files4pps, make_okay_files,
+                                 cleanup_cspp_workdir)
 
-from pre_cspp import fix_rdrfile
+from sdr_runner.pre_cspp import fix_rdrfile
 
-from polar_preproc import LOG
+from sdr_runner import LOG
 
 #: Default time format
 _DEFAULT_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
@@ -65,8 +65,8 @@ import os, sys
 _NPP_SDRPROC_LOG_FILE = os.environ.get('NPP_SDRPROC_LOG_FILE', None)
 import logging
 
-if _NPP_PREPROC_LOG_FILE:
-    handler = logging.FileHandler(_NPP_PREPROC_LOG_FILE)
+if _NPP_SDRPROC_LOG_FILE:
+    handler = logging.FileHandler(_NPP_SDRPROC_LOG_FILE)
 else:
     handler = logging.StreamHandler(sys.stderr)
 

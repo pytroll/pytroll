@@ -24,7 +24,7 @@ utv)
 CSPP_HOME="/local_disk/opt/CSPP/1_1"
 CSPP_WORKDIR="/san1/wrk_cspp"
 APPL_HOME="${HOME}/usr"
-NPP_SDRPROC_CONFIG_DIR="/data/proj/safutv/dev/npp_dev/pytroll/reception_station/etc/"
+NPP_SDRPROC_CONFIG_DIR="/data/proj/safutv/dev/npp_dev/pytroll/reception_station/npp/etc/"
 
         ;;
 
