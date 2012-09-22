@@ -17,10 +17,10 @@ setup(name='npp_lvl1proc',
       url='',
       long_description=long_description,
       license='GPLv3',
-      version='0.1',
+      version='0.11',
       #packages = find_packages(),
-      scripts = ['npp_dr_runner.sh', 'npp_dr_runner.py'],
-      py_modules=['npp_dr_runner', 'cspp2pps', 'pre_cspp'],
+      scripts = ['npp_dr_runner.sh'],
+      packages=['npp_dr_runner'],
       
       # Project should use reStructuredText, so ensure that the docutils get
       # installed or upgraded on the target machine
