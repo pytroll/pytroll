@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: cspp_env.sh 526 2012-03-13 22:32:33Z graemem $
+# $Id: cspp_env.sh 857 2012-07-25 13:32:09Z scottm $
 # Environment script for CSPP / ADL 3.1.
 
 
@@ -18,6 +18,9 @@ test -d "$CSPP_HOME/ADL" && export CSPP_REV="20120215"
 # read-write directory into which new ancillary data can be downloaded
 export CSPP_ANC_CACHE_DIR=${CSPP_HOME}/cache
 
+# read-write directory for initial SDR luts and download SDR luts
+export CSPP_SDR_LUTS=${CSPP_ANC_CACHE_DIR}/luts
+
 # static ancillary data including default algorithm settings
 export CSPP_ANC_HOME=${CSPP_HOME}/static
 
@@ -33,6 +36,8 @@ export PATH=${CSPP_HOME}/viirs/sdr:$PATH
 export PATH=${CSPP_HOME}/viirs/edr:$PATH
 export PATH=${CSPP_HOME}/cris/sdr:$PATH
 export PATH=${CSPP_HOME}/atms/sdr:$PATH
+export PATH=${CSPP_HOME}/common:$PATH
+export PATH=${CSPP_HOME}/common/ShellB3/bin:$PATH
 
 
 #
