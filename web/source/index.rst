@@ -3,6 +3,11 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. meta::
+   :description: Weather satellite data reading and processing with python
+   :keywords: Meteosat, SEVIRI, AVHRR, METOP, NOAA, MODIS, VIIRS, NPP, SDR, reader, processing, python, pytroll
+
+
 Welcome to pytroll!
 ===================
 
