@@ -21,6 +21,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """Receiver for 2met messages, through zeromq.
+
+Outputs messages with the following metadata:
+satellite, format, start_time, end_time, filename, uri, type, orbit_number, [instrument, number]
+
 """
 import os
 from datetime import datetime
@@ -285,7 +289,13 @@ def receive_from_zmq(days=1):
                         mr.clean_passes(days)
 
 if __name__ == '__main__':
-    logging.basicConfig(filename='mylog_npp.log',level=logging.DEBUG)
+    import sys
+    try:
+        logfile = sys.argv[1]
+    except IndexError:
+        logfile = "receiver.log"
+    
+    logging.basicConfig(filename=logfile,level=logging.DEBUG)
     logger = logging.getLogger("Receiver")
     try:
         receive_from_zmq(1)
