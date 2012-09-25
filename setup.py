@@ -28,6 +28,6 @@ setup(name="pytroll",
       description='Sandbox for pytroll',
       author='The pytroll team',
       author_email='team@pytroll.org',
-      packages=['posttroll', 'np', 'db'],
+      packages=['np', 'db'],
       zip_safe=False,
       )
