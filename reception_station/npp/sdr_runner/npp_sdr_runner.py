@@ -124,7 +124,7 @@ def run_cspp(viirs_rdr_file):
     #print tup
     t0_clock = time.clock()
     t0_wall = time.time()
-    subprocess.call(["viirs_sdr.sh", viirs_rdr_file])
+    subprocess.call(["viirs_sdr.sh", "-z", viirs_rdr_file])
     print time.clock() - t0_clock, "seconds process time"
     print time.time() - t0_wall, "seconds wall clock time"
 
@@ -176,6 +176,7 @@ def start_npp_sdr_processing(level1_home, mypublisher, message):
                 LOG.error('Failed to fix orbit number in RDR file = ' + str(urlobj.path))
                 import traceback
                 traceback.print_exc(file=sys.stderr)
+
 
             LOG.info("Start CSPP: RDR file = " + str(rdr_filename))
             working_dir = run_cspp(rdr_filename)
@@ -234,20 +235,28 @@ def npp_runner():
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
 
-    #npp_runner()
+    npp_runner()
 
+    """
+    # Testing:
     rdr_home_dir = OPTIONS['level0_home']
     sdr_home_dir = OPTIONS['level1_home']
 
     from glob import glob
     rdrlist = glob('%s/RNSCA-RVIRS_*' % rdr_home_dir)
-    rdr_filename = rdrlist[0]
-    rdr_filename = fix_rdrfile(rdr_filename)
-    wrkdir = run_cspp(rdr_filename)
-    #wrkdir = "/san1/wrk_cspp/tmpujTkcm"
-    result_files = get_sdr_files(wrkdir)
-    tobj = get_datetime_from_filename(rdr_filename)
-    subd = create_subdirname(tobj)
-    pack_sdr_files(result_files, sdr_home_dir, subd)
-    make_okay_files(sdr_home_dir, subd)
-    cleanup_cspp_workdir(wrkdir)
+    #rdr_filename = rdrlist[0]
+    for rdr_filename in rdrlist:
+        try:
+            rdr_filename = fix_rdrfile(rdr_filename)
+        except IOError:
+            import traceback
+            traceback.print_exc()
+
+        wrkdir = run_cspp(rdr_filename)
+        result_files = get_sdr_files(wrkdir)
+        tobj = get_datetime_from_filename(rdr_filename)
+        subd = create_subdirname(tobj)
+        pack_sdr_files(result_files, sdr_home_dir, subd)
+        make_okay_files(sdr_home_dir, subd)
+        cleanup_cspp_workdir(wrkdir)
+    """
