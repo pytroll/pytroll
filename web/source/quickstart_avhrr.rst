@@ -1,3 +1,7 @@
+.. meta::
+   :description: Reading NOAA/METOP AVHRR files with python
+   :keywords: AVHRR, NOAA, METOP, AAPP, HRPT, reader, read, reading, python, pytroll
+
 ======================
  Quickstart with AVHRR
 ======================

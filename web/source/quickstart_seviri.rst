@@ -1,5 +1,10 @@
 .. -*- coding: utf-8 -*-
 
+.. meta::
+   :description: Reading Meteosat SEVIRI HRIT files with python
+   :keywords: Meteosat, SEVIRI, LRIT, HRIT, reader, read, reading, python, pytroll
+
+
 ===========================
  Quickstart with MSG SEVIRI
 ===========================

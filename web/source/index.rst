@@ -5,7 +5,7 @@
 
 .. meta::
    :description: Weather satellite data reading and processing with python
-   :keywords: Meteosat, SEVIRI, AVHRR, METOP, NOAA, MODIS, VIIRS, NPP, SDR, reader, processing, python, pytroll
+   :keywords: Meteosat, SEVIRI, AVHRR, METOP, NOAA, MODIS, TERRA, AQUA, VIIRS, NPP, SDR, AAPP, HRPT, read, reading, reader, process, processing, python, pytroll, weather, satellite, data
 
 
 Welcome to pytroll!

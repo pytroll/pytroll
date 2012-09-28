@@ -1,6 +1,6 @@
 .. meta::
    :description: Reading NPP VIIRS SDR files with python
-   :keywords: VIIRS, NPP, SDR, reader, python, pytroll
+   :keywords: VIIRS, NPP, SDR, reader, read, reading, python, pytroll
 
 ==================
 VIIRS with Pytroll
