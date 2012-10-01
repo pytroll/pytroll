@@ -48,7 +48,15 @@ def run_terra_l0l1(pdsfile):
 
     working_dir = OPTIONS['working_dir']
     # Change working directory:
-    fdwork = os.open(working_dir, os.O_RDONLY)
+    if not os.path.exists(working_dir):
+        try:
+            os.makedirs(working_dir)
+        except OSError:
+            print "Failed creating working directory %s" % working_dir
+            working_dir = '/tmp'
+            print "Will use /tmp"
+
+    fdwork = os.open(working_dir, os.O_RDONLY)        
     os.fchdir(fdwork)
 
     level1b_home = OPTIONS['level1b_home']
@@ -92,7 +100,7 @@ def run_terra_l0l1(pdsfile):
 
     print "Level-1 filename: ",mod01_file
     satellite = "Terra"
-    wrapper_home = SPA_HOME + "/modisl1db/wrapper/l0tol1"
+    wrapper_home = os.path.join(SPA_HOME, "/modisl1db/wrapper/l0tol1")
     cmdstr = ("%s/run modis.pds %s sat %s modis.mxd01 %s modis.mxd03 %s" % 
               (wrapper_home, pdsfile, satellite, mod01_file, mod03_file))
     # Run the command:
@@ -100,12 +108,12 @@ def run_terra_l0l1(pdsfile):
     os.system(cmdstr)
 
     # Now do the level1a-1b processing:
-    lut_home = SPA_HOME + "/modisl1db/algorithm/data/modist/cal"
-    refl_lut = "%s/MOD02_Reflective_LUTs.V6.1.6.0_OC.hdf" % lut_home
-    emiss_lut = "%s/MOD02_Emissive_LUTs.V6.1.6.0_OC.hdf" % lut_home
-    qa_lut = "%s/MOD02_QA_LUTs.V6.1.6.0_OC.hdf" % lut_home
+    lut_home = os.path.join(SPA_HOME, "/modisl1db/algorithm/data/modist/cal")
+    refl_lut = os.path.join(lut_home, "MOD02_Reflective_LUTs.V6.1.6.0_OC.hdf")
+    emiss_lut = os.path.join(lut_home, "MOD02_Emissive_LUTs.V6.1.6.0_OC.hdf")
+    qa_lut = os.path.join(lut_home, "MOD02_QA_LUTs.V6.1.6.0_OC.hdf")
 
-    wrapper_home = SPA_HOME + "/modisl1db/wrapper/l1atob"
+    wrapper_home = os.path.join(SPA_HOME, "/modisl1db/wrapper/l1atob")
     cmdstr = ("%s/run modis.mxd01 %s modis.mxd03 %s modis_reflective_luts %s modis_emissive_luts %s modis_qa_luts %s modis.mxd021km %s modis.mxd02hkm %s modis.mxd02qkm %s" %
               (wrapper_home, mod01_file, mod03_file,
                refl_lut, emiss_lut, qa_lut, mod021km_file, mod02hkm_file, mod02qkm_file))
@@ -143,14 +151,22 @@ def run_aqua_gbad(obs_time):
 
     return att_file, eph_file
 
-
 # ---------------------------------------------------------------------------
 def run_aqua_l0l1(pdsfile):
     """Process Aqua MODIS level 0 PDS data to level 1a/1b"""
     import os
 
+    working_dir = OPTIONS['working_dir']
+    if not os.path.exists(working_dir):
+        try:
+            os.makedirs(working_dir)
+        except OSError:
+            print "Failed creating working directory %s" % working_dir
+            working_dir = '/tmp'
+            print "Will use /tmp"
+
     # Change working directory:
-    fdwork = os.open("/tmp", os.O_RDONLY)
+    fdwork = os.open(working_dir, os.O_RDONLY)
     os.fchdir(fdwork)
 
     #ephemeris_home = OPTIONS['ephemeris_home']
@@ -172,8 +188,8 @@ def run_aqua_l0l1(pdsfile):
     #ephemeris = "%s/P15409571540958154095911343000923001.eph" % ephemeris_home 
     #attitude  = "%s/P15409571540958154095911343000923001.att" % attitude_home
     
-    leapsec_name = "%s/leapsec.dat" % ETC_DIR
-    utcpole_name = "%s/utcpole.dat" % ETC_DIR
+    leapsec_name = os.path.join(ETC_DIR, "leapsec.dat")
+    utcpole_name = os.path.join(ETC_DIR, "utcpole.dat")
     geocheck_threshold = 50 # Hardcoded threshold!
 
 
@@ -189,9 +205,9 @@ def run_aqua_l0l1(pdsfile):
     firstpart = obstime.strftime(geofile_aqua)
     mod03_file = "%s/%s_%s" % (level1b_home, firstpart, lastpart)
 
-    print "Level-1 filename: ",mod01_file        
+    print "Level-1 filename: ", mod01_file        
     satellite = "Aqua"
-    wrapper_home = SPA_HOME + "/modisl1db/wrapper/l0tol1"
+    wrapper_home = os.path.join(SPA_HOME, "modisl1db/wrapper/l0tol1")
     cmdstr = ("%s/run modis.pds %s sat %s modis.mxd01 %s modis.mxd03 %s gbad_eph %s gbad_att %s leapsec %s utcpole %s geocheck_threshold %s" % 
               (wrapper_home, pdsfile, satellite, mod01_file, mod03_file,
                ephemeris, attitude, leapsec_name, utcpole_name, geocheck_threshold))
@@ -200,10 +216,10 @@ def run_aqua_l0l1(pdsfile):
 
 
     # Now do the level1a-1b processing:
-    lut_home = SPA_HOME + "/modisl1db/algorithm/data/modisa/cal"
-    refl_lut = "%s/MYD02_Reflective_LUTs.V6.1.7.1_OCb.hdf" % lut_home
-    emiss_lut = "%s/MYD02_Emissive_LUTs.V6.1.7.1_OCb.hdf" % lut_home
-    qa_lut = "%s/MYD02_QA_LUTs.V6.1.7.1_OCb.hdf" % lut_home
+    lut_home = os.path.join(SPA_HOME, "/modisl1db/algorithm/data/modisa/cal")
+    refl_lut = os.path.join(lut_home, "MYD02_Reflective_LUTs.V6.1.7.1_OCb.hdf")
+    emiss_lut = os.path.join(lut_home, "MYD02_Emissive_LUTs.V6.1.7.1_OCb.hdf")
+    qa_lut = os.path.join(lut_home, "MYD02_QA_LUTs.V6.1.7.1_OCb.hdf")
 
     wrapper_home = SPA_HOME + "/modisl1db/wrapper/l1atob"
     # level1_home
@@ -224,7 +240,7 @@ def run_aqua_l0l1(pdsfile):
     # Close working directory:
     os.close(fdwork)
 
-    return 
+    return mod021km_file
 
 # ---------------------------------------------------------------------------
 def start_modis_lvl1_processing(level1b_home, aqua_files,
@@ -242,9 +258,15 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
     print "Ok... ", urlobj.netloc
     print "Sat and Instrument: ", message.data['satellite'], message.data['instrument']
 
+    to_send = {}
+
+    if 'start_time' in message.data:
+        start_time = message.data['start_time']
+    else:
+        start_time = None
+
     if (message.data['satellite'] == "TERRA" and 
         message.data['instrument'] == 'modis'):
-        start_time = message.data['start_time']
         try:
             orbnum = int(message.data['orbit_number'])            
         except KeyError:
@@ -269,7 +291,6 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
             # Add intelligence to run-function. FIXME!
             # Now publish:
             filename = result_files['level1a_file']
-            to_send = {}
             to_send['uri'] = ('ssh://safe.smhi.se/' +  
                               os.path.join(level1b_home, 
                                                filename))
@@ -280,9 +301,6 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
             to_send['level'] = '1'
             to_send['type'] = 'HDF4'
             to_send['start_time'] = start_time
-            message = Message('/oper/polar/direct_readout/norrkoping',
-                              "file", to_send).encode()
-            mypublisher.send(message)
 
 
     elif (message.data['satellite'] == "AQUA" and 
@@ -296,7 +314,11 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
         if orbnum:
             scene_id = orbnum
         else:
-            scene_id = start_time.strftime('%Y%m%d%H%M')
+            if start_time:
+                scene_id = start_time.strftime('%Y%m%d%H%M')
+            else:
+                print "No start time!!!"
+                return aqua_files
 
         path, fname =  os.path.split(urlobj.path)
         if ((fname.find(modisfile_aqua_prfx) == 0 or 
@@ -321,12 +343,13 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
                   str(aqua_files[scene_id]))
             aquanames = [ os.path.basename(s) for s in aqua_files[scene_id] ]
 
+            lvl1filename = None
             if (aquanames[0].find(modisfile_aqua_prfx) == 0 and 
                 aquanames[1].find(packetfile_aqua_prfx) == 0):
                 # Do processing:
                 print "Level-0 to lvl1 processing on aqua start! Scene = %r" % scene_id
                 print "File = ", aqua_files[scene_id][0]
-                run_aqua_l0l1(aqua_files[scene_id][0])
+                lvl1filename = run_aqua_l0l1(aqua_files[scene_id][0])
                 # Clean register: aqua_files dict
                 aqua_files[scene_id] = []
             elif (aquanames[1].find(modisfile_aqua_prfx) == 0 and 
@@ -334,11 +357,33 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
                 # Do processing:
                 print "Level-0 to lvl1 processing on aqua start! Scene = %r" % scene_id
                 print "File = ", aqua_files[scene_id][1]
-                run_aqua_l0l1(aqua_files[scene_id][1])
+                lvl1filename = run_aqua_l0l1(aqua_files[scene_id][1])
                 # Clean register: aqua_files dict
                 aqua_files[scene_id] = []
             else:
                 print "Should not come here...???"
+
+            # Now publish:
+            filename = lvl1filename
+            to_send = {}
+            to_send['uri'] = ('ssh://safe.smhi.se/' +  
+                              os.path.join(level1b_home, 
+                                           filename))
+            to_send['filename'] = filename
+            to_send['instrument'] = 'modis'
+            to_send['satellite'] = 'AQUA'
+            to_send['format'] = 'EOS'
+            to_send['level'] = '1'
+            to_send['type'] = 'HDF4'
+            to_send['start_time'] = start_time
+
+    else:
+        return aqua_files
+
+
+    message = Message('/oper/polar/direct_readout/norrkoping',
+                      "file", to_send).encode()
+    mypublisher.send(message)
 
     return aqua_files
 
