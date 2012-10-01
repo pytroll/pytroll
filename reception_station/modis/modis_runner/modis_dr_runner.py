@@ -100,7 +100,7 @@ def run_terra_l0l1(pdsfile):
 
     print "Level-1 filename: ",mod01_file
     satellite = "Terra"
-    wrapper_home = os.path.join(SPA_HOME, "/modisl1db/wrapper/l0tol1")
+    wrapper_home = os.path.join(SPA_HOME, "modisl1db/wrapper/l0tol1")
     cmdstr = ("%s/run modis.pds %s sat %s modis.mxd01 %s modis.mxd03 %s" % 
               (wrapper_home, pdsfile, satellite, mod01_file, mod03_file))
     # Run the command:
@@ -108,12 +108,12 @@ def run_terra_l0l1(pdsfile):
     os.system(cmdstr)
 
     # Now do the level1a-1b processing:
-    lut_home = os.path.join(SPA_HOME, "/modisl1db/algorithm/data/modist/cal")
+    lut_home = os.path.join(SPA_HOME, "modisl1db/algorithm/data/modist/cal")
     refl_lut = os.path.join(lut_home, "MOD02_Reflective_LUTs.V6.1.6.0_OC.hdf")
     emiss_lut = os.path.join(lut_home, "MOD02_Emissive_LUTs.V6.1.6.0_OC.hdf")
     qa_lut = os.path.join(lut_home, "MOD02_QA_LUTs.V6.1.6.0_OC.hdf")
 
-    wrapper_home = os.path.join(SPA_HOME, "/modisl1db/wrapper/l1atob")
+    wrapper_home = os.path.join(SPA_HOME, "modisl1db/wrapper/l1atob")
     cmdstr = ("%s/run modis.mxd01 %s modis.mxd03 %s modis_reflective_luts %s modis_emissive_luts %s modis_qa_luts %s modis.mxd021km %s modis.mxd02hkm %s modis.mxd02qkm %s" %
               (wrapper_home, mod01_file, mod03_file,
                refl_lut, emiss_lut, qa_lut, mod021km_file, mod02hkm_file, mod02qkm_file))
@@ -216,7 +216,7 @@ def run_aqua_l0l1(pdsfile):
 
 
     # Now do the level1a-1b processing:
-    lut_home = os.path.join(SPA_HOME, "/modisl1db/algorithm/data/modisa/cal")
+    lut_home = os.path.join(SPA_HOME, "modisl1db/algorithm/data/modisa/cal")
     refl_lut = os.path.join(lut_home, "MYD02_Reflective_LUTs.V6.1.7.1_OCb.hdf")
     emiss_lut = os.path.join(lut_home, "MYD02_Emissive_LUTs.V6.1.7.1_OCb.hdf")
     qa_lut = os.path.join(lut_home, "MYD02_QA_LUTs.V6.1.7.1_OCb.hdf")
