@@ -249,6 +249,7 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
             orbnum = int(message.data['orbit_number'])            
         except KeyError:
             orbnum = None
+
         path, fname =  os.path.split(urlobj.path)
         if fname.find(modisfile_terra_prfx) == 0 and fname.endswith('001.PDS'):
             # Check if the file exists:
@@ -287,7 +288,16 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
     elif (message.data['satellite'] == "AQUA" and 
           (message.data['instrument'] == 'modis' or 
            message.data['instrument'] == '0957')):
-        orbnum = int(message.data['orbit_number'])
+        try:
+            orbnum = int(message.data['orbit_number'])            
+        except KeyError:
+            orbnum = None
+
+        if orbnum:
+            scene_id = orbnum
+        else:
+            scene_id = start_time.strftime('%Y%m%d%H%M')
+
         path, fname =  os.path.split(urlobj.path)
         if ((fname.find(modisfile_aqua_prfx) == 0 or 
              fname.find(packetfile_aqua_prfx) == 0) and 
@@ -298,35 +308,35 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
                               "but is not there! File = " + 
                               urlobj.path)
 
-            if not orbnum in aqua_files:
-                aqua_files[orbnum] = []
-            if len(aqua_files[orbnum]) == 0:
-                aqua_files[orbnum] = [urlobj.path]
+            if not scene_id in aqua_files:
+                aqua_files[scene_id] = []
+            if len(aqua_files[scene_id]) == 0:
+                aqua_files[scene_id] = [urlobj.path]
             else:
-                if not urlobj.path in aqua_files[orbnum]:
-                    aqua_files[orbnum].append(urlobj.path)
+                if not urlobj.path in aqua_files[scene_id]:
+                    aqua_files[scene_id].append(urlobj.path)
 
-        if orbnum in aqua_files and len(aqua_files[orbnum]) == 2:
-            print("aqua files with orbit %d :" % orbnum + 
-                  str(aqua_files[orbnum]))
-            aquanames = [ os.path.basename(s) for s in aqua_files[orbnum] ]
+        if scene_id in aqua_files and len(aqua_files[scene_id]) == 2:
+            print("aqua files with scene-id = %r :" % scene_id + 
+                  str(aqua_files[scene_id]))
+            aquanames = [ os.path.basename(s) for s in aqua_files[scene_id] ]
 
             if (aquanames[0].find(modisfile_aqua_prfx) == 0 and 
                 aquanames[1].find(packetfile_aqua_prfx) == 0):
                 # Do processing:
-                print "Level-0 to lvl1 processing on aqua start! Orb = %d" % orbnum
-                print "File = ", aqua_files[orbnum][0]
-                run_aqua_l0l1(aqua_files[orbnum][0])
+                print "Level-0 to lvl1 processing on aqua start! Scene = %r" % scene_id
+                print "File = ", aqua_files[scene_id][0]
+                run_aqua_l0l1(aqua_files[scene_id][0])
                 # Clean register: aqua_files dict
-                aqua_files[orbnum] = []
+                aqua_files[scene_id] = []
             elif (aquanames[1].find(modisfile_aqua_prfx) == 0 and 
                   aquanames[0].find(packetfile_aqua_prfx) == 0):
                 # Do processing:
-                print "Level-0 to lvl1 processing on aqua start! Orb = %d" % orbnum
-                print "File = ", aqua_files[orbnum][1]
-                run_aqua_l0l1(aqua_files[orbnum][1])
+                print "Level-0 to lvl1 processing on aqua start! Scene = %r" % scene_id
+                print "File = ", aqua_files[scene_id][1]
+                run_aqua_l0l1(aqua_files[scene_id][1])
                 # Clean register: aqua_files dict
-                aqua_files[orbnum] = []
+                aqua_files[scene_id] = []
             else:
                 print "Should not come here...???"
 
