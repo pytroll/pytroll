@@ -238,7 +238,7 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
     urlobj = urlparse(message.data['uri'])
     print "Server = ", urlobj.netloc
     if urlobj.netloc != servername:
-        continue
+        return aqua_files
     print "Ok... ", urlobj.netloc
     print "Sat and Instrument: ", message.data['satellite'], message.data['instrument']
 
