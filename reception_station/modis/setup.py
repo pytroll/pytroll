@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 long_description = """
 Small package with scripts to process Direct Readout MODIS from PDS level 0 to
@@ -18,7 +18,6 @@ setup(name='modis_lvl1_proc',
       long_description=long_description,
       license='GPLv3',
       version='0.1',
-      #packages = find_packages(),
       scripts = ['modis_dr_runner.sh', 'modis_runner/modis_dr_runner.py'],
       packages=['modis_runner'],
       

@@ -235,106 +235,107 @@ def modis_runner():
     with posttroll.subscriber.Subscribe('PDS') as subscr:
         with Publish('modis_dr_runner', 'EOS 1', 
                      LEVEL1_PUBLISH_PORT) as publisher:        
-        aqua_files = {}
-        for msg in subscr.recv():
-            print ""
-            print "Aqua files: ", aqua_files
-            print "\tMessage:"
-            print msg
-            urlobj = urlparse(msg.data['uri'])
-            print "Server = ", urlobj.netloc
-            if urlobj.netloc != servername:
-                continue
-            print "Ok... ", urlobj.netloc
-            print "Sat and Instrument: ", msg.data['satellite'], msg.data['instrument']
+            aqua_files = {}
+            for msg in subscr.recv():
+                print ""
+                print "Aqua files: ", aqua_files
+                print "\tMessage:"
+                print msg
+                urlobj = urlparse(msg.data['uri'])
+                print "Server = ", urlobj.netloc
+                if urlobj.netloc != servername:
+                    continue
+                print "Ok... ", urlobj.netloc
+                print "Sat and Instrument: ", msg.data['satellite'], msg.data['instrument']
 
-            if (msg.data['satellite'] == "TERRA" and 
-                msg.data['instrument'] == 'modis'):
-                start_time = msg.data['start_time']
-                try:
-                    orbnum = int(msg.data['orbit number'])            
-                except KeyError:
-                    orbnum = None
-                path, fname =  os.path.split(urlobj.path)
-                if fname.find(modisfile_terra_prfx) == 0 and fname.endswith('001.PDS'):
-                    # Check if the file exists:
-                    if not os.path.exists(urlobj.path):
-                        raise IOError("File is reported to be dispatched " + 
-                                      "but is not there! File = " + 
-                                      urlobj.path)
+                if (msg.data['satellite'] == "TERRA" and 
+                    msg.data['instrument'] == 'modis'):
+                    start_time = msg.data['start_time']
+                    try:
+                        orbnum = int(msg.data['orbit number'])            
+                    except KeyError:
+                        orbnum = None
+                    path, fname =  os.path.split(urlobj.path)
+                    if fname.find(modisfile_terra_prfx) == 0 and fname.endswith('001.PDS'):
+                        # Check if the file exists:
+                        if not os.path.exists(urlobj.path):
+                            raise IOError("File is reported to be dispatched " + 
+                                          "but is not there! File = " + 
+                                          urlobj.path)
 
-                    # Do processing:
-                    print("Level-0 to lvl1 processing on terra start!" + 
-                          " Start time = ", start_time)
-                    if orbnum:
-                        print "Orb = %d" % orbnum
-                    print "File = ", urlobj.path
-                    result_files = run_terra_l0l1(urlobj.path)
-                    # Assume everything has gone well! 
-                    # Add intelligence to run-function. FIXME!
-                    # Now publish:
-                    filename = result_files['level1a_file']
-                    to_send = {}
-                    to_send['uri'] = ('ssh://safe.smhi.se/' +  
-                                      os.path.join(level1b_home, 
-                                                   filename))
-                    to_send['filename'] = filename
-                    to_send['instrument'] = 'modis'
-                    to_send['satellite'] = 'TERRA'
-                    to_send['format'] = 'EOS'
-                    to_send['level'] = '1'
-                    to_send['type'] = 'HDF4'
-                    to_send['start_time'] = start_time
-                    msg = Message('/oper/polar/direct_readout/norrkoping',
-                                  "file", to_send).encode()
-                    publisher.send(msg)
-
-
-            elif (msg.data['satellite'] == "AQUA" and 
-                  (msg.data['instrument'] == 'modis' or 
-                   msg.data['instrument'] == '0957')):
-                orbnum = int(msg.data['orbit number'])
-                path, fname =  os.path.split(urlobj.path)
-                if ((fname.find(modisfile_aqua_prfx) == 0 or 
-                     fname.find(packetfile_aqua_prfx) == 0) and 
-                    fname.endswith('001.PDS')):
-                    # Check if the file exists:
-                    if not os.path.exists(urlobj.path):
-                        raise IOError("File is reported to be dispatched " + 
-                                      "but is not there! File = " + 
-                                      urlobj.path)
-
-                    if not orbnum in aqua_files:
-                        aqua_files[orbnum] = []
-                    if len(aqua_files[orbnum]) == 0:
-                        aqua_files[orbnum] = [urlobj.path]
-                    else:
-                        if not urlobj.path in aqua_files[orbnum]:
-                            aqua_files[orbnum].append(urlobj.path)
-
-                if orbnum in aqua_files and len(aqua_files[orbnum]) == 2:
-                    print("aqua files with orbit %d :" % orbnum + 
-                          str(aqua_files[orbnum]))
-                    aquanames = [ os.path.basename(s) for s in aqua_files[orbnum] ]
-
-                    if (aquanames[0].find(modisfile_aqua_prfx) == 0 and 
-                        aquanames[1].find(packetfile_aqua_prfx) == 0):
                         # Do processing:
-                        print "Level-0 to lvl1 processing on aqua start! Orb = %d" % orbnum
-                        print "File = ", aqua_files[orbnum][0]
-                        run_aqua_l0l1(aqua_files[orbnum][0])
-                        # Clean register: aqua_files dict
-                        aqua_files[orbnum] = []
-                    elif (aquanames[1].find(modisfile_aqua_prfx) == 0 and 
-                          aquanames[0].find(packetfile_aqua_prfx) == 0):
-                        # Do processing:
-                        print "Level-0 to lvl1 processing on aqua start! Orb = %d" % orbnum
-                        print "File = ", aqua_files[orbnum][1]
-                        run_aqua_l0l1(aqua_files[orbnum][1])
-                        # Clean register: aqua_files dict
-                        aqua_files[orbnum] = []
-                    else:
-                        print "Should not come here...???"
+                        print("Level-0 to lvl1 processing on terra start!" + 
+                              " Start time = ", start_time)
+                        if orbnum:
+                            print "Orb = %d" % orbnum
+                        print "File = ", urlobj.path
+                        result_files = run_terra_l0l1(urlobj.path)
+                        # Assume everything has gone well! 
+                        # Add intelligence to run-function. FIXME!
+                        # Now publish:
+                        filename = result_files['level1a_file']
+                        to_send = {}
+                        to_send['uri'] = ('ssh://safe.smhi.se/' +  
+                                          os.path.join(level1b_home, 
+                                                       filename))
+                        to_send['filename'] = filename
+                        to_send['instrument'] = 'modis'
+                        to_send['satellite'] = 'TERRA'
+                        to_send['format'] = 'EOS'
+                        to_send['level'] = '1'
+                        to_send['type'] = 'HDF4'
+                        to_send['start_time'] = start_time
+                        msg = Message('/oper/polar/direct_readout/norrkoping',
+                                      "file", to_send).encode()
+                        publisher.send(msg)
+
+
+                elif (msg.data['satellite'] == "AQUA" and 
+                      (msg.data['instrument'] == 'modis' or 
+                       msg.data['instrument'] == '0957')):
+                    orbnum = int(msg.data['orbit number'])
+                    path, fname =  os.path.split(urlobj.path)
+                    if ((fname.find(modisfile_aqua_prfx) == 0 or 
+                         fname.find(packetfile_aqua_prfx) == 0) and 
+                        fname.endswith('001.PDS')):
+                        # Check if the file exists:
+                        if not os.path.exists(urlobj.path):
+                            raise IOError("File is reported to be dispatched " + 
+                                          "but is not there! File = " + 
+                                          urlobj.path)
+
+                        if not orbnum in aqua_files:
+                            aqua_files[orbnum] = []
+                        if len(aqua_files[orbnum]) == 0:
+                            aqua_files[orbnum] = [urlobj.path]
+                        else:
+                            if not urlobj.path in aqua_files[orbnum]:
+                                aqua_files[orbnum].append(urlobj.path)
+
+
+                    if orbnum in aqua_files and len(aqua_files[orbnum]) == 2:
+                        print("aqua files with orbit %d :" % orbnum + 
+                              str(aqua_files[orbnum]))
+                        aquanames = [ os.path.basename(s) for s in aqua_files[orbnum] ]
+
+                        if (aquanames[0].find(modisfile_aqua_prfx) == 0 and 
+                            aquanames[1].find(packetfile_aqua_prfx) == 0):
+                            # Do processing:
+                            print "Level-0 to lvl1 processing on aqua start! Orb = %d" % orbnum
+                            print "File = ", aqua_files[orbnum][0]
+                            run_aqua_l0l1(aqua_files[orbnum][0])
+                            # Clean register: aqua_files dict
+                            aqua_files[orbnum] = []
+                        elif (aquanames[1].find(modisfile_aqua_prfx) == 0 and 
+                              aquanames[0].find(packetfile_aqua_prfx) == 0):
+                            # Do processing:
+                            print "Level-0 to lvl1 processing on aqua start! Orb = %d" % orbnum
+                            print "File = ", aqua_files[orbnum][1]
+                            run_aqua_l0l1(aqua_files[orbnum][1])
+                            # Clean register: aqua_files dict
+                            aqua_files[orbnum] = []
+                        else:
+                            print "Should not come here...???"
 
 
 # ---------------------------------------------------------------------------
