@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2011 SMHI
+# Copyright (c) 2011, 2012 SMHI
 
 # Author(s):
 
@@ -28,7 +28,13 @@ from posttroll.message import Message
 class TimeoutException(BaseException):
     pass
 
+import warnings
+
 def get_address(data_type, timeout=2):
+
+    warnings.warn("nameclient.get_address shouldn't be used, " +
+                  "use posttroll.subscriber.get_address instead...",
+                  DeprecationWarning)
 
     context = zmq.Context()
 

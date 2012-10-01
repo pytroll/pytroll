@@ -140,11 +140,13 @@ class MessageReceiver(object):
             pname = pass_name(risetime, satellite)
             swath = self._received_passes.get(pname, {"satellite": satellite,
                                                       "start_time": risetime})
-            swath["type"] = "HRPT 0"
+            swath["type"] = "binary"
             if satellite == "FENGYUN_1D":
                 swath["format"] = "CHRPT"
             else:
-                swath["format"] = "16-bit HRPT Minor Frame"
+                swath["format"] = "HRPT"
+            swath["level"] = "0"
+            
 
         elif filename.startswith("P042") or filename.startswith("P154"):
             pds = {}
@@ -186,7 +188,8 @@ class MessageReceiver(object):
             swath["instrument"] = instruments.get(pds["apid1"][3:],
                                                   pds["apid1"][3:])
             swath["format"] = "PDS"
-            swath["type"] = "EOS 0"
+            swath["type"] = "binary"
+            swath["level"] = "0"
             swath["number"] = int(pds["ufn"])
 
         elif filename.startswith("R") and filename.endswith(".h5"):
@@ -208,8 +211,9 @@ class MessageReceiver(object):
                                                       "start_time": risetime})
 
             swath["instrument"] = mda["instrument"]
-            swath["format"] = "HDF5"
-            swath["type"] = "RDR"
+            swath["format"] = "RDR"
+            swath["type"] = "HDF5"
+            swath["level"] = "0"
 
         else:
             return
@@ -265,7 +269,7 @@ def receive_from_zmq(days=1):
     sys.stdout.flush()
 
     with Publish("receiver", "HRPT 0", 9000) as hrpt_pub:
-        with Publish("receiver", "EOS 0", 9001) as pds_pub:
+        with Publish("receiver", "PDS", 9001) as pds_pub:
             with Publish("receiver", "RDR", 9002) as npp_pub:
                 for rawmsg in socket.recv():
                     # TODO:
@@ -279,11 +283,11 @@ def receive_from_zmq(days=1):
                     msg = Message('/oper/polar/direct_readout/norrköping', "file",
                                   to_send).encode()
                     logger.debug("publishing " + str(msg))
-                    if to_send["type"] == "HRPT 0":
+                    if to_send["format"] == "HRPT":
                         hrpt_pub.send(msg)
-                    if to_send["type"] == "EOS 0":
+                    if to_send["format"] == "PDS":
                         pds_pub.send(msg)
-                    if to_send["type"] == "RDR":
+                    if to_send["format"] == "RDR":
                         npp_pub.send(msg)
                     if days:
                         mr.clean_passes(days)

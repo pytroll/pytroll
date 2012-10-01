@@ -329,20 +329,21 @@ class ReceiverTester(unittest.TestCase):
         # "filename": "20120112111932_NOAA_19.hmf", "type": "HRPT 0"}
 
         keys = set(["satellite", "format", "start_time", "end_time", "filename",
-                    "uri", "type", "orbit_number"])
+                    "uri", "type", "orbit_number", "level"])
 
         
         for line in lines:
             data = Message(rawstr=line).data
             self.assertEqual(keys, set(data.keys()))
             self.assertEqual(data["satellite"], "NOAA 19")
-            self.assertEqual(data["format"], "16-bit HRPT Minor Frame")
+            self.assertEqual(data["type"], "binary")
             self.assertEqual(data["start_time"],
                              datetime(2012, 1, 12, 11, 19, 32))
             self.assertEqual(data["end_time"],
                              datetime(2012, 1, 12, 11, 35, 20))
             self.assertEqual(data["filename"], "20120112111932_NOAA_19.hmf")
-            self.assertEqual(data["type"], "HRPT 0")
+            self.assertEqual(data["format"], "HRPT")
+            self.assertEqual(data["level"], "0")
             self.assertEqual(data["orbit_number"], 15090)
 
             
@@ -355,14 +356,14 @@ class ReceiverTester(unittest.TestCase):
         receive_from_zmq(None)
 
         keys = set(["satellite", "format", "start_time", "end_time", "filename",
-                    "instrument", "uri", "type", "orbit_number"])
+                    "instrument", "uri", "type", "orbit_number", "level"])
 
         
         for line in lines:
             data = Message(rawstr=line).data
             self.assertEqual(keys, set(data.keys()))
             self.assertEqual(data["satellite"], "NPP")
-            self.assertEqual(data["format"], "HDF5")
+            self.assertEqual(data["type"], "HDF5")
             self.assertEqual(data["start_time"],
                              datetime(2012, 7, 5, 7, 6, 48))
             self.assertEqual(data["end_time"],
@@ -371,7 +372,8 @@ class ReceiverTester(unittest.TestCase):
                             ["RNSCA-RVIRS_npp_d20120705_t0706492_e0716204_b00001_c20120705071952092000_nfts_drl.h5",
                              'RCRIS-RNSCA_npp_d20120705_t0706508_e0716230_b00001_c20120705071952132000_nfts_drl.h5',
                              'RATMS-RNSCA_npp_d20120705_t0706500_e0715388_b00001_c20120705071952147000_nfts_drl.h5'])
-            self.assertEqual(data["type"], "RDR")
+            self.assertEqual(data["format"], "RDR")
+            self.assertEqual(data["level"], "0")
             self.assertEqual(data["orbit_number"], 3560)
 
 
@@ -384,7 +386,7 @@ class ReceiverTester(unittest.TestCase):
         receive_from_zmq(None)
 
         keys = set(["satellite", "format", "start_time", "end_time", "filename",
-                    "instrument", "uri", "type", "orbit_number", "number"])
+                    "instrument", "uri", "type", "orbit_number", "number", "level"])
 
         
         for line in lines:
@@ -405,7 +407,8 @@ class ReceiverTester(unittest.TestCase):
                              "P0420064AAAAAAAAAAAAAA12023215743001.PDS",
                              "P0420064AAAAAAAAAAAAAA12023215743000.PDS",
                              "P0420064AAAAAAAAAAAAAA12023215743000.PDS"])
-            self.assertEqual(data["type"], "EOS 0")
+            self.assertEqual(data["type"], "binary")
+            self.assertEqual(data["level"], "0")
             self.assertEqual(data["orbit_number"], 64360)
 
     def test_aqua(self):
@@ -417,7 +420,7 @@ class ReceiverTester(unittest.TestCase):
         receive_from_zmq(None)
 
         keys = set(["satellite", "format", "start_time", "end_time", "filename",
-                    "instrument", "uri", "type", "orbit_number", "number"])
+                    "instrument", "uri", "type", "orbit_number", "number", "level"])
 
         
         for line in lines:
@@ -568,7 +571,8 @@ class ReceiverTester(unittest.TestCase):
                                 "P1540157AAAAAAAAAAAAAA12024002139000.PDS",
                                 "P1540157AAAAAAAAAAAAAA12024002139000.PDS",
                                 ])
-            self.assertEqual(data["type"], "EOS 0")
+            self.assertEqual(data["type"], "binary")
+            self.assertEqual(data["level"], "0")
             self.assertEqual(data["orbit_number"], 51722)
             
 
