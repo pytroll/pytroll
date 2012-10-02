@@ -387,19 +387,19 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
                 LOG.info('Clean the internal aqua_files register')
                 aqua_files = {}
 
-            # Now publish:
-            to_send['uri'] = ('ssh://safe.smhi.se/' +  
-                              os.path.join(level1b_home, 
-                                           lvl1filename))
-            if orbnum:
-                to_send['orbit_number'] = orbnum
-            to_send['filename'] = lvl1filename
-            to_send['instrument'] = 'modis'
-            to_send['satellite'] = 'AQUA'
-            to_send['format'] = 'EOS'
-            to_send['level'] = '1'
-            to_send['type'] = 'HDF4'
-            to_send['start_time'] = start_time
+                # Now publish:
+                to_send['uri'] = ('ssh://safe.smhi.se/' +  
+                                  os.path.join(level1b_home, 
+                                               lvl1filename))
+                if orbnum:
+                    to_send['orbit_number'] = orbnum
+                to_send['filename'] = lvl1filename
+                to_send['instrument'] = 'modis'
+                to_send['satellite'] = 'AQUA'
+                to_send['format'] = 'EOS'
+                to_send['level'] = '1'
+                to_send['type'] = 'HDF4'
+                to_send['start_time'] = start_time
 
     else:
         return aqua_files
