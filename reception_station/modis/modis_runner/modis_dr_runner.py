@@ -338,6 +338,7 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
     elif (message.data['satellite'] == "AQUA" and 
           (message.data['instrument'] == 'modis' or 
            message.data['instrument'] == 'gbad')):
+        try:
             orbnum = int(message.data['orbit_number'])            
         except KeyError:
             orbnum = None
