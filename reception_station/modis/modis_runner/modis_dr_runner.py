@@ -28,6 +28,34 @@ for option, value in CONF.items(MODE, raw = True):
  
 from datetime import datetime
 
+import logging
+LOG = logging.getLogger('modis-lvl1-processing')
+
+
+#: Default time format
+_DEFAULT_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+
+#: Default log format
+_DEFAULT_LOG_FORMAT = '[%(levelname)s: %(asctime)s : %(name)s] %(message)s'
+
+import sys
+_MODIS_LVL1PROC_LOG_FILE = os.environ.get('MODIS_LVL1PROC_LOG_FILE', None)
+
+
+if _MODIS_LVL1PROC_LOG_FILE:
+    handler = logging.FileHandler(_MODIS_LVL1PROC_LOG_FILE)
+else:
+    handler = logging.StreamHandler(sys.stderr)
+
+formatter = logging.Formatter(fmt=_DEFAULT_LOG_FORMAT,
+                              datefmt=_DEFAULT_TIME_FORMAT)
+handler.setFormatter(formatter)
+
+handler.setLevel(10)
+LOG.setLevel(10)
+LOG.addHandler(handler)
+
+
 
 LEVEL1_PUBLISH_PORT = 9010
 
@@ -52,9 +80,9 @@ def run_terra_l0l1(pdsfile):
         try:
             os.makedirs(working_dir)
         except OSError:
-            print "Failed creating working directory %s" % working_dir
+            LOG.error("Failed creating working directory %s" % working_dir)
             working_dir = '/tmp'
-            print "Will use /tmp"
+            LOG.info("Will use /tmp")
 
     fdwork = os.open(working_dir, os.O_RDONLY)        
     os.fchdir(fdwork)
@@ -91,14 +119,14 @@ def run_terra_l0l1(pdsfile):
     firstpart = obstime.strftime(level1a_terra)
     mod01files = glob.glob("%s/%s*hdf" % (level1b_home, firstpart))
     if len(mod01files) > 0:
-        print("Level 1 file already exists: %s" % mod01files[0])
+        LOG.warning("Level 1 file already exists: %s" % mod01files[0])
         return retv
         
     mod01_file = "%s/%s_%s" % (level1b_home, firstpart, lastpart)
     firstpart = obstime.strftime(geofile_terra)
     mod03_file = "%s/%s_%s" % (level1b_home, firstpart, lastpart)
 
-    print "Level-1 filename: ",mod01_file
+    LOG.info("Level-1 filename: " + str(mod01_file))
     satellite = "Terra"
     wrapper_home = os.path.join(SPA_HOME, "modisl1db/wrapper/l0tol1")
     cmdstr = ("%s/run modis.pds %s sat %s modis.mxd01 %s modis.mxd03 %s" % 
@@ -140,12 +168,12 @@ def run_aqua_gbad(obs_time):
     att_file = os.path.join(att_dir, att_file)
     eph_file = os.path.basename(packetfile).split('.PDS')[0] + '.eph'
     eph_file = os.path.join(eph_dir, eph_file)
-    print "eph-file = ",eph_file
+    LOG.info("eph-file = " + eph_file)
 
     wrapper_home = SPA_HOME + "/gbad/wrapper/gbad"
     cmdstr = ("%s/run aqua.gbad.pds %s aqua.gbad_att %s aqua.gbad_eph %s configurationfile %s" %
               (wrapper_home, packetfile, att_file, eph_file, spa_config_file))
-    print "Command: ", cmdstr
+    LOG.info("Command: " + cmdstr)
     # Run the command:
     os.system(cmdstr)
 
@@ -161,9 +189,9 @@ def run_aqua_l0l1(pdsfile):
         try:
             os.makedirs(working_dir)
         except OSError:
-            print "Failed creating working directory %s" % working_dir
+            LOG.error("Failed creating working directory %s" % working_dir)
             working_dir = '/tmp'
-            print "Will use /tmp"
+            LOG.info("Will use /tmp")
 
     # Change working directory:
     fdwork = os.open(working_dir, os.O_RDONLY)
@@ -198,14 +226,14 @@ def run_aqua_l0l1(pdsfile):
     firstpart = obstime.strftime(level1a_aqua)
     mod01files = glob.glob("%s/%s*hdf" % (level1b_home, firstpart))
     if len(mod01files) > 0:
-        print("Level 1 file already exists: %s" % mod01files[0])
+        LOG.warning("Level 1 file already exists: %s" % mod01files[0])
         return
         
     mod01_file = "%s/%s_%s" % (level1b_home, firstpart, lastpart)
     firstpart = obstime.strftime(geofile_aqua)
     mod03_file = "%s/%s_%s" % (level1b_home, firstpart, lastpart)
 
-    print "Level-1 filename: ", mod01_file        
+    LOG.warning( "Level-1 filename: ", mod01_file        
     satellite = "Aqua"
     wrapper_home = os.path.join(SPA_HOME, "modisl1db/wrapper/l0tol1")
     cmdstr = ("%s/run modis.pds %s sat %s modis.mxd01 %s modis.mxd03 %s gbad_eph %s gbad_att %s leapsec %s utcpole %s geocheck_threshold %s" % 
@@ -247,23 +275,24 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
                                 mypublisher, message):
     """From a posttroll message start the modis lvl1 processing"""
 
-    print ""
-    print "Aqua files: ", aqua_files
-    print "\tMessage:"
-    print message
+    LOG.info("")
+    LOG.info("Aqua files: " + str(aqua_files))
+    LOG.info("\tMessage:")
+    LOG.info(message)
     urlobj = urlparse(message.data['uri'])
-    print "Server = ", urlobj.netloc
+    LOG.info("Server = " + str(urlobj.netloc))
     if urlobj.netloc != servername:
         return aqua_files
-    print "Ok... ", urlobj.netloc
-    print "Sat and Instrument: ", message.data['satellite'], message.data['instrument']
+    LOG.info("Ok... " + str(urlobj.netloc))
+    LOG.info("Sat and Instrument: " + str(message.data['satellite']) + " " 
+             + str(message.data['instrument']))
 
     to_send = {}
 
     if 'start_time' in message.data:
         start_time = message.data['start_time']
     else:
-        print "ERROR: No start time in message!"
+        LOG.warning("No start time in message!")
         start_time = None
 
     if (message.data['satellite'] == "TERRA" and 
@@ -282,11 +311,11 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
                               urlobj.path)
 
             # Do processing:
-            print("Level-0 to lvl1 processing on terra start!" + 
-                  " Start time = ", start_time)
+            LOG.info("Level-0 to lvl1 processing on terra start!" + 
+                     " Start time = " + str(start_time))
             if orbnum:
-                print "Orb = %d" % orbnum
-            print "File = ", urlobj.path
+                LOG.info("Orb = %d" % orbnum)
+            LOG.info("File = " + str(urlobj.path))
             result_files = run_terra_l0l1(urlobj.path)
             # Assume everything has gone well! 
             # Add intelligence to run-function. FIXME!
@@ -295,6 +324,8 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
             to_send['uri'] = ('ssh://safe.smhi.se/' +  
                               os.path.join(level1b_home, 
                                                filename))
+            if orbnum:
+                to_send['orbit_number'] = orbnum
             to_send['filename'] = filename
             to_send['instrument'] = 'modis'
             to_send['satellite'] = 'TERRA'
@@ -312,14 +343,11 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
         except KeyError:
             orbnum = None
 
-        if orbnum:
-            scene_id = orbnum
+        if start_time:
+            scene_id = start_time.strftime('%Y%m%d%H%M')
         else:
-            if start_time:
-                scene_id = start_time.strftime('%Y%m%d%H%M')
-            else:
-                print "No start time!!!"
-                return aqua_files
+            LOG.warning("No start time!!!")
+            return aqua_files
 
         path, fname =  os.path.split(urlobj.path)
         if ((fname.find(modisfile_aqua_prfx) == 0 or 
@@ -340,35 +368,29 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
                     aqua_files[scene_id].append(urlobj.path)
 
         if scene_id in aqua_files and len(aqua_files[scene_id]) == 2:
-            print("aqua files with scene-id = %r :" % scene_id + 
-                  str(aqua_files[scene_id]))
+            LOG.info("aqua files with scene-id = %r :" % scene_id + 
+                     str(aqua_files[scene_id]))
             aquanames = [ os.path.basename(s) for s in aqua_files[scene_id] ]
 
             lvl1filename = None
-            if (aquanames[0].find(modisfile_aqua_prfx) == 0 and 
-                aquanames[1].find(packetfile_aqua_prfx) == 0):
+            if ((aquanames[0].find(modisfile_aqua_prfx) == 0 and 
+                 aquanames[1].find(packetfile_aqua_prfx) == 0) or 
+                (aquanames[1].find(modisfile_aqua_prfx) == 0 and 
+                 aquanames[0].find(packetfile_aqua_prfx) == 0)):
                 # Do processing:
-                print "Level-0 to lvl1 processing on aqua start! Scene = %r" % scene_id
-                print "File = ", aqua_files[scene_id][0]
+                LOG.info("Level-0 to lvl1 processing on aqua start! Scene = %r" % scene_id)
+                LOG.info("File = " + str(aqua_files[scene_id][0]))
                 lvl1filename = run_aqua_l0l1(aqua_files[scene_id][0])
                 # Clean register: aqua_files dict
-                aqua_files[scene_id] = []
-            elif (aquanames[1].find(modisfile_aqua_prfx) == 0 and 
-                  aquanames[0].find(packetfile_aqua_prfx) == 0):
-                # Do processing:
-                print "Level-0 to lvl1 processing on aqua start! Scene = %r" % scene_id
-                print "File = ", aqua_files[scene_id][1]
-                lvl1filename = run_aqua_l0l1(aqua_files[scene_id][1])
-                # Clean register: aqua_files dict
-                aqua_files[scene_id] = []
-            else:
-                print "Should not come here...???"
+                aqua_files = {}
 
             # Now publish:
             filename = lvl1filename
             to_send['uri'] = ('ssh://safe.smhi.se/' +  
                               os.path.join(level1b_home, 
                                            filename))
+            if orbnum:
+                to_send['orbit_number'] = orbnum
             to_send['filename'] = filename
             to_send['instrument'] = 'modis'
             to_send['satellite'] = 'AQUA'
