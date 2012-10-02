@@ -249,7 +249,7 @@ def run_aqua_l0l1(pdsfile):
     emiss_lut = os.path.join(lut_home, "MYD02_Emissive_LUTs.V6.1.7.1_OCb.hdf")
     qa_lut = os.path.join(lut_home, "MYD02_QA_LUTs.V6.1.7.1_OCb.hdf")
 
-    wrapper_home = SPA_HOME + "/modisl1db/wrapper/l1atob"
+    wrapper_home = os.path.join(SPA_HOME, "modisl1db/wrapper/l1atob")
     # level1_home
     proctime = datetime.now()
     lastpart = proctime.strftime("%Y%j%H%M%S.hdf")
@@ -337,8 +337,7 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
 
     elif (message.data['satellite'] == "AQUA" and 
           (message.data['instrument'] == 'modis' or 
-           message.data['instrument'] == '0957')):
-        try:
+           message.data['instrument'] == 'gbad')):
             orbnum = int(message.data['orbit_number'])            
         except KeyError:
             orbnum = None
@@ -370,7 +369,9 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
         if scene_id in aqua_files and len(aqua_files[scene_id]) == 2:
             LOG.info("aqua files with scene-id = %r :" % scene_id + 
                      str(aqua_files[scene_id]))
+            
             aquanames = [ os.path.basename(s) for s in aqua_files[scene_id] ]
+            LOG.info('aquanames: ' + str(aquanames))
 
             lvl1filename = None
             if ((aquanames[0].find(modisfile_aqua_prfx) == 0 and 
@@ -382,16 +383,16 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
                 LOG.info("File = " + str(aqua_files[scene_id][0]))
                 lvl1filename = run_aqua_l0l1(aqua_files[scene_id][0])
                 # Clean register: aqua_files dict
+                LOG.info('Clean the internal aqua_files register')
                 aqua_files = {}
 
             # Now publish:
-            filename = lvl1filename
             to_send['uri'] = ('ssh://safe.smhi.se/' +  
                               os.path.join(level1b_home, 
-                                           filename))
+                                           lvl1filename))
             if orbnum:
                 to_send['orbit_number'] = orbnum
-            to_send['filename'] = filename
+            to_send['filename'] = lvl1filename
             to_send['instrument'] = 'modis'
             to_send['satellite'] = 'AQUA'
             to_send['format'] = 'EOS'
