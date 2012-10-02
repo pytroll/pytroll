@@ -263,6 +263,7 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
     if 'start_time' in message.data:
         start_time = message.data['start_time']
     else:
+        print "ERROR: No start time in message!"
         start_time = None
 
     if (message.data['satellite'] == "TERRA" and 
@@ -365,7 +366,6 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
 
             # Now publish:
             filename = lvl1filename
-            to_send = {}
             to_send['uri'] = ('ssh://safe.smhi.se/' +  
                               os.path.join(level1b_home, 
                                            filename))
@@ -402,8 +402,10 @@ def modis_runner():
                                                         aquafiles,
                                                         publisher, msg)
 
-    return
 
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     modis_runner()
+
+    #aqua_modis_file = '/san1/polar_in/direct_readout/modis/P1540064AAAAAAAAAAAAAA12276040157001.PDS'
+    #lvl1filename = run_aqua_l0l1(aqua_modis_file)
