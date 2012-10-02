@@ -233,7 +233,7 @@ def run_aqua_l0l1(pdsfile):
     firstpart = obstime.strftime(geofile_aqua)
     mod03_file = "%s/%s_%s" % (level1b_home, firstpart, lastpart)
 
-    LOG.warning( "Level-1 filename: ", mod01_file        
+    LOG.warning("Level-1 filename: " + str(mod01_file))
     satellite = "Aqua"
     wrapper_home = os.path.join(SPA_HOME, "modisl1db/wrapper/l0tol1")
     cmdstr = ("%s/run modis.pds %s sat %s modis.mxd01 %s modis.mxd03 %s gbad_eph %s gbad_att %s leapsec %s utcpole %s geocheck_threshold %s" % 
