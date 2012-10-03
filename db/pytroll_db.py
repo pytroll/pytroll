@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2010-2011.
+# Copyright (c) 2010-2012.
 
 # Author(s):
 
@@ -487,7 +487,7 @@ class DCManager(object):
 
     def get_file_format(self, file_format_name):
         return self._session.query(FileFormat).\
-               filter(FileFormat.file_format_name7 == file_format_name).one()
+               filter(FileFormat.file_format_name == file_format_name).one()
 
     def get_parameter(self, parameter_name):
         return self._session.query(Parameter).\
@@ -510,9 +510,10 @@ class DCManager(object):
             filter(File.creation_time > oldest_creation_time).\
             filter(File.creation_time < newest_creation_time).all() 
 
-    def get_within_area_of_interest(self, boundingbox, file_type_name = None):
-        """Get all files within area of interest.
-        E.g.: boundingbox = 'POLYGON ((1.7  54.8, 28.7 54.9, 34.8 71.2, 2.3 71.7, 1.7  54.8))'
+    def get_within_area_of_interest(self, boundingbox, file_type_name=None, distance=0):
+        """Get all files within *distance* of area of interest.
+        E.g.: boundingbox = [(1.7, 54.8), (28.7, 54.9), (34.8, 71.2), (2.3, 71.7)]'
+        distance in km.
         """
 
         #retv = self._session.query(ParameterLinestring).\
@@ -527,9 +528,18 @@ class DCManager(object):
         #retv = self._session.query(File).from_statement(
         #    "select f.* from file f, parameter_linestring pl where ST_Distance(pl.data_value, ST_GeomFromText(:bbox)) < 1.").\
         #    params(bbox=boundingbox).all()
-        retv = self._session.query(File).from_statement(
-            "select * from (select filename, ST_Distance(data_value, 'POLYGON ((1.7  54.8, 28.7 54.9, 34.8 71.2, 2.3 71.7, 1.7  54.8))':: geography)/1000. as dist from parameter_linestring) dlist where dlist.dist < 1000").all()
+        #retv = self._session.query(File).from_statement(
+        #    "select * from (select filename, ST_Distance(data_value, 'POLYGON ((1.7  54.8, 28.7 54.9, 34.8 71.2, 2.3 71.7, 1.7  54.8))':: geography)/1000. as dist from parameter_linestring) dlist where dlist.dist < 1000").all()
 
+        polypoints = boundingbox + [boundingbox[0]]
+
+        poly = "POLYGON ((" + ", ".join(str(item[0]) + " " + str(item[1])
+                                        for item in polypoints) + "))"
+        
+        retv = self._session.query(File).from_statement(
+            "select * from (select filename, ST_Distance(data_value, '" +
+            poly + "':: geography)/1000. as dist from parameter_linestring) " +
+            "dlist where dlist.dist <= " + str(distance)).all()
 
         return retv
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2010-2011.
+# Copyright (c) 2010-2012.
 
 # Author(s):
  
@@ -27,8 +27,20 @@ from posttroll.subscriber import Subscribe
 from posttroll.publisher import Publish
 from posttroll.message import Message
 
+import logging
+from logger import PytrollFormatter, PytrollHandler
+
+logger = logging.getLogger("hrpt2")
+logger.setLevel(logging.DEBUG)
+
 try:
     with Publish("l2prod", "HRPT 2", 9003) as pub:
+        ch = PytrollHandler(pub)
+        ch.setLevel(logging.DEBUG)
+        formatter = PytrollFormatter("/oper/polar/gds")
+        ch.setFormatter(formatter)
+        # add ch to logger
+        logger.addHandler(ch)
         with Subscribe("HRPT 1b") as sub1:
             for msg in sub1.recv():
                 
@@ -36,6 +48,9 @@ try:
                 ##if data["type"] != "HRPT 1b":
                 ##    continue
 
+                logger.error("hej")
+
+                
                 print "Consumer got", msg
                 if msg is not None and msg.type == "file":
                     data = msg.data

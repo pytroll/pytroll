@@ -1,5 +1,10 @@
 .. -*- coding: utf-8 -*-
 
+.. meta::
+   :description: Reading Meteosat SEVIRI HRIT files with python
+   :keywords: Meteosat, SEVIRI, LRIT, HRIT, reader, read, reading, python, pytroll
+
+
 ===========================
  Quickstart with MSG SEVIRI
 ===========================
@@ -12,6 +17,11 @@ Software to uncompress HRIT can be obtained from EUMETSAT (register and download
 For this tutorial template config files (see :doc:`install`) can be used. These are located in the *etc* dir of the mpop_ source. Copy *mpop.cfg.template*, *areas.def.template* and *meteosat09.cfg.template* to another dir and remove the *.template* extension. In the config file *meteosat09.cfg* locate the section :attr:`severi-level1` and modify the defined :attr:`dir` to point to the dir of your uncompressed HRIT data. 
 
 Set PPP_CONFIG_DIR to the directory containing your modified mpop_ config files.
+
+.. tip:: Using wildcards in the *meteosat09.cfg* file allows mpop to adapt to
+   any changes on the operation satellite for the 0 degree service (for exemple
+   in case of satellite switch, for maintenance or when the successor satellite
+   comes in).
 
 First example: Loading data
 ===========================
@@ -124,8 +134,8 @@ and add as many :attr:`| global_data.image.mymethod.prerequisites` as needed.
 
 A description of the available builtin composites for SEVIRI and VISIR derived sensors can be seen using::
 
-    >>> from mpop.instruments.visir import VisirScene
-    >>> help(VisirScene)
+    >>> from mpop.instruments.visir import VisirCompositer
+    >>> help(VisirCompositer)
 
 The builtin composites are recommendations from the `MSG Interpretation Guide`_
 

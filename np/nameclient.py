@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2011 SMHI
+# Copyright (c) 2011, 2012 SMHI
 
 # Author(s):
 
@@ -24,11 +24,17 @@
 """
 
 import zmq
-
+from posttroll.message import Message
 class TimeoutException(BaseException):
     pass
 
+import warnings
+
 def get_address(data_type, timeout=2):
+
+    warnings.warn("nameclient.get_address shouldn't be used, " +
+                  "use posttroll.subscriber.get_address instead...",
+                  DeprecationWarning)
 
     context = zmq.Context()
 
@@ -37,7 +43,9 @@ def get_address(data_type, timeout=2):
     try:
         socket.connect("tcp://localhost:5555")
 
-        socket.send (data_type)
+        msg = Message("/oper/ns", "request", {"type": data_type})
+        socket.send(str(msg))
+
 
         # Get the reply.
         poller = zmq.Poller()
@@ -45,8 +53,8 @@ def get_address(data_type, timeout=2):
         s = poller.poll(timeout=timeout * 1000)
         if s:
             if s[0][0] == socket:
-                m = socket.recv(zmq.NOBLOCK)
-                return m
+                m = Message.decode(socket.recv(zmq.NOBLOCK))
+                return m.data
             else:
                 raise RuntimeError("Unknown socket ?!?!?")
         else:
