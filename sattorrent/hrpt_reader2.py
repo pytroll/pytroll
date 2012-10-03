@@ -141,7 +141,9 @@ def read_file(filename):
                       ('aux_sync', '<u2', (100, ))])
 
     arr = np.fromfile(filename, dtype=dtype)
-    arr = arr.newbyteorder()
+    if not np.allclose(np.array((644, 367, 860, 413, 527, 149)),
+                       arr["frame_sync"]):
+        arr = arr.newbyteorder()
     return arr
 
 

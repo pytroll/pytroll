@@ -36,9 +36,13 @@ try:
 except OSError:
     pass
 
-start_time = datetime.strptime(sys.argv[1], "%Y%m%d%H%M%S")
+try:
+    start_time = datetime.strptime(sys.argv[1], "%Y%m%d%H%M%S")
+    if start_time > datetime.utcnow():
+        time.sleep((start_time - datetime.utcnow()).seconds)
+except IndexError:
+    pass
 
-time.sleep((start_time - datetime.utcnow()).seconds)
 
 with open(FILENAME, "rb") as fpr:
     with open("/tmp/hrpt/20120130134606_NOAA_18.temp", "wb") as fpw:

@@ -1,5 +1,10 @@
 .. -*- coding: utf-8 -*-
 
+.. meta::
+   :description: Reading Meteosat SEVIRI HRIT files with python
+   :keywords: Meteosat, SEVIRI, LRIT, HRIT, reader, read, reading, python, pytroll
+
+
 ===========================
  Quickstart with MSG SEVIRI
 ===========================
@@ -129,8 +134,8 @@ and add as many :attr:`| global_data.image.mymethod.prerequisites` as needed.
 
 A description of the available builtin composites for SEVIRI and VISIR derived sensors can be seen using::
 
-    >>> from mpop.instruments.visir import VisirScene
-    >>> help(VisirScene)
+    >>> from mpop.instruments.visir import VisirCompositer
+    >>> help(VisirCompositer)
 
 The builtin composites are recommendations from the `MSG Interpretation Guide`_
 
