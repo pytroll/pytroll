@@ -26,8 +26,11 @@ def get_sdr_files(sdr_dir):
     # VIIRS I-bands + geolocation:
     iband_files = (glob(os.path.join(sdr_dir, 'SVI??_npp_*.h5')) + 
                    glob(os.path.join(sdr_dir, 'GI??O_npp_*.h5')))
+    # VIIRS DNB band + geolocation:
+    dnb_files = (glob(os.path.join(sdr_dir, 'SVDNB_npp_*.h5')) + 
+                 glob(os.path.join(sdr_dir, 'GDNBO_npp_*.h5')))
 
-    return sorted(mband_files) + sorted(iband_files)
+    return sorted(mband_files) + sorted(iband_files) + sorted(dnb_files)
 
 def create_subdirname(obstime, with_seconds=False):
     """Generate the pps subdirectory name from the start observation time, ex.:
