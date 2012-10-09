@@ -254,6 +254,52 @@ class Client(HaveBuffer):
 
 
 
+    def get_all(self, satellites):
+        """Retrieve all the available scanlines from the stream, and save them.
+        """
+        sat_last_seen = {}
+        sat_lines = {}
+        for sat in satellites:
+            sat_lines[sat] = {}
+        queue = Queue()
+        self.add_queue(queue)
+        while True:
+            try:
+                sat, utctime, senders = queue.get(True,
+                                                  CLIENT_TIMEOUT.seconds)
+                if sat not in satellites:
+                    continue
+                sat_last_seen[sat] = datetime.utcnow()
+                logger.debug("Picking line " + " ".join([str(utctime),
+                                                     str(senders)]))
+                # choose the highest elevation
+                sender, elevation = max(senders, key=(lambda x: x[1]))
+                logger.debug("requesting " +
+                             " ".join([str(sat), str(utctime),
+                                       str(sender), str(elevation)]))
+                host = sender.split(":")[0]
+                # TODO: this should be parallelized, and timed. I case of
+                # failure, another source should be used. Choking ?
+                line = self._requesters[host].get_line(sat, utctime)
+                sat_lines[sat][utctime] = line
+            except Empty:
+                pass
+            for sat, utctime in sat_last_seen.items():
+                if utctime + CLIENT_TIMEOUT < datetime.utcnow():
+                    # write the lines to file
+                    logger.info(sat + " seems to be inactive now, writing file.")
+                    first_time = min(sat_lines[sat].keys())
+                    filename = first_time.isoformat() + sat + ".hmf"
+                    with open(filename, "wb") as fp_:
+                        for linetime in sorted(sat_lines[sat].keys()):
+                            fp_.write(sat_lines[sat][linetime])
+                    
+                    del sat_last_seen[sat]
+            
+            
+
+        
+
     def order(self, time_slice, satellite, filename):
         """Get all the scanlines for a *satellite* within a *time_slice* and
         save them in *filename*. The scanlines will be saved in a contiguous
