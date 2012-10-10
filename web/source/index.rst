@@ -21,8 +21,8 @@ The provided python packages are designed to be used both in R&D environments
 and in 24/7 operational production.
 
 .. note::
-   A Pytroll workshop will be held in Norrköping, Sweden in
-   November, 2012. Please send a message on the pytroll mailing list
+   A Pytroll workshop will be held in Norrköping, Sweden, week 48, end
+   of November, 2012. Please send a message on the pytroll mailing list
    (pytroll@googlegroups.com) if you are interested.
 
 The available python packages at the moment are:
