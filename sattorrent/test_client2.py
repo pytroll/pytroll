@@ -60,6 +60,6 @@ if __name__ == '__main__':
     client = Client(sys.argv[1])
     client.start()
     try:
-        client.get_all(["NOAA 18"])
+        client.get_all(["NOAA 19", "NOAA 18", "NOAA 16", "NOAA 15"])
     finally:
         client.stop()
