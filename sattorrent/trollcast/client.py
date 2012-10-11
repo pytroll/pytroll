@@ -34,14 +34,14 @@ from Queue import Queue, Empty
 from datetime import timedelta, datetime
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("client")
 
 # TODO: what if a scanline never arrives ? do we wait for it forever ?
 
 # FIXME: this should be configurable depending on the type of data.
 LINES_PER_SECOND = 6
 LINE_SIZE = 11090 * 2
-CLIENT_TIMEOUT = timedelta(seconds=30)
+CLIENT_TIMEOUT = timedelta(seconds=5)
 
 BUFFER_TIME = 2.0
 
@@ -160,6 +160,8 @@ class HaveBuffer(Thread):
         self._sub = create_subscriber(cfgfile)
         self.scanlines = {}
         self._queues = []
+        self._requesters = []
+        self._timers = {}
 
     def add_queue(self, queue):
         """Adds a queue to dispatch have messages to
@@ -174,7 +176,11 @@ class HaveBuffer(Thread):
     def send_to_queues(self, sat, utctime):
         """Send scanline at *utctime* to queues.
         """
-
+        try:
+            self._timers[(sat, utctime)].cancel()
+            del self._timers[(sat, utctime)]
+        except KeyError:
+            pass
         for queue in self._queues:
             queue.put_nowait((sat, utctime, self.scanlines[sat][utctime]))
         
@@ -199,13 +205,21 @@ class HaveBuffer(Thread):
                     # sending to queue. In the case were the "have" messages of
                     # all servers were sent in less time, we should not be
                     # waiting...
-                    Timer(BUFFER_TIME,
-                          self.send_to_queues,
-                          args=[sat, utctime]).start()
+                    if len(self._requesters) == 1:
+                        self.send_to_queues(sat, utctime)
+                    else:
+                        timer = Timer(BUFFER_TIME,
+                                      self.send_to_queues,
+                                      args=[sat, utctime])
+                        timer.start()
+                        self._timers[(sat, utctime)] = timer
                 else:
                     # Since append is atomic in CPython, this should work.
                     # However, if it is not, then this is not thread safe.
                     self.scanlines[sat][utctime].append((sender, elevation))
+                    if (len(self.scanlines[sat][utctime]) ==
+                        len(self._requesters)):
+                        self.send_to_queues(sat, utctime)
                 
     def stop(self):
         self._sub.stop()
@@ -293,7 +307,8 @@ class Client(HaveBuffer):
                     with open(filename, "wb") as fp_:
                         for linetime in sorted(sat_lines[sat].keys()):
                             fp_.write(sat_lines[sat][linetime])
-                    
+
+                    sat_lines[sat] = {}
                     del sat_last_seen[sat]
             
             
@@ -443,3 +458,58 @@ class Client(HaveBuffer):
         for req in self._requesters.values():
             req.stop()
 
+if __name__ == '__main__':
+    import argparse
+    LOG = logging.getLogger("")
+    LOG.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+
+    class MyFormatter(logging.Formatter):
+        converter = datetime.fromtimestamp
+        
+        def formatTime(self, record, datefmt=None):
+            ct = self.converter(record.created)
+            if datefmt:
+                s = ct.strftime(datefmt)
+            else:
+                t = ct.strftime("%Y-%m-%d %H:%M:%S")
+                s = "%s.%03d" % (t, record.msecs)
+            return s
+
+
+    formatter = MyFormatter('[ %(levelname)s %(name)s %(asctime)s] %(message)s')
+    ch.setFormatter(formatter)
+    LOG.addHandler(ch)
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-t", "--times", nargs=2, help="Start and end times, <YYYYMMDDHHMMSS>")
+    parser.add_argument("-o", "--output", help="Output file (used only in conjuction with -t)")
+    parser.add_argument("-f" ,"--config_file", required=True, help="eg. sattorrent_local.cfg")
+    parser.add_argument("satellite", nargs="+", help="eg. noaa_18")
+    args = parser.parse_args()
+    times = args.times
+
+    client = Client(args.config_file)
+    client.start()
+
+    try:
+        if times:
+            start_time = datetime.strptime(times[0], "%Y%m%d%H%M%S")
+            end_time = datetime.strptime(times[1], "%Y%m%d%H%M%S")
+            
+            time_slice = slice(start_time, end_time)
+            satellite = " ".join(args.satellite[0].split("_")).upper()
+            client.order(time_slice, satellite, args.output)
+        else:
+            satellites = [" ".join(sat.split("_")).upper() for sat in args.satellite]
+            
+            client.get_all(satellites)
+    except KeyboardInterrupt:
+        print "Thanks for using pytroll/trollcast. See you soon on www.pytroll.org!"
+
+    finally:
+        client.stop()
+
+    
+    
