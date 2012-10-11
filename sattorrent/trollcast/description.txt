@@ -1,6 +1,6 @@
-=========================================
- Sattorrent: Trollcasting at its best :)
-=========================================
+=============================
+ Trollcasting at its best :)
+=============================
 
 Server serve it's file(s) all the time. As soon at new scanlines come in,
 publish 'have' messages.
@@ -17,9 +17,12 @@ Status
 
 server.py is functional. However, it lacks support for multiple files and
 choking.
+On file moving out, wipe out old stuff.
 
-client.py is functional. Lack buffured listening to account for agregating
-several sources.
+
+client.py is functional. Future features:
+ - automatic lag/timeout computation based on previous data exchange
+ - automatic computation of satellite reception time based on an observer point or an area of interest.
 
 Protocol
 ========
@@ -30,3 +33,35 @@ scanlines : get the times of the available scanlines for a given satellite::
 
   scanlines NOAA18
   scanline NOAA18 time_start time_end
+
+How does it work?
+=================
+
+Installation
+============
+
+No installation is needed...
+
+Configuration
+=============
+
+[local_reception]
+localhost=c13246
+remotehosts=safe
+data=hrpt
+data_dir=/tmp/hrpt
+file_pattern=*.temp
+tle_dir=/bla/bla
+max_connections=2
+station=norrköping
+coordinates=16.148649 58.581844 0.052765
+
+[safe]
+hostname=safe.smhi.se
+pubport=9333
+reqport=9332
+
+[c13246]
+hostname=c13246
+pubport=9333
+reqport=9332

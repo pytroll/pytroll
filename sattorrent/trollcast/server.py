@@ -36,19 +36,34 @@ TODO:
 """
 from __future__ import with_statement 
 
-from pyinotify import (ProcessEvent, Notifier, WatchManager,
-                       IN_OPEN, IN_MODIFY, IN_CREATE, IN_CLOSE_WRITE)
-from ConfigParser import ConfigParser
-from zmq import Context, Poller, PUB, REP, POLLIN, NOBLOCK
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+from ConfigParser import ConfigParser, NoOptionError
+from zmq import Context, Poller, LINGER, PUB, REP, REQ, POLLIN, NOBLOCK
 from posttroll.message import Message
 from posttroll import strp_isoformat
-from threading import Thread
+from posttroll.subscriber import Subscriber
+from pyorbital.orbital import Orbital
+import time
+from fnmatch import fnmatch
+
+from urlparse import urlparse, urlunparse
+from threading import Thread, Lock
 import numpy as np
 import os
 from datetime import datetime, timedelta
 from random import uniform
+from glob import glob
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("trollcast/server")
+logger.setLevel(logging.DEBUG)
+
 
 LINE_SIZE = 11090 * 2
+
+CACHE_SIZE = 32
 
 def timecode(tc_array):
     word = tc_array[0]
@@ -63,15 +78,10 @@ def timecode(tc_array):
     # FIXME : should return current year !
     return timedelta(days=int(day/2 - 1), milliseconds=int(msecs))
 
-class FileStreamer(ProcessEvent):
-    
-    def __init__(self, holder, configfile, *args, **kwargs):
-        ProcessEvent.__init__(self, *args, **kwargs)
-        self._file = None
-        self._filename = ""
-        self._where = 0
-        self._satellite = ""
+class Holder(object):
 
+    def __init__(self, configfile):
+        self._holder = {}
         cfg = ConfigParser()
         cfg.read(configfile)
         host = cfg.get("local_reception", "localhost")
@@ -84,32 +94,136 @@ class FileStreamer(ProcessEvent):
         self._context = Context()
         self._socket = self._context.socket(PUB)
         self._socket.bind("tcp://*:" + port)
-        self.scanlines = holder
-
-    def get(self, *args, **kwargs):
-        return self.scanlines.get(*args, **kwargs)
-
-    def __getitem__(self, *args, **kwargs):
-        return self.scanlines.__getitem__(*args, **kwargs)
-
+        self._lock = Lock()
+        self._cache = []
+        
+        
     def __del__(self, *args, **kwargs):
         self._socket.close()
 
-    def process_IN_CREATE(self, event):
-        print "Creating:", event.pathname
+    def get(self, *args, **kwargs):
+        return self._holder.get(*args, **kwargs)
 
-    def process_IN_OPEN(self, event):
-        if self._file is None and event.pathname.endswith(".temp"):
-            print "Opening:", event.pathname
-            self._filename = event.pathname
-            self._file = open(event.pathname, "rb")
+    def __getitem__(self, *args, **kwargs):
+        return self._holder.__getitem__(*args, **kwargs)
+    
+    def send_have(self, satellite, utctime, elevation):
+        """Sends 'have' message for *satellite*, *utctime*, *elevation*.
+        """
+        to_send = {}
+        to_send["satellite"] = satellite
+        to_send["timecode"] = utctime.isoformat()
+        to_send["elevation"] = elevation
+        to_send["origin"] = self._addr
+        msg = Message('/oper/polar/direct_readout/' + self._station, "have",
+                      to_send).encode()
+        self._socket.send(msg)
+
+    def get_scanline(self, satellite, utctime):
+        info = self._holder[satellite][utctime]
+        if len(info) == 4:
+            return info[3]
+        else:
+            url = urlparse(self._holder[satellite][utctime][1])
+            with open(url.path, "rb") as fp_:
+                fp_.seek(self._holder[satellite][utctime][0])
+                return fp_.read(LINE_SIZE)
+
+
+        
+    def add_scanline(self, satellite, utctime, elevation, line_start, filename, line=None):
+        """Adds the scanline to the server. Typically used by the client to
+        signal newly received lines.
+        """
+        self._lock.acquire()
+        try:
+            if(satellite not in self._holder or
+               utctime not in self._holder[satellite]):
+                if line:
+                    self._holder.setdefault(satellite,
+                                            {})[utctime] = (line_start,
+                                                            filename,
+                                                            elevation,
+                                                            line)
+                    self._cache.append((satellite, utctime))
+                    while len(self._cache) > CACHE_SIZE:
+                        sat, deltime = self._cache[0]
+                        del self._cache[0]
+                        self._holder[sat][deltime] = \
+                                                self._holder[sat][deltime][:3]
+                        
+                else:
+                    self._holder.setdefault(satellite,
+                                            {})[utctime] = (line_start,
+                                                            filename,
+                                                            elevation)
+                self.send_have(satellite, utctime, elevation)
+        finally:
+            self._lock.release()
+        
+
+class FileStreamer(FileSystemEventHandler):
+    """Get the updates from files.
+
+    TODO: separate holder from file handling.
+    """
+    def __init__(self, holder, configfile, *args, **kwargs):
+        FileSystemEventHandler.__init__(self, *args, **kwargs)
+        self._file = None
+        self._filename = ""
+        self._where = 0
+        self._satellite = ""
+        self._orbital = None
+        cfg = ConfigParser()
+        cfg.read(configfile)
+        self._coords = cfg.get("local_reception", "coordinates").split(" ")
+        self._coords = [float(self._coords[0]),
+                        float(self._coords[1]),
+                        float(self._coords[2])]
+        logger.debug(self._coords)
+        try:
+            self._tle_files = cfg.get("local_reception", "tle_files")
+        except NoOptionError:
+            self._tle_files = None
+
+        self._file_pattern = cfg.get("local_reception", "file_pattern")
+        
+        self.scanlines = holder
+
+    def on_created(self, event):
+        if event.src_path != self._filename:
+            logger.debug("Closing: " + self._filename)
+            if self._file:
+                self._file.close()
+            self._file = None
+            self._filename = ""
             self._where = 0
-            self._satellite = "".join(event.pathname.split("_")[1:3])[:-5]
+            self._satellite = ""
+        logger.debug("Creating: " + event.src_path)
 
-    def process_IN_MODIFY(self, event):
-        self.process_IN_OPEN(event)
 
-        if event.pathname != self._filename:
+    def on_opened(self, event):
+        fname = os.path.split(event.src_path)[1]
+        if self._file is None and fnmatch(fname, self._file_pattern):
+            logger.debug("Opening: " + event.src_path)
+            self._filename = event.src_path
+            self._file = open(event.src_path, "rb")
+            self._where = 0
+            self._satellite = " ".join(event.src_path.split("_")[1:3])[:-5]
+
+            if self._tle_files is not None:
+                filelist = glob(self._tle_files)
+                tle_file = max(filelist, key=lambda x: os.stat(x).st_mtime)
+            else:
+                tle_file = None
+
+            self._orbital = Orbital(self._satellite, tle_file)
+            
+
+    def on_modified(self, event):
+        self.on_opened(event)
+
+        if event.src_path != self._filename:
             return
             
         self._file.seek(self._where)
@@ -135,57 +249,74 @@ class FileStreamer(ProcessEvent):
 
 
             array = np.fromstring(line, dtype=dtype)
-            if all(abs(np.array((644, 367, 860, 413, 527, 149)) - 
-                       array["frame_sync"]) > 1):
+            if np.all(abs(np.array((644, 367, 860, 413, 527, 149)) - 
+                          array["frame_sync"]) > 1):
                 array = array.newbyteorder()
-            year = int(os.path.split(event.pathname)[1][:4])
+            year = int(os.path.split(event.src_path)[1][:4])
             utctime = datetime(year, 1, 1) + timecode(array["timecode"][0])
-            print "Got line", utctime, self._satellite
 
-            # FIXME: get real elevation
-            elevation = uniform(5, 90)
+            # Check that we receive real-time data
+            # if ((abs(utctime - datetime.utcnow())).days > 0 or
+            #     (abs(utctime - datetime.utcnow())).seconds > 1000):
+            #     logger.info("Garbage line: " + str(utctime))
+            #     line = self._file.read(LINE_SIZE)
+            #     continue
+
+
+            elevation = self._orbital.get_observer_look(utctime, *self._coords)[1]
+            logger.info("Got line " + utctime.isoformat() + " "
+                        + self._satellite + " "
+                        + str(elevation))
+
+
+            
             # TODO:
             # - serve also already present files
-            self.add_scanline(self._satellite, utctime,
-                              elevation, line_start, self._filename)
+            # - timeout and close the file
+            self.scanlines.add_scanline(self._satellite, utctime,
+                                        elevation, line_start, self._filename,
+                                        line)
 
             line = self._file.read(LINE_SIZE)
 
         self._file.seek(self._where)        
 
-    def process_IN_CLOSE_WRITE(self, event):
-        if event.pathname == self._filename:
-            print "Closing:", event.pathname
-            self._file.close()
-            self._file = None
-            self._filename = ""
-            self._where = 0
-            self._satellite = ""
+class MirrorStreamer(Thread):
+    """Act as a relay...
+    """
 
-    def send_have(self, satellite, utctime, elevation):
-        """Sends 'have' message for *satellite*, *utctime*, *elevation*.
+    def __init__(self, holder, configfile):
+        Thread.__init__(self)
+        
+        self.scanlines = holder
+        
+        cfg = ConfigParser()
+        cfg.read(configfile)
+        host = cfg.get("local_reception", "mirror")
+        hostname = cfg.get(host, "hostname")
+        port = cfg.get(host, "pubport")
+        rport = cfg.get(host, "reqport")
+        address = "tcp://" + hostname + ":" + port
+        self._sub = Subscriber([address], "hrpt 0")
+        self._reqaddr = "tcp://" + hostname + ":" + rport
+
+    def run(self):
+
+        for message in self._sub.recv(1):
+            if message is None:
+                continue
+            if(message.type == "have"):
+                logger.debug("Relaying " + str(message.data["timecode"]))
+                self.scanlines.add_scanline(message.data["satellite"],
+                                            strp_isoformat(message.data["timecode"]),
+                                            message.data["elevation"],
+                                            None,
+                                            self._reqaddr)
+    def stop(self):
+        """Stop streaming.
         """
-        to_send = {}
-        to_send["satellite"] = satellite
-        to_send["timecode"] = utctime.isoformat()
-        to_send["elevation"] = elevation
-        to_send["origin"] = self._addr
-        msg = Message('/oper/polar/direct_readout/' + self._station, "have",
-                      to_send).encode()
-        self._socket.send(msg)
-
-    def add_scanline(self, satellite, utctime, elevation, line_start, filename):
-        """Adds the scanline to the server. Typically used by the client to
-        signal newly received lines.
-        """
-        if(satellite not in self.scanlines or
-           utctime not in self.scanlines[satellite]):
-            self.scanlines.setdefault(satellite,
-                                      {})[utctime] = (line_start,
-                                                      filename,
-                                                      elevation)
-            self.send_have(satellite, utctime, elevation)
-
+        self._sub.stop()
+        
 class Looper(object):
 
     def __init__(self):
@@ -230,10 +361,31 @@ class Responder(SocketLooperThread):
         cfg = ConfigParser()
         cfg.read(configfile)
         self._station = cfg.get("local_reception", "station")
-        
+
+        self.mirrors = {}
+
+
     def __del__(self, *args, **kwargs):
         self._socket.close()
+        for mirror in self.mirrors.values():
+            mirror.close()
+            
         
+    def forward_request(self, address, message):
+        """Forward a request to another server.
+        """
+        if address not in self.mirrors:
+            context = Context()
+            socket = context.socket(REQ)
+            socket.setsockopt(LINGER, 1)
+            socket.connect(address)
+            self.mirrors[address] = socket
+        else:
+            socket = self.mirrors[address]
+        socket.send(str(message))
+        return socket.recv()
+
+
     def run(self):
         poller = Poller()
         poller.register(self._socket, POLLIN)
@@ -245,18 +397,14 @@ class Responder(SocketLooperThread):
                 
                 # send list of scanlines
                 if(message.type == "request" and
-                   message.data.startswith("scanlines")):
-                    elts = message.data.split(" ")
-                    sat = elts[1]
-                    if len(elts) > 2:
-                        start_time = strp_isoformat(elts[2])
-                    else:
-                        start_time = datetime(1950, 1, 1)
-                    if len(elts) > 3:
-                        end_time = strp_isoformat(elts[3])
-                    else:
-                        end_time = datetime(19500, 1, 1)
-                    print self._holder.get(sat, [])
+                   message.data["type"] == "scanlines"):
+                    sat = message.data["satellite"]
+                    epoch = "1950-01-01T00:00:00"
+                    start_time = strp_isoformat(message.data.get("start_time",
+                                                                 epoch))
+                    end_time = strp_isoformat(message.data.get("end_time",
+                                                               epoch))
+
                     resp = Message('/oper/polar/direct_readout/' + self._station,
                                    "scanlines",
                                    [(utctime.isoformat(),
@@ -268,26 +416,32 @@ class Responder(SocketLooperThread):
 
                 # send one scanline
                 elif(message.type == "request" and
-                     message.data.startswith("scanline")):
-                    sat = message.data.split(" ")[1]
-                    utctime = strp_isoformat(message.data.split(" ")[2])
-                    with open(self._holder[sat][utctime][1], "rb") as fp_:
-                        fp_.seek(self._holder[sat][utctime][0])
+                     message.data["type"] == "scanline"):
+                    sat = message.data["satellite"]
+                    utctime = strp_isoformat(message.data["utctime"])
+                    url = urlparse(self._holder[sat][utctime][1])
+                    if url.scheme in ["", "file"]: # data is locally stored.
                         resp = Message('/oper/polar/direct_readout/'
                                        + self._station,
                                        "scanline",
-                                       fp_.read(LINE_SIZE),
+                                       self._holder.get_scanline(sat, utctime),
                                        binary=True)
+                    else: # it's the address of a remote server.
+                        resp = self.forward_request(urlunparse(url),
+                                                    message)
                     self._socket.send(str(resp))
 
                 # take in a new scanline
                 elif(message.type == "notice" and
-                     message.data.startswith("scanline")):
-                    sat, utctime, elevation, filename, line_start = \
-                         message.data.split(' ')[1:]
+                     message.data["type"] == "scanline"):
+                    sat = message.data["satellite"]
+                    utctime = message.data["utctime"]
+                    elevation = message.data["elevation"]
+                    filename = message.data["filename"]
+                    line_start = message.data["file_position"]
                     utctime = strp_isoformat(utctime)
-                    self._holder.add_scanline(sat, utctime, float(elevation),
-                                              int(line_start), filename)
+                    self._holder.add_scanline(sat, utctime, elevation,
+                                              line_start, filename)
                     resp = Message('/oper/polar/direct_readout/'
                                        + self._station,
                                        "notice",
@@ -301,25 +455,42 @@ class Responder(SocketLooperThread):
 def main(configfile):
     """Serve forever.
     """
-    scanlines = {}
 
-    wm_ = WatchManager()
-    mask = IN_CREATE | IN_OPEN | IN_CLOSE_WRITE | IN_MODIFY
-
-    handler = FileStreamer(scanlines, configfile)
-    notifier = Notifier(wm_, handler)
+    scanlines = Holder(configfile)
+    fstreamer = FileStreamer(scanlines, configfile)
+    notifier = Observer()
     cfg = ConfigParser()
     cfg.read(configfile)
     path = cfg.get("local_reception", "data_dir")
-    wm_.add_watch(path, mask, rec=False)
+    notifier.schedule(fstreamer, path, recursive=False)
+    
 
     local_station = cfg.get("local_reception", "localhost")
     responder_port = cfg.get(local_station, "reqport")
-    responder = Responder(handler, configfile, "tcp://*:" + responder_port, REP)
+    responder = Responder(scanlines, configfile,
+                          "tcp://*:" + responder_port, REP)
     responder.start()
+
+    mirror = None
+    try:
+        mirror = MirrorStreamer(scanlines, configfile)
+        mirror.start()
+    except NoOptionError:
+        pass
     
-    notifier.loop()
+    notifier.start()
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        notifier.stop()
+    
     responder.stop()
+    notifier.join()
+
+    if mirror is not None:
+        mirror.stop()
+        
     print "Thanks for using pytroll/trollcast. See you soon on www.pytroll.org!"
 
 if __name__ == '__main__':
