@@ -30,6 +30,7 @@ from posttroll.subscriber import Subscriber, get_address
 from posttroll.message import Message
 from threading import Thread
 
+import copy
 import logging
 import logging.handlers
 
@@ -86,8 +87,9 @@ class ColoredFormatter(logging.Formatter):
         if self.use_color and levelname in COLORS:
             levelname_color = (COLOR_SEQ % (30 + COLORS[levelname])
                                + levelname + RESET_SEQ)
-            record.levelname = levelname_color
-        return logging.Formatter.format(self, record)
+            record2 = copy.copy(record)
+            record2.levelname = levelname_color
+        return logging.Formatter.format(self, record2)
 
 
 
@@ -110,6 +112,8 @@ LOG.addHandler(ch)
 ch2 = logging.handlers.SMTPHandler("localhost", "safusr.u@smhi.se",
                                    ["martin.raspaud@smhi.se"], "Pytroll logger")
 ch2.setLevel(logging.WARNING)
+formatter2 = logging.Formatter("[%(asctime)s %(levelname)-8s] %(message)s")
+ch2.setFormatter(formatter2)
 LOG.addHandler(ch2)
 
 class Logger(object):
