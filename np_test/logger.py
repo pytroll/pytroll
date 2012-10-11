@@ -93,15 +93,23 @@ class ColoredFormatter(logging.Formatter):
 #logging.basicConfig(format='[%(asctime)s %(levelname)s] %(message)s',
 #                    level=logging.DEBUG)
 
+# TODO: put all this in the ifmain section
+
 LOG = logging.getLogger("pytroll")
 LOG.setLevel(logging.DEBUG)
 
-ch = logging.StreamHandler()
+#ch = logging.StreamHandler()
+ch = logging.handlers.TimedRotatingFileHandler("pytroll.log", "midnight")
 ch.setLevel(logging.DEBUG)
 
 formatter = ColoredFormatter("[%(asctime)s %(levelname)-19s] %(message)s")
 ch.setFormatter(formatter)
 LOG.addHandler(ch)
+
+ch2 = logging.handlers.SMTPHandler("localhost", "safusr.u@smhi.se",
+                                   ["martin.raspaud@smhi.se"], "Pytroll logger")
+ch2.setLevel(logging.WARNING)
+LOG.addHandler(ch2)
 
 class Logger(object):
 
@@ -180,7 +188,8 @@ class Logger(object):
 if __name__ == '__main__':
     import time
     try:
-        logger = Logger()
+        #logger = Logger()
+        logger = Logger(("safe", 16543))
         logger.start()
         while True:
             time.sleep(1)
