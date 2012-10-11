@@ -62,6 +62,8 @@ logger.setLevel(logging.DEBUG)
 
 LINE_SIZE = 11090 * 2
 
+CACHE_SIZE = 32
+
 def timecode(tc_array):
     word = tc_array[0]
     day = word
@@ -92,6 +94,8 @@ class Holder(object):
         self._socket = self._context.socket(PUB)
         self._socket.bind("tcp://*:" + port)
         self._lock = Lock()
+        self._cache = []
+        
         
     def __del__(self, *args, **kwargs):
         self._socket.close()
@@ -114,7 +118,19 @@ class Holder(object):
                       to_send).encode()
         self._socket.send(msg)
 
-    def add_scanline(self, satellite, utctime, elevation, line_start, filename):
+    def get_scanline(self, satellite, utctime):
+        info = self._holder[satellite][utctime]
+        if len(info) == 4:
+            return info[3]
+        else:
+            url = urlparse(self._holder[satellite][utctime][1])
+            with open(url.path, "rb") as fp_:
+                fp_.seek(self._holder[satellite][utctime][0])
+                return fp_.read(LINE_SIZE)
+
+
+        
+    def add_scanline(self, satellite, utctime, elevation, line_start, filename, line=None):
         """Adds the scanline to the server. Typically used by the client to
         signal newly received lines.
         """
@@ -122,10 +138,24 @@ class Holder(object):
         try:
             if(satellite not in self._holder or
                utctime not in self._holder[satellite]):
-                self._holder.setdefault(satellite,
-                                        {})[utctime] = (line_start,
-                                                        filename,
-                                                        elevation)
+                if line:
+                    self._holder.setdefault(satellite,
+                                            {})[utctime] = (line_start,
+                                                            filename,
+                                                            elevation,
+                                                            line)
+                    self._cache.append((satellite, utctime))
+                    while len(self._cache) > CACHE_SIZE:
+                        sat, deltime = self._cache[0]
+                        del self._cache[0]
+                        self._holder[sat][deltime] = \
+                                                self._holder[sat][deltime][:3]
+                        
+                else:
+                    self._holder.setdefault(satellite,
+                                            {})[utctime] = (line_start,
+                                                            filename,
+                                                            elevation)
                 self.send_have(satellite, utctime, elevation)
         finally:
             self._lock.release()
@@ -388,13 +418,11 @@ class Responder(SocketLooperThread):
                     utctime = strp_isoformat(message.data["utctime"])
                     url = urlparse(self._holder[sat][utctime][1])
                     if url.scheme in ["", "file"]: # data is locally stored.
-                        with open(url.path, "rb") as fp_:
-                            fp_.seek(self._holder[sat][utctime][0])
-                            resp = Message('/oper/polar/direct_readout/'
-                                           + self._station,
-                                           "scanline",
-                                           fp_.read(LINE_SIZE),
-                                           binary=True)
+                        resp = Message('/oper/polar/direct_readout/'
+                                       + self._station,
+                                       "scanline",
+                                       self._holder.get_scanline(sat, utctime),
+                                       binary=True)
                     else: # it's the address of a remote server.
                         resp = self.forward_request(urlunparse(url),
                                                     message)
