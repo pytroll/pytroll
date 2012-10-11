@@ -31,6 +31,7 @@ from posttroll.message import Message
 from threading import Thread
 
 import logging
+import logging.handlers
 
 
 class PytrollFormatter(logging.Formatter):
