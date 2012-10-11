@@ -26,10 +26,8 @@
 
 # TODO: remove old hanging subscriptions
 
-import zmq
-from posttroll.subscriber import Subscriber
+from posttroll.subscriber import Subscriber, get_address
 from posttroll.message import Message
-import np.nameclient as nc
 from threading import Thread
 
 import logging
@@ -44,7 +42,7 @@ class PytrollFormatter(logging.Formatter):
         self._subject = subject
 
     def format(self, record):
-        mesg = Message(self._subject, str(record.levelname).lower(),
+        mesg = Message(self._subject, "log." + str(record.levelname).lower(),
                        record.getMessage())
         return str(mesg)
 
@@ -130,7 +128,7 @@ class Logger(object):
     def listen(self):
         """Listen to incomming messages.
         """
-        for addr in nc.get_address(""):
+        for addr in get_address(""):
             LOG.info("Listening to " + str(addr["URI"]) +
                          " (" + str(addr["type"]) + ")")
             self.subscriber.add(addr["URI"], addr["type"])
@@ -150,13 +148,13 @@ class Logger(object):
         """
         for msg in self.subscriber.recv(1):
             if msg:
-                if msg.type in ["debug", "info",
-                                "warning", "error",
-                                "critical"]:
-                    getattr(LOG, msg.type)(msg.subject + " " +
-                              msg.sender + " " +
-                              str(msg.data) + " " +
-                              str(msg.time))
+                if msg.type in ["log.debug", "log.info",
+                                "log.warning", "log.error",
+                                "log.critical"]:
+                    getattr(LOG, msg.type[4:])(msg.subject + " " +
+                                               msg.sender + " " +
+                                               str(msg.data) + " " +
+                                               str(msg.time))
                     
                 elif msg.binary:
                     LOG.debug(msg.subject + " " +
