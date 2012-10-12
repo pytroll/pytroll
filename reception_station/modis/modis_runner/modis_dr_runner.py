@@ -209,8 +209,11 @@ def run_aqua_l0l1(pdsfile):
 
     # Get the observation time from the filename as a datetime object:
     bname = os.path.basename(pdsfile)
+    #try:
     obstime = datetime.strptime(bname, filetype_aqua)
-
+    #except ValueError:
+        
+        
     # Get ephemeris and attitude names! FIXME!
     attitude, ephemeris = run_aqua_gbad(obstime)
     #ephemeris = "%s/P15409571540958154095911343000923001.eph" % ephemeris_home 
@@ -375,31 +378,37 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
             LOG.info('aquanames: ' + str(aquanames))
 
             lvl1filename = None
-            if ((aquanames[0].find(modisfile_aqua_prfx) == 0 and 
-                 aquanames[1].find(packetfile_aqua_prfx) == 0) or 
-                (aquanames[1].find(modisfile_aqua_prfx) == 0 and 
-                 aquanames[0].find(packetfile_aqua_prfx) == 0)):
-                # Do processing:
-                LOG.info("Level-0 to lvl1 processing on aqua start! Scene = %r" % scene_id)
-                LOG.info("File = " + str(aqua_files[scene_id][0]))
-                lvl1filename = run_aqua_l0l1(aqua_files[scene_id][0])
-                # Clean register: aqua_files dict
-                LOG.info('Clean the internal aqua_files register')
-                aqua_files = {}
+            if (aquanames[0].find(modisfile_aqua_prfx) == 0 and 
+                aquanames[1].find(packetfile_aqua_prfx) == 0):
+                modisfile = aqua_files[scene_id][0]
+            elif (aquanames[1].find(modisfile_aqua_prfx) == 0 and 
+                  aquanames[0].find(packetfile_aqua_prfx) == 0):
+                modisfile = aqua_files[scene_id][1]
+            else:
+                LOG.error("Either MODIS file or packet file not there!?")
+                continue
 
-                # Now publish:
-                to_send['uri'] = ('ssh://safe.smhi.se/' +  
-                                  os.path.join(level1b_home, 
-                                               lvl1filename))
-                if orbnum:
-                    to_send['orbit_number'] = orbnum
-                to_send['filename'] = lvl1filename
-                to_send['instrument'] = 'modis'
-                to_send['satellite'] = 'AQUA'
-                to_send['format'] = 'EOS'
-                to_send['level'] = '1'
-                to_send['type'] = 'HDF4'
-                to_send['start_time'] = start_time
+            # Do processing:
+            LOG.info("Level-0 to lvl1 processing on aqua start! Scene = %r" % scene_id)
+            LOG.info("File = " + str(modisfile))
+            lvl1filename = run_aqua_l0l1(modisfile)
+            # Clean register: aqua_files dict
+            LOG.info('Clean the internal aqua_files register')
+            aqua_files = {}
+
+            # Now publish:
+            to_send['uri'] = ('ssh://safe.smhi.se/' +  
+                              os.path.join(level1b_home, 
+                                           lvl1filename))
+            if orbnum:
+                to_send['orbit_number'] = orbnum
+            to_send['filename'] = lvl1filename
+            to_send['instrument'] = 'modis'
+            to_send['satellite'] = 'AQUA'
+            to_send['format'] = 'EOS'
+            to_send['level'] = '1'
+            to_send['type'] = 'HDF4'
+            to_send['start_time'] = start_time
 
     else:
         return aqua_files
