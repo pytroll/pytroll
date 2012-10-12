@@ -58,8 +58,12 @@ def get_npp_stamp(filename):
     match = _RE_NPP_STAMP.match(os.path.basename(filename))                 
     if not match:
         return
-    start_time, end_time = _dte2time(match.group(3), match.group(4),
-                                     match.group(5))
+    try:
+        start_time, end_time = _dte2time(match.group(3),
+                                         match.group(4),
+                                         match.group(5))
+    except ValueError:
+        return
     return NPPStamp(match.group(2), start_time, end_time, 
                     int(match.group(6)))
 
