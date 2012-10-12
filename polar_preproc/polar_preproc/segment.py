@@ -20,12 +20,13 @@ class Segment(object):
     use_stamp_in_list = True
 
     def __init__(self, platform=None, start_time=None, end_time=None, orbit_number=None,
-                 create_time=None, site=None, domain=None, name=None,
+                 instrument=None, create_time=None, site=None, domain=None, name=None,
                  description=None, items=[]):
         self.platform = platform
         self.start_time = start_time
         self.end_time = end_time
         self.orbit_number = orbit_number
+        self.instrument = instrument
         self.create_time = create_time or datetime.now()
         self.site = site or SITE
         self.domain = domain or DOMAIN
