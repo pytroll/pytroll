@@ -208,8 +208,8 @@ def start_npp_sdr_processing(level1_home, mypublisher, message):
             to_send['filename'] = filename
             to_send['instrument'] = 'viirs'
             to_send['satellite'] = 'NPP'
-            to_send['format'] = 'HDF5'
-            to_send['type'] = 'SDR'
+            to_send['format'] = 'SDR'
+            to_send['type'] = 'HDF5'
             to_send['start_time'] = start_time #start_time.isoformat()
             message = Message('/oper/polar/direct_readout/norrkoping',
                           "file", to_send).encode()
