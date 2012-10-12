@@ -386,7 +386,7 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
                 modisfile = aqua_files[scene_id][1]
             else:
                 LOG.error("Either MODIS file or packet file not there!?")
-                continue
+                return aqua_files
 
             # Do processing:
             LOG.info("Level-0 to lvl1 processing on aqua start! Scene = %r" % scene_id)
