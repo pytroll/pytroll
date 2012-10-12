@@ -105,6 +105,8 @@ def run_cspp(viirs_rdr_file):
     import time
     import tempfile
 
+    viirs_sdr_call = OPTIONS['viirs_sdr_call']
+
     try:
         working_dir = tempfile.mkdtemp(dir=CSPP_WORKDIR)
     except OSError:
@@ -124,7 +126,7 @@ def run_cspp(viirs_rdr_file):
     #print tup
     t0_clock = time.clock()
     t0_wall = time.time()
-    subprocess.call(["viirs_sdr.sh", "-z", viirs_rdr_file])
+    subprocess.call(viirs_sdr_call + [viirs_rdr_file])
     print time.clock() - t0_clock, "seconds process time"
     print time.time() - t0_wall, "seconds wall clock time"
 
