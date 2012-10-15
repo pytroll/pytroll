@@ -108,29 +108,30 @@ def run_terra_l0l1(pdsfile):
     mod02qkm_file = "%s/%s_%s" % (level1b_home, firstpart, lastpart)
     firstpart = obstime.strftime(level1b_500m_terra)
     mod02hkm_file = "%s/%s_%s" % (level1b_home, firstpart, lastpart)
-
-    retv = {'mod021km_file': mod021km_file,
-            'mod02hkm_file': mod02hkm_file,
-            'mod02qkm_file': mod02qkm_file,
-            'level1a_file': level1a_terra}
-
-    #proctime = datetime.now()
     lastpart = proctime.strftime("%Y%j%H%M%S.hdf")
     firstpart = obstime.strftime(level1a_terra)
-    mod01files = glob.glob("%s/%s*hdf" % (level1b_home, firstpart))
-    if len(mod01files) > 0:
-        LOG.warning("Level 1 file already exists: %s" % mod01files[0])
-        return retv
-        
     mod01_file = "%s/%s_%s" % (level1b_home, firstpart, lastpart)
     firstpart = obstime.strftime(geofile_terra)
     mod03_file = "%s/%s_%s" % (level1b_home, firstpart, lastpart)
 
+    retv = {'mod021km_file': mod021km_file,
+            'mod02hkm_file': mod02hkm_file,
+            'mod02qkm_file': mod02qkm_file,
+            'level1a_file': mod01_file,
+            'geo_file': mod03_file}
+
+    mod01files = glob.glob("%s/%s*hdf" % (level1b_home, firstpart))
+    if len(mod01files) > 0:
+        LOG.warning("Level 1 file already exists: %s" % mod01files[0])
+        os.close(fdwork) # Close working directory
+        return retv
+        
     LOG.info("Level-1 filename: " + str(mod01_file))
     satellite = "Terra"
     wrapper_home = os.path.join(SPA_HOME, "modisl1db/wrapper/l0tol1")
     cmdstr = ("%s/run modis.pds %s sat %s modis.mxd01 %s modis.mxd03 %s" % 
               (wrapper_home, pdsfile, satellite, mod01_file, mod03_file))
+
     # Run the command:
     #subprocess.check_call(cmdstr)
     os.system(cmdstr)
@@ -271,7 +272,23 @@ def run_aqua_l0l1(pdsfile):
     # Close working directory:
     os.close(fdwork)
 
-    return mod021km_file
+    retv = {'mod021km_file': mod021km_file,
+            'mod02hkm_file': mod02hkm_file,
+            'mod02qkm_file': mod02qkm_file,
+            'level1a_file': mod01_file,
+            'geo_file': mod03_file}
+
+    return retv
+
+
+def send_message(this_publisher, msg):
+    """Send a message for down-stream processing"""
+
+    message = Message('/oper/polar/direct_readout/norrköping',
+                      "file", msg).encode()
+    this_publisher.send(message)
+    
+    return
 
 # ---------------------------------------------------------------------------
 def start_modis_lvl1_processing(level1b_home, aqua_files,
@@ -290,7 +307,7 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
     LOG.info("Sat and Instrument: " + str(message.data['satellite']) + " " 
              + str(message.data['instrument']))
 
-    to_send = {}
+
 
     if 'start_time' in message.data:
         start_time = message.data['start_time']
@@ -323,20 +340,21 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
             # Assume everything has gone well! 
             # Add intelligence to run-function. FIXME!
             # Now publish:
-            filename = result_files['level1a_file']
-            to_send['uri'] = ('ssh://safe.smhi.se/' +  
-                              os.path.join(level1b_home, 
-                                               filename))
-            if orbnum:
-                to_send['orbit_number'] = orbnum
-            to_send['filename'] = filename
-            to_send['instrument'] = 'modis'
-            to_send['satellite'] = 'TERRA'
-            to_send['format'] = 'EOS'
-            to_send['level'] = '1'
-            to_send['type'] = 'HDF4'
-            to_send['start_time'] = start_time
+            for resfile in result_files:
+                to_send = {}
+                filename = result_files[resfile]
+                to_send['uri'] = ('ssh://safe.smhi.se/' + filename)
+                if orbnum:
+                    to_send['orbit_number'] = orbnum
+                to_send['filename'] = os.path.basename(filename)
+                to_send['instrument'] = 'modis'
+                to_send['satellite'] = 'TERRA'
+                to_send['format'] = 'EOS'
+                to_send['level'] = '1'
+                to_send['type'] = 'HDF4'
+                to_send['start_time'] = start_time
 
+                send_message(mypublisher, to_send)
 
     elif (message.data['satellite'] == "AQUA" and 
           (message.data['instrument'] == 'modis' or 
@@ -391,32 +409,32 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
             # Do processing:
             LOG.info("Level-0 to lvl1 processing on aqua start! Scene = %r" % scene_id)
             LOG.info("File = " + str(modisfile))
-            lvl1filename = run_aqua_l0l1(modisfile)
+            result_files = run_aqua_l0l1(modisfile)
+
             # Clean register: aqua_files dict
             LOG.info('Clean the internal aqua_files register')
             aqua_files = {}
 
             # Now publish:
-            to_send['uri'] = ('ssh://safe.smhi.se/' +  
-                              os.path.join(level1b_home, 
-                                           lvl1filename))
-            if orbnum:
-                to_send['orbit_number'] = orbnum
-            to_send['filename'] = lvl1filename
-            to_send['instrument'] = 'modis'
-            to_send['satellite'] = 'AQUA'
-            to_send['format'] = 'EOS'
-            to_send['level'] = '1'
-            to_send['type'] = 'HDF4'
-            to_send['start_time'] = start_time
+            for resfile in result_files:
+                to_send = {}
+                filename = result_files[resfile]
+                to_send['uri'] = ('ssh://safe.smhi.se/' + filename)
+                if orbnum:
+                    to_send['orbit_number'] = orbnum
+                to_send['filename'] = filename
+                to_send['instrument'] = 'modis'
+                to_send['satellite'] = 'AQUA'
+                to_send['format'] = 'EOS'
+                to_send['level'] = '1'
+                to_send['type'] = 'HDF4'
+                to_send['start_time'] = start_time
+
+                send_message(mypublisher, to_send)
 
     else:
         return aqua_files
 
-
-    message = Message('/oper/polar/direct_readout/norrkoping',
-                      "file", to_send).encode()
-    mypublisher.send(message)
 
     return aqua_files
 
