@@ -36,25 +36,25 @@ TODO:
 """
 from __future__ import with_statement 
 
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
+import logging
+import os
 from ConfigParser import ConfigParser, NoOptionError
-from zmq import Context, Poller, LINGER, PUB, REP, REQ, POLLIN, NOBLOCK
-from posttroll.message import Message
+from datetime import datetime, timedelta
+from fnmatch import fnmatch
+from glob import glob
+from threading import Thread, Lock
+from urlparse import urlparse, urlunparse
+
+import numpy as np
+import time
 from posttroll import strp_isoformat
+from posttroll.message import Message
 from posttroll.subscriber import Subscriber
 from pyorbital.orbital import Orbital
-import time
-from fnmatch import fnmatch
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
+from zmq import Context, Poller, LINGER, PUB, REP, REQ, POLLIN, NOBLOCK
 
-from urlparse import urlparse, urlunparse
-from threading import Thread, Lock
-import numpy as np
-import os
-from datetime import datetime, timedelta
-from random import uniform
-from glob import glob
-import logging
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("trollcast/server")
@@ -64,6 +64,16 @@ logger.setLevel(logging.DEBUG)
 LINE_SIZE = 11090 * 2
 
 CACHE_SIZE = 32
+
+HRPT_SYNC = np.array([ 994, 1011, 437, 701, 644, 277, 452, 467, 833, 224, 694,
+        990, 220, 409, 1010, 403, 654, 105, 62, 867, 75, 149, 320, 725, 668,
+        581, 866, 109, 166, 941, 1022, 59, 989, 182, 461, 197, 751, 359, 704,
+        66, 387, 238, 850, 746, 473, 573, 282, 6, 212, 169, 623, 761, 979, 338,
+        249, 448, 331, 911, 853, 536, 323, 703, 712, 370, 30, 900, 527, 977,
+        286, 158, 26, 796, 705, 100, 432, 515, 633, 77, 65, 489, 186, 101, 406,
+        560, 148, 358, 742, 113, 878, 453, 501, 882, 525, 925, 377, 324, 589,
+        594, 496, 972], dtype=np.uint16)
+HRPT_SYNC_START = np.array([644, 367, 860, 413, 527, 149], dtype=np.uint16)
 
 def timecode(tc_array):
     word = tc_array[0]
@@ -249,18 +259,20 @@ class FileStreamer(FileSystemEventHandler):
 
 
             array = np.fromstring(line, dtype=dtype)
-            if np.all(abs(np.array((644, 367, 860, 413, 527, 149)) - 
+            if np.all(abs(HRPT_SYNC_START - 
                           array["frame_sync"]) > 1):
                 array = array.newbyteorder()
+
+            # FIXME: this is bad!!!! Should not get the year from the filename
             year = int(os.path.split(event.src_path)[1][:4])
             utctime = datetime(year, 1, 1) + timecode(array["timecode"][0])
 
             # Check that we receive real-time data
-            # if ((abs(utctime - datetime.utcnow())).days > 0 or
-            #     (abs(utctime - datetime.utcnow())).seconds > 1000):
-            #     logger.info("Garbage line: " + str(utctime))
-            #     line = self._file.read(LINE_SIZE)
-            #     continue
+            if not (np.all(array['aux_sync'] == HRPT_SYNC) and
+                    np.all(array['frame_sync'] == HRPT_SYNC_START)):
+                logger.info("Garbage line: " + str(utctime))
+                line = self._file.read(LINE_SIZE)
+                continue
 
 
             elevation = self._orbital.get_observer_look(utctime, *self._coords)[1]
