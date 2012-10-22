@@ -26,7 +26,8 @@
 
 # TODO: remove old hanging subscriptions
 
-from posttroll.subscriber import Subscriber, get_address
+from posttroll.subscriber import Subscriber
+from posttroll.ns import get_pub_address
 from posttroll.message import Message
 from threading import Thread
 
@@ -141,7 +142,7 @@ class Logger(object):
     def listen(self):
         """Listen to incomming messages.
         """
-        for addr in get_address(""):
+        for addr in get_pub_address(""):
             LOG.info("Listening to " + str(addr["URI"]) +
                          " (" + str(addr["type"]) + ")")
             self.subscriber.add(addr["URI"], addr["type"])
@@ -200,4 +201,5 @@ if __name__ == '__main__':
             time.sleep(1)
     except KeyboardInterrupt:
         logger.stop()
-        print "Thanks for using pytroll/logger. See you soon on www.pytroll.org!"
+        print ("Thanks for using pytroll/logger. "
+               "See you soon on www.pytroll.org!")
