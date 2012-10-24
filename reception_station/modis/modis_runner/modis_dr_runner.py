@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Level-1 processing for Terra/Aqua Modis Direct Readout data. Using the SPA
 modis level-1 processor from the NASA Direct Readout Lab (DRL). Listens for
 pytroll messages from the Nimbus server (PDS file dispatch) and triggers
