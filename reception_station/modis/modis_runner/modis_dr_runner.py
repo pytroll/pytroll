@@ -25,6 +25,12 @@ if MODE is None:
 OPTIONS = {}
 for option, value in CONF.items(MODE, raw = True):
     OPTIONS[option] = value
+
+DAYS_BETWEEN_URL_DOWNLOAD = OPTIONS.get('days_between_url_download', 14)
+DAYS_KEEP_OLD_ETC_FILES = OPTIONS.get('days_keep_old_etc_files', 60)
+URL = OPTIONS['url_modis_navigation']
+NAVIGATION_HELPER_FILES = ['utcpole.dat', 'leapsec.dat']
+
  
 from datetime import datetime
 
@@ -56,7 +62,6 @@ LOG.setLevel(10)
 LOG.addHandler(handler)
 
 
-
 LEVEL1_PUBLISH_PORT = 9010
 
 packetfile_aqua_prfx = "P154095715409581540959"
@@ -69,6 +74,127 @@ from urlparse import urlparse
 import posttroll.subscriber
 from posttroll.publisher import Publish
 from posttroll.message import Message
+
+
+def clean_utcpole_and_leapsec_files(thr_days=60):
+    """Clean any old *leapsec.dat* and *utcpole.dat* backup files, older than
+    *thr_days* old
+
+    """
+    from glob import glob
+    from datetime import datetime, timedelta
+    import os
+
+    now = datetime.utcnow()
+    deltat = timedelta(days=thr_days)
+
+    # Make the list of files to clean:
+    flist = glob(os.path.join(ETC_DIR, '*.dat_*'))
+    for filename in flist:
+        lastpart = os.path.basename(filename).split('dat_')[1]
+        tobj = datetime.strptime(lastpart, "%Y%m%d%H%M")
+        if (now - tobj) > deltat:
+            LOG.info("File to old, cleaning: %s " % filename)
+            os.remove(filename)
+
+    return
+
+def check_utcpole_and_leapsec_files(thr_days=14):
+    """Check if the files *leapsec.dat* and *utcpole.dat* are available in the
+    etc directory and check if they are fresh.
+    Return True if fresh/new files exists, otherwise False
+
+    """
+
+    from glob import glob
+    from datetime import datetime, timedelta
+
+    now = datetime.utcnow()
+    tdelta = timedelta(days=thr_days)
+
+    files_ok = True
+    for bname in [NAVIGATION_HELPER_FILES]:
+        filename = os.path.join(ETC_DIR, bname)
+        if os.path.exists(filename):
+            # Check how old it is:
+            realpath = os.path.realpath(filename)
+            # Get the timestamp in the file name:
+            try:
+                tstamp = os.path.basename(realpath).split('.dat_')[1]
+            except IndexError:
+                files_ok = False
+                break
+            tobj = datetime.strptime(tstamp, "%Y%m%d%H%M")
+            
+            if (now - tobj) > tdelta:
+                LOG.info("File too old! File=%s " % filename)
+                files_ok = False
+                break
+        else:
+            LOG.info("No navigation helper file: " % filename)
+            files_ok = False
+            break
+            
+    return files_ok
+
+
+def update_utcpole_and_leapsec_files():
+    """
+    Function to update the ancillary data files *leapsec.dat* and
+    *utcpole.dat* used in the navigation of MODIS direct readout data.
+
+    These files need to be updated at least once every 2nd week, in order to
+    achieve the best possible navigation.
+
+    """
+    import urllib2
+    import os, sys
+    from datetime import datetime
+
+    # Start cleaning any possible old files:
+    clean_utcpole_and_leapsec_files(DAYS_KEEP_OLD_ETC_FILES)
+
+    try:
+        usock = urllib2.urlopen(URL)
+    except urllib2.URLError:
+        print ('Failed opening url: ' + URL)
+        sys.exit(-1)
+    else:
+        usock.close()
+
+    now = datetime.utcnow()
+    timestamp = now.strftime('%Y%m%d%H%M')
+    for filename in NAVIGATION_HELPER_FILES:
+        try:
+            usock = urllib2.urlopen(URL + filename)
+        except urllib2.HTTPError:
+            print("Failed opening file " + filename)
+            continue
+
+        data = usock.read()
+        usock.close()
+
+        # I store the files with a timestamp attached, in order not to remove
+        # the existing files.  In case something gets wrong in the download, we
+        # can handle this by not changing the sym-links below:
+        newname = filename + '_' + timestamp
+        outfile = os.path.join(ETC_DIR, newname)
+        linkfile = os.path.join(ETC_DIR, filename)
+        fd = open(outfile, 'w')
+        fd.write(data)
+        fd.close()
+        
+        # Here we could make a check on the sanity of the downloaded files:
+        # TODO!
+
+        # Update the symlinks (assuming the files are okay):
+        if os.path.exists(linkfile):
+            os.unlink(linkfile)
+        
+        os.symlink(outfile, linkfile)
+
+    return
+
 
 # ---------------------------------------------------------------------------
 def run_terra_l0l1(pdsfile):
@@ -333,6 +459,18 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
             # Do processing:
             LOG.info("Level-0 to lvl1 processing on terra start!" + 
                      " Start time = " + str(start_time))
+            # Start checking and dowloading the luts (utcpole.dat and
+            # leapsec.dat):
+            LOG.info("Checking the modis luts and updating " + 
+                     "from internet if necessary!")
+            fresh = check_utcpole_and_leapsec_files(DAYS_BETWEEN_URL_DOWNLOAD)
+            if fresh:
+                LOG.info("Files in etc dir are fresh! No url downloading....")
+            else:
+                LOG.warning("Files in etc are non existent or too old. " +
+                            "Start url fetch...")
+                update_utcpole_and_leapsec_files()
+
             if orbnum:
                 LOG.info("Orb = %d" % orbnum)
             LOG.info("File = " + str(urlobj.path))
@@ -408,6 +546,18 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
 
             # Do processing:
             LOG.info("Level-0 to lvl1 processing on aqua start! Scene = %r" % scene_id)
+
+            # Start checking and dowloading the luts (utcpole.dat and
+            # leapsec.dat):
+            LOG.info("Checking the modis luts and updating " + 
+                     "from internet if necessary!")
+            fresh = check_utcpole_and_leapsec_files(DAYS_BETWEEN_URL_DOWNLOAD)
+            if fresh:
+                LOG.info("Files in etc dir are fresh! No url downloading....")
+            else:
+                LOG.warning("Files in etc are non existent or too old. " +
+                            "Start url fetch...")
+
             LOG.info("File = " + str(modisfile))
             result_files = run_aqua_l0l1(modisfile)
 
