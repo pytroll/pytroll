@@ -24,9 +24,8 @@ setup(name='modis_lvl1_proc',
       # Project should use reStructuredText, so ensure that the docutils get
       # installed or upgraded on the target machine
       install_requires = ['docutils>=0.3', 
-                          'pytroll',
-                          'numpy',
-                          'pyorbital'
+                          'posttroll',
+                          'numpy'
                          ],
 
       data_files=[('etc', ['etc/modis_dr_config.cfg'])],
