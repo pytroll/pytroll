@@ -30,7 +30,9 @@ from posttroll.subscriber import Subscriber, get_address
 from posttroll.message import Message
 from threading import Thread
 
+import copy
 import logging
+import logging.handlers
 
 
 class PytrollFormatter(logging.Formatter):
@@ -85,23 +87,34 @@ class ColoredFormatter(logging.Formatter):
         if self.use_color and levelname in COLORS:
             levelname_color = (COLOR_SEQ % (30 + COLORS[levelname])
                                + levelname + RESET_SEQ)
-            record.levelname = levelname_color
-        return logging.Formatter.format(self, record)
+            record2 = copy.copy(record)
+            record2.levelname = levelname_color
+        return logging.Formatter.format(self, record2)
 
 
 
 #logging.basicConfig(format='[%(asctime)s %(levelname)s] %(message)s',
 #                    level=logging.DEBUG)
 
+# TODO: put all this in the ifmain section
+
 LOG = logging.getLogger("pytroll")
 LOG.setLevel(logging.DEBUG)
 
-ch = logging.StreamHandler()
+#ch = logging.StreamHandler()
+ch = logging.handlers.TimedRotatingFileHandler("pytroll.log", "midnight")
 ch.setLevel(logging.DEBUG)
 
 formatter = ColoredFormatter("[%(asctime)s %(levelname)-19s] %(message)s")
 ch.setFormatter(formatter)
 LOG.addHandler(ch)
+
+ch2 = logging.handlers.SMTPHandler("localhost", "safusr.u@smhi.se",
+                                   ["martin.raspaud@smhi.se"], "Pytroll logger")
+ch2.setLevel(logging.WARNING)
+formatter2 = logging.Formatter("[%(asctime)s %(levelname)-8s] %(message)s")
+ch2.setFormatter(formatter2)
+LOG.addHandler(ch2)
 
 class Logger(object):
 
@@ -180,7 +193,8 @@ class Logger(object):
 if __name__ == '__main__':
     import time
     try:
-        logger = Logger()
+        #logger = Logger()
+        logger = Logger(("safe", 16543))
         logger.start()
         while True:
             time.sleep(1)
