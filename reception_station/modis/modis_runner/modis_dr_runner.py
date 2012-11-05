@@ -8,12 +8,16 @@ processing on direct readout data
 
 import os, glob
 
+import modis_runner
+_PACKAGEDIR = modis_runner.__path__[0]
+CONFIG_PATH = os.path.join(os.path.dirname(_PACKAGEDIR), '..', 'etc')
+
 SPA_HOME = os.environ.get("SPA_HOME", '')
 APPL_HOME = os.environ.get('MODIS_LVL1PROC', '')
 ETC_DIR = os.path.join(SPA_HOME, 'etc')
 
 import ConfigParser
-CONFIG_PATH = os.environ.get('MODIS_LVL1PROC_CONFIG_DIR', '')
+#CONFIG_PATH = os.environ.get('MODIS_LVL1PROC_CONFIG_DIR', '')
 print "CONFIG_PATH: ", CONFIG_PATH 
 
 CONF = ConfigParser.ConfigParser()

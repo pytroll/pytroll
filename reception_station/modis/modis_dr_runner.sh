@@ -24,7 +24,7 @@ utv)
 #SPA_HOME="/local_disk/opt/SPA"
 SPA_HOME="/local_disk/opt/MODISL1DB_SPA/current"
 APPL_HOME="${HOME}/usr"
-MODIS_LVL1PROC_CONFIG_DIR="/data/proj/safutv/dev/npp_dev/pytroll/reception_station/modis/etc"
+#MODIS_LVL1PROC_CONFIG_DIR="/data/proj/safutv/dev/npp_dev/pytroll/reception_station/modis/etc"
 MODIS_LVL1PROC_LOG_FILE="/data/proj/safutv/dev/npp_dev/pytroll/reception_station/modis/logs/modis_lvl1proc.log"
 
         ;;
@@ -35,6 +35,8 @@ MODIS_LVL1PROC_LOG_FILE="/data/proj/safutv/dev/npp_dev/pytroll/reception_station
 test)
 
 SPA_HOME="/local_disk/opt/MODISL1DB_SPA/current"
+APPL_HOME="${HOME}/usr"
+MODIS_LVL1PROC_LOG_FILE="/san1/modislvl1b/work/modis_lvl1proc.log"
 
         ;;
 
@@ -42,6 +44,10 @@ SPA_HOME="/local_disk/opt/MODISL1DB_SPA/current"
 # PRODUCTION
 
 prod)
+
+SPA_HOME="/local_disk/opt/MODISL1DB_SPA/current"
+APPL_HOME="/usr"
+MODIS_LVL1PROC_LOG_FILE="/san1/modislvl1b/work/modis_lvl1proc.log"
 
         ;;
 
@@ -69,7 +75,7 @@ esac
 
 
 export SPA_HOME
-export MODIS_LVL1PROC_CONFIG_DIR
+#export MODIS_LVL1PROC_CONFIG_DIR
 export MODIS_LVL1PROC_LOG_FILE
 
 MODIS_LVL1PROC=${APPL_HOME}
