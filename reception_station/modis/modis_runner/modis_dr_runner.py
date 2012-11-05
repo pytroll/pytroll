@@ -205,6 +205,8 @@ def update_utcpole_and_leapsec_files():
 def run_terra_l0l1(pdsfile):
     """Process Terra MODIS level 0 PDS data to level 1a/1b"""
 
+    from subprocess import Popen, PIPE, STDOUT
+    
     working_dir = OPTIONS['working_dir']
     # Change working directory:
     if not os.path.exists(working_dir):
@@ -215,8 +217,8 @@ def run_terra_l0l1(pdsfile):
             working_dir = '/tmp'
             LOG.info("Will use /tmp")
 
-    fdwork = os.open(working_dir, os.O_RDONLY)        
-    os.fchdir(fdwork)
+    #fdwork = os.open(working_dir, os.O_RDONLY)        
+    #os.fchdir(fdwork)
 
     level1b_home = OPTIONS['level1b_home']
     filetype_terra = OPTIONS['filetype_terra']
@@ -254,7 +256,7 @@ def run_terra_l0l1(pdsfile):
     mod01files = glob.glob("%s/%s*hdf" % (level1b_home, firstpart))
     if len(mod01files) > 0:
         LOG.warning("Level 1 file already exists: %s" % mod01files[0])
-        os.close(fdwork) # Close working directory
+        #os.close(fdwork) # Close working directory
         return retv
         
     LOG.info("Level-1 filename: " + str(mod01_file))
@@ -264,8 +266,25 @@ def run_terra_l0l1(pdsfile):
               (wrapper_home, pdsfile, satellite, mod01_file, mod03_file))
 
     # Run the command:
-    #subprocess.check_call(cmdstr)
-    os.system(cmdstr)
+    modislvl1b_proc = Popen(cmdstr, shell=True, 
+                            cwd=working_dir,
+                            stderr=PIPE, stdout=PIPE)
+
+    while True:
+        line = modislvl1b_proc.stdout.readline()
+        if not line:
+            break
+        LOG.info(line)
+
+    while True:
+        errline = modislvl1b_proc.stderr.readline()
+        if not errline:
+            break
+        LOG.info(errline)
+
+    modislvl1b_proc.poll()
+    #modislvl1b_status = modislvl1b_proc.returncode
+    #os.system(cmdstr)
 
     # Now do the level1a-1b processing:
     lut_home = os.path.join(SPA_HOME, "modisl1db/algorithm/data/modist/cal")
@@ -278,10 +297,27 @@ def run_terra_l0l1(pdsfile):
               (wrapper_home, mod01_file, mod03_file,
                refl_lut, emiss_lut, qa_lut, mod021km_file, mod02hkm_file, mod02qkm_file))
     # Run the command:
-    os.system(cmdstr)
+    #os.system(cmdstr)
+    modislvl1b_proc = Popen(cmdstr, shell=True, 
+                            cwd=working_dir,
+                            stderr=PIPE, stdout=PIPE)
+
+    while True:
+        line = modislvl1b_proc.stdout.readline()
+        if not line:
+            break
+        LOG.info(line)
+
+    while True:
+        errline = modislvl1b_proc.stderr.readline()
+        if not errline:
+            break
+        LOG.info(errline)
+
+    modislvl1b_proc.poll()
 
     # Close working directory:
-    os.close(fdwork)
+    #os.close(fdwork)
 
     return retv
 
@@ -289,6 +325,8 @@ def run_terra_l0l1(pdsfile):
 def run_aqua_gbad(obs_time):
     """Run the gbad for aqua"""
 
+    from subprocess import Popen, PIPE, STDOUT
+    
     level0_home = OPTIONS['level0_home']
     packetfile = os.path.join(level0_home, 
                               obs_time.strftime(OPTIONS['packetfile_aqua']))
@@ -307,7 +345,23 @@ def run_aqua_gbad(obs_time):
               (wrapper_home, packetfile, att_file, eph_file, spa_config_file))
     LOG.info("Command: " + cmdstr)
     # Run the command:
-    os.system(cmdstr)
+    #os.system(cmdstr)
+    modislvl1b_proc = Popen(cmdstr, shell=True, 
+                            stderr=PIPE, stdout=PIPE)
+
+    while True:
+        line = modislvl1b_proc.stdout.readline()
+        if not line:
+            break
+        LOG.info(line)
+
+    while True:
+        errline = modislvl1b_proc.stderr.readline()
+        if not errline:
+            break
+        LOG.info(errline)
+
+    modislvl1b_proc.poll()
 
     return att_file, eph_file
 
@@ -315,7 +369,8 @@ def run_aqua_gbad(obs_time):
 def run_aqua_l0l1(pdsfile):
     """Process Aqua MODIS level 0 PDS data to level 1a/1b"""
     import os
-
+    from subprocess import Popen, PIPE, STDOUT
+    
     working_dir = OPTIONS['working_dir']
     if not os.path.exists(working_dir):
         try:
@@ -326,8 +381,8 @@ def run_aqua_l0l1(pdsfile):
             LOG.info("Will use /tmp")
 
     # Change working directory:
-    fdwork = os.open(working_dir, os.O_RDONLY)
-    os.fchdir(fdwork)
+    #fdwork = os.open(working_dir, os.O_RDONLY)
+    #os.fchdir(fdwork)
 
     #ephemeris_home = OPTIONS['ephemeris_home']
     #attitude_home = OPTIONS['attitude_home']
@@ -375,7 +430,24 @@ def run_aqua_l0l1(pdsfile):
               (wrapper_home, pdsfile, satellite, mod01_file, mod03_file,
                ephemeris, attitude, leapsec_name, utcpole_name, geocheck_threshold))
     # Run the command:
-    os.system(cmdstr)
+    #os.system(cmdstr)
+    modislvl1b_proc = Popen(cmdstr, shell=True, 
+                            cwd=working_dir,
+                            stderr=PIPE, stdout=PIPE)
+
+    while True:
+        line = modislvl1b_proc.stdout.readline()
+        if not line:
+            break
+        LOG.info(line)
+
+    while True:
+        errline = modislvl1b_proc.stderr.readline()
+        if not errline:
+            break
+        LOG.info(errline)
+
+    modislvl1b_proc.poll()
 
 
     # Now do the level1a-1b processing:
@@ -398,10 +470,27 @@ def run_aqua_l0l1(pdsfile):
               (wrapper_home, mod01_file, mod03_file,
                refl_lut, emiss_lut, qa_lut, mod021km_file, mod02hkm_file, mod02qkm_file))
     # Run the command:
-    os.system(cmdstr)
+    #os.system(cmdstr)
+    modislvl1b_proc = Popen(cmdstr, shell=True, 
+                            cwd=working_dir,
+                            stderr=PIPE, stdout=PIPE)
 
-    # Close working directory:
-    os.close(fdwork)
+    while True:
+        line = modislvl1b_proc.stdout.readline()
+        if not line:
+            break
+        LOG.info(line)
+
+    while True:
+        errline = modislvl1b_proc.stderr.readline()
+        if not errline:
+            break
+        LOG.info(errline)
+
+    modislvl1b_proc.poll()
+
+    ## Close working directory:
+    #os.close(fdwork)
 
     retv = {'mod021km_file': mod021km_file,
             'mod02hkm_file': mod02hkm_file,
