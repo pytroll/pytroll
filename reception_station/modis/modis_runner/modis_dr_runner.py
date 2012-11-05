@@ -10,7 +10,7 @@ import os, glob
 
 import modis_runner
 _PACKAGEDIR = modis_runner.__path__[0]
-CONFIG_PATH = os.path.join(os.path.dirname(_PACKAGEDIR), '..', 'etc')
+CONFIG_PATH = os.path.join(os.path.dirname(_PACKAGEDIR), 'etc')
 
 SPA_HOME = os.environ.get("SPA_HOME", '')
 APPL_HOME = os.environ.get('MODIS_LVL1PROC', '')
