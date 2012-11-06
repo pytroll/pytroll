@@ -51,6 +51,19 @@ to have a look and give us a hand):
 .. _python-geotiepoints: http://www.github.com/adybbroe/python-geotiepoints
 .. _posttroll: http://github.com/mraspaud/posttroll
 
+
+Satellites supported (imager instruments) at the moment by the reader/processor
+modules include: 
+
+ - Meteosat series (tested with 7, 8, 9)
+ - GOES series, in HRIT/LRIT format (tested with 11, 12, 13, 15)
+ - MTSAT series, in HRIT/LRIT format (tested with 1R, 2)
+ - Electro L, in HRIT/LRIT format (tested with N1)
+ - NOAA series, in AAPP format (tested with 15, 16, 17, 18, 19)
+ - Metop-A, in EPS 1a and 1b format
+ - Aqua and Terra, in hdf-eos format
+ - NPP, in SDR hdf format
+
 Contents:
 
 .. toctree::
