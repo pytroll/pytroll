@@ -30,7 +30,6 @@ import os
 from datetime import datetime
 from urlparse import urlsplit, urlunsplit, SplitResult
 from posttroll.publisher import Publish
-from posttroll.subscriber import Subscriber
 from posttroll.message import Message
 from lxml import etree
 import logging
@@ -90,7 +89,10 @@ class TwoMetMessage(object):
         if mstring.startswith("Message["):
             self._internal_decode(mstring)
         elif mstring.startswith("<message"):
-            self._xml_decode(mstring)
+            try:
+                self._xml_decode(mstring)
+            except:
+                logger.exception("Spurious message! " + str(mstring))
         else:
             raise NotImplementedError("Don't know how to decode message: "
                                       + str(mstring))
@@ -422,7 +424,11 @@ if __name__ == '__main__':
             """Run the receiver.
             """
             del args
-            receive_from_zmq(opts.host, opts.port, 1)
+            try:
+                receive_from_zmq(opts.host, opts.port, 1)
+            except:
+                logger.exception("Crashed.")
+                raise
 
         try:
             import daemon.runner
