@@ -94,8 +94,7 @@ class TwoMetMessage(object):
             except:
                 logger.exception("Spurious message! " + str(mstring))
         else:
-            raise NotImplementedError("Don't know how to decode message: "
-                                      + str(mstring))
+            logger.warning("Don't know how to decode message: " + str(mstring))
         
 def pass_name(utctime, satellite):
     """Construct a unique pass name from a risetime and a satellite name.
