@@ -24,7 +24,7 @@ utv)
 CSPP_HOME="/local_disk/opt/CSPP/1_2"
 CSPP_WORKDIR="/san1/wrk_cspp"
 APPL_HOME="${HOME}/usr"
-NPP_SDRPROC_CONFIG_DIR="/data/proj/safutv/dev/npp_dev/pytroll/reception_station/npp/etc/"
+#NPP_SDRPROC_CONFIG_DIR="/data/proj/safutv/dev/npp_dev/pytroll/reception_station/npp/etc/"
 
         ;;
 
@@ -50,6 +50,7 @@ offline)
 
 CSPP_HOME="/local_disk/opt/CSPP/1_2"
 APPL_HOME="${HOME}/usr"
+CSPP_WORKDIR="/local_disk/tmp"
 
         ;;
 
@@ -65,13 +66,11 @@ echo "No SMHI_MODE set..."
 esac
 
 
-
-
 export CSPP_HOME
 NPP_SDRPROC=${APPL_HOME}
 export NPP_SDRPROC
 export CSPP_WORKDIR
-export NPP_SDRPROC_CONFIG_DIR
+#export NPP_SDRPROC_CONFIG_DIR
 
 source ${CSPP_HOME}/cspp_env.sh
 

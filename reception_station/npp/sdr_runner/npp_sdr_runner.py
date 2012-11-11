@@ -11,15 +11,15 @@ processing on direct readout data
 
 import os
 
+import sdr_runner
+_PACKAGEDIR = sdr_runner.__path__[0]
+CONFIG_PATH = os.path.join(os.path.dirname(_PACKAGEDIR), 'etc')
+
 CSPP_HOME = os.environ.get("CSPP_HOME", '')
 CSPP_WORKDIR = os.environ.get("CSPP_WORKDIR", '')
 APPL_HOME = os.environ.get('NPP_SDRPROC', '')
-ETC_DIR = os.environ.get('NPP_SDRPROC_CONFIG_DIR', '')
-
 
 import ConfigParser
-#CONFIG_PATH = "%s/etc" % os.environ.get('CSPP_HOME', '')
-CONFIG_PATH = "%s" % ETC_DIR
 print "CONFIG_PATH: ", CONFIG_PATH 
 
 CONF = ConfigParser.ConfigParser()
@@ -32,13 +32,8 @@ if MODE is None:
 OPTIONS = {}
 for option, value in CONF.items(MODE, raw = True):
     OPTIONS[option] = value
- 
-
-# Safe:
-addr_npp = "tcp://safe.smhi.se:9002"
 
 LEVEL1_PUBLISH_PORT = 9020
-
 SERVERNAME = OPTIONS['servername']
 
 from urlparse import urlparse
@@ -100,8 +95,7 @@ CSPP_ENVS = {"CSPP_HOME": CSPP_HOME,
 # ---------------------------------------------------------------------------
 def run_cspp(viirs_rdr_file):
     """Run CSPP on VIIRS RDR files"""
-    import subprocess
-    #from subprocess import Popen
+    from subprocess import Popen, PIPE, STDOUT
     import time
     import tempfile
 
@@ -113,25 +107,41 @@ def run_cspp(viirs_rdr_file):
         working_dir = tempfile.mkdtemp()
 
     # Change working directory:
-    fdwork = os.open(working_dir, os.O_RDONLY)
-    os.fchdir(fdwork)
+    #fdwork = os.open(working_dir, os.O_RDONLY)
+    #os.fchdir(fdwork)
 
-    print "Envs: ", CSPP_ENVS
-
-    os.system("echo $PATH > ~/cspp_path.log")
+    #print "Envs: ", CSPP_ENVS
+    #os.system("echo $PATH > ~/cspp_path.log")
     # Run the command:
     #retv = Popen(["viirs_sdr.sh", viirs_rdr_file], 
     #             env=CSPP_ENVS)
     #tup = retv.communicate()
-    #print tup
+    
+    # Run the command:
+    cmdlist = [viirs_sdr_call, viirs_rdr_file]
     t0_clock = time.clock()
     t0_wall = time.time()
-    subprocess.call(viirs_sdr_call + [viirs_rdr_file])
-    print time.clock() - t0_clock, "seconds process time"
-    print time.time() - t0_wall, "seconds wall clock time"
+    viirs_sdr_proc = Popen(cmdlist, 
+                           cwd=working_dir,
+                           stderr=PIPE, stdout=PIPE)
+    while True:
+        line = viirs_sdr_proc.stdout.readline()
+        if not line:
+            break
+        LOG.info(line)
 
-    # Close working directory:
-    os.close(fdwork)
+    while True:
+        errline = viirs_sdr_proc.stderr.readline()
+        if not errline:
+            break
+        LOG.info(errline)
+    LOG.info("Seconds process time: " + str(time.clock() - t0_clock))
+    LOG.info("Seconds wall clock time: " + str(time.time() - t0_wall))
+
+    viirs_sdr_proc.poll()
+
+    ## Close working directory:
+    #os.close(fdwork)
 
     return working_dir
 
@@ -178,7 +188,6 @@ def start_npp_sdr_processing(level1_home, mypublisher, message):
                 LOG.error('Failed to fix orbit number in RDR file = ' + str(urlobj.path))
                 import traceback
                 traceback.print_exc(file=sys.stderr)
-
 
             LOG.info("Start CSPP: RDR file = " + str(rdr_filename))
             working_dir = run_cspp(rdr_filename)
@@ -238,6 +247,12 @@ def npp_runner():
 if __name__ == "__main__":
 
     npp_runner()
+
+    rdr_filename = "/san1/polar_in/direct_readout/npp/RNSCA-RVIRS_npp_d20121111_t0825276_e0837086_b05391_c20121111084036199000_nfts_drl.h5"
+    LOG.info("Start CSPP: RDR file = " + str(rdr_filename))
+    working_dir = run_cspp(rdr_filename)
+    LOG.info("CSPP SDR processing finished...")
+
 
     """
     # Testing:

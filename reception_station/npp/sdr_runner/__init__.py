@@ -8,11 +8,15 @@ LOG = logging.getLogger('npp-sdr-processing')
 
 _RE_NPP_STAMP = re.compile('.*?(([A-Za-z0-9]+)_d(\d+)_t(\d+)_e(\d+)_b(\d+)).*')
 
-try:
-    CONFIG_PATH = os.environ['NPP_SDRPROC_CONFIG_DIR']
-except KeyError:
-    LOG.error('NPP_SDRPROC_CONFIG_DIR is not defined')
-    raise
+import sdr_runner
+_PACKAGEDIR = sdr_runner.__path__[0]
+CONFIG_PATH = os.path.join(os.path.dirname(_PACKAGEDIR), 'etc')
+
+#try:
+#    CONFIG_PATH = os.environ['NPP_SDRPROC_CONFIG_DIR']
+#except KeyError:
+#    LOG.error('NPP_SDRPROC_CONFIG_DIR is not defined')
+#    raise
 
 #
 # Read config file (SITE and DOMAIN)
