@@ -24,6 +24,7 @@ utv)
 CSPP_HOME="/local_disk/opt/CSPP/1_2"
 CSPP_WORKDIR="/san1/cspp/work"
 APPL_HOME="${HOME}/usr"
+NPP_SDRPROC_LOG_FILE=/san1/cspp/work/npp_sdr_runner.log
 #NPP_SDRPROC_CONFIG_DIR="/data/proj/safutv/dev/npp_dev/pytroll/reception_station/npp/etc/"
 
         ;;
@@ -34,8 +35,9 @@ APPL_HOME="${HOME}/usr"
 test)
 
 CSPP_HOME="/local_disk/opt/CSPP/current"
-CSPP_WORKDIR="/san1/cspp/wrk"
+CSPP_WORKDIR="/san1/cspp/work"
 APPL_HOME="/usr"
+NPP_SDRPROC_LOG_FILE=/san1/cspp/work/npp_sdr_runner.log
 
         ;;
 
@@ -45,8 +47,9 @@ APPL_HOME="/usr"
 prod)
 
 CSPP_HOME="/local_disk/opt/CSPP/current"
-CSPP_WORKDIR="/san1/cspp/wrk"
+CSPP_WORKDIR="/san1/cspp/work"
 APPL_HOME="/usr"
+NPP_SDRPROC_LOG_FILE=/san1/cspp/work/npp_sdr_runner.log
 
         ;;
 
@@ -59,6 +62,7 @@ offline)
 CSPP_HOME="/local_disk/opt/CSPP/1_2"
 APPL_HOME="${HOME}/usr"
 CSPP_WORKDIR="/local_disk/tmp"
+NPP_SDRPROC_LOG_FILE=/local_disk/tmp/npp_sdr_runner.log
 
         ;;
 
@@ -79,7 +83,7 @@ NPP_SDRPROC=${APPL_HOME}
 export NPP_SDRPROC
 export CSPP_WORKDIR
 #export NPP_SDRPROC_CONFIG_DIR
+export NPP_SDRPROC_LOG_FILE
 
 source ${CSPP_HOME}/cspp_env.sh
-
 python ${APPL_HOME}/bin/npp_sdr_runner.py

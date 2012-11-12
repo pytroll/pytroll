@@ -121,7 +121,7 @@ def run_cspp(viirs_rdr_file):
     cmdlist = [viirs_sdr_call, viirs_rdr_file]
     t0_clock = time.clock()
     t0_wall = time.time()
-    viirs_sdr_proc = Popen(cmdlist, 
+    viirs_sdr_proc = Popen(cmdlist,
                            cwd=working_dir,
                            stderr=PIPE, stdout=PIPE)
     while True:
@@ -248,10 +248,11 @@ if __name__ == "__main__":
 
     npp_runner()
 
-    rdr_filename = "/san1/polar_in/direct_readout/npp/RNSCA-RVIRS_npp_d20121111_t0825276_e0837086_b05391_c20121111084036199000_nfts_drl.h5"
-    LOG.info("Start CSPP: RDR file = " + str(rdr_filename))
-    working_dir = run_cspp(rdr_filename)
-    LOG.info("CSPP SDR processing finished...")
+    
+    #rdr_filename = "/san1/polar_in/direct_readout/npp/RNSCA-RVIRS_npp_d20121111_t0825276_e0837086_b05391_c20121111084036199000_nfts_drl.h5"
+    #LOG.info("Start CSPP: RDR file = " + str(rdr_filename))
+    #working_dir = run_cspp(rdr_filename)
+    #LOG.info("CSPP SDR processing finished...")
 
 
     """
