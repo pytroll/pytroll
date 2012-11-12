@@ -38,7 +38,7 @@ NAVIGATION_HELPER_FILES = ['utcpole.dat', 'leapsec.dat']
 
  
 from datetime import datetime
-
+from logging import handlers
 import logging
 LOG = logging.getLogger('modis-lvl1-processing')
 
@@ -54,7 +54,15 @@ _MODIS_LVL1PROC_LOG_FILE = os.environ.get('MODIS_LVL1PROC_LOG_FILE', None)
 
 
 if _MODIS_LVL1PROC_LOG_FILE:
-    handler = logging.FileHandler(_MODIS_LVL1PROC_LOG_FILE)
+    #handler = logging.FileHandler(_MODIS_LVL1PROC_LOG_FILE)
+    handler = handlers.TimedRotatingFileHandler(_MODIS_LVL1PROC_LOG_FILE,
+                                                when='M', 
+                                                interval=10, 
+                                                backupCount=10, 
+                                                encoding=None, 
+                                                delay=False, 
+                                                utc=False)
+
 else:
     handler = logging.StreamHandler(sys.stderr)
 
@@ -62,8 +70,8 @@ formatter = logging.Formatter(fmt=_DEFAULT_LOG_FORMAT,
                               datefmt=_DEFAULT_TIME_FORMAT)
 handler.setFormatter(formatter)
 
-handler.setLevel(10)
-LOG.setLevel(10)
+handler.setLevel(logging.DEBUG)
+LOG.setLevel(logging.DEBUG)
 LOG.addHandler(handler)
 
 
@@ -691,7 +699,9 @@ def modis_runner():
     """Listens and triggers processing"""
 
     lvl1b_home = OPTIONS['level1b_home']
-
+    # Roll over log files at application start:
+    LOG.handlers[0].doRollover()
+    LOG.info("*** Start MODIS level-1 processing with modis-lvl1b spa from NASA:")
     with posttroll.subscriber.Subscribe('PDS') as subscr:
         with Publish('modis_dr_runner', 'EOS 1', 
                      LEVEL1_PUBLISH_PORT) as publisher:        

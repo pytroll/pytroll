@@ -46,9 +46,7 @@ from sdr_runner.post_cspp import (get_sdr_files,
                                   create_subdirname, 
                                   pack_sdr_files, make_okay_files,
                                   cleanup_cspp_workdir)
-
 from sdr_runner.pre_cspp import fix_rdrfile
-
 from sdr_runner import LOG
 
 #: Default time format
@@ -60,9 +58,17 @@ _DEFAULT_LOG_FORMAT = '[%(levelname)s: %(asctime)s : %(name)s] %(message)s'
 import os, sys
 _NPP_SDRPROC_LOG_FILE = os.environ.get('NPP_SDRPROC_LOG_FILE', None)
 import logging
+from logging import handlers
 
 if _NPP_SDRPROC_LOG_FILE:
-    handler = logging.FileHandler(_NPP_SDRPROC_LOG_FILE)
+    #handler = logging.FileHandler(_NPP_SDRPROC_LOG_FILE)
+    handler = handlers.TimedRotatingFileHandler(_NPP_SDRPROC_LOG_FILE,
+                                                when='M', 
+                                                interval=10, 
+                                                backupCount=10, 
+                                                encoding=None, 
+                                                delay=False, 
+                                                utc=False)
 else:
     handler = logging.StreamHandler(sys.stderr)
 
@@ -70,8 +76,8 @@ formatter = logging.Formatter(fmt=_DEFAULT_LOG_FORMAT,
                               datefmt=_DEFAULT_TIME_FORMAT)
 handler.setFormatter(formatter)
 
-handler.setLevel(10)
-LOG.setLevel(10)
+handler.setLevel(logging.DEBUG)
+LOG.setLevel(logging.DEBUG)
 LOG.addHandler(handler)
 
 
@@ -106,17 +112,6 @@ def run_cspp(viirs_rdr_file):
     except OSError:
         working_dir = tempfile.mkdtemp()
 
-    # Change working directory:
-    #fdwork = os.open(working_dir, os.O_RDONLY)
-    #os.fchdir(fdwork)
-
-    #print "Envs: ", CSPP_ENVS
-    #os.system("echo $PATH > ~/cspp_path.log")
-    # Run the command:
-    #retv = Popen(["viirs_sdr.sh", viirs_rdr_file], 
-    #             env=CSPP_ENVS)
-    #tup = retv.communicate()
-    
     # Run the command:
     cmdlist = [viirs_sdr_call, viirs_rdr_file]
     t0_clock = time.clock()
@@ -139,9 +134,6 @@ def run_cspp(viirs_rdr_file):
     LOG.info("Seconds wall clock time: " + str(time.time() - t0_wall))
 
     viirs_sdr_proc.poll()
-
-    ## Close working directory:
-    #os.close(fdwork)
 
     return working_dir
 
@@ -234,7 +226,9 @@ def npp_runner():
     """The NPP/VIIRS runner. Listens and triggers processing"""
 
     sdr_home = OPTIONS['level1_home']
-
+    # Roll over log files at application start:
+    LOG.handlers[0].doRollover()
+    LOG.info("--- Start Suomi NPP SDR processing with CSPP ---")
     with posttroll.subscriber.Subscribe('RDR') as subscr:
         with Publish('npp_dr_runner', 'SDR', 
                      LEVEL1_PUBLISH_PORT) as publisher:        
@@ -248,7 +242,6 @@ if __name__ == "__main__":
 
     npp_runner()
 
-    
     #rdr_filename = "/san1/polar_in/direct_readout/npp/RNSCA-RVIRS_npp_d20121111_t0825276_e0837086_b05391_c20121111084036199000_nfts_drl.h5"
     #LOG.info("Start CSPP: RDR file = " + str(rdr_filename))
     #working_dir = run_cspp(rdr_filename)
