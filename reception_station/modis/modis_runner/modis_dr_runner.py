@@ -700,8 +700,11 @@ def modis_runner():
 
     lvl1b_home = OPTIONS['level1b_home']
     # Roll over log files at application start:
-    LOG.handlers[0].doRollover()
-    LOG.info("*** Start MODIS level-1 processing with modis-lvl1b spa from NASA:")
+    try:
+        LOG.handlers[0].doRollover()
+    except AttributeError:
+        LOG.warning("No log rotation supported for this handler...")
+    LOG.info("*** Start the MODIS level-1 runner:")
     with posttroll.subscriber.Subscribe('PDS') as subscr:
         with Publish('modis_dr_runner', 'EOS 1', 
                      LEVEL1_PUBLISH_PORT) as publisher:        

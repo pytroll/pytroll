@@ -62,10 +62,12 @@ from logging import handlers
 
 if _NPP_SDRPROC_LOG_FILE:
     #handler = logging.FileHandler(_NPP_SDRPROC_LOG_FILE)
+    ndays = OPTIONS["log_rotation_days"]
+    ncount = OPTIONS["log_rotation_backup"]
     handler = handlers.TimedRotatingFileHandler(_NPP_SDRPROC_LOG_FILE,
-                                                when='M', 
-                                                interval=10, 
-                                                backupCount=10, 
+                                                when='D', 
+                                                interval=ndays, 
+                                                backupCount=ncount, 
                                                 encoding=None, 
                                                 delay=False, 
                                                 utc=False)
@@ -227,8 +229,11 @@ def npp_runner():
 
     sdr_home = OPTIONS['level1_home']
     # Roll over log files at application start:
-    LOG.handlers[0].doRollover()
-    LOG.info("--- Start Suomi NPP SDR processing with CSPP ---")
+    try:
+        LOG.handlers[0].doRollover()
+    except AttributeError:
+        LOG.warning("No log rotation supported for this handler...")
+    LOG.info("*** Start the Suomi NPP SDR runner:")
     with posttroll.subscriber.Subscribe('RDR') as subscr:
         with Publish('npp_dr_runner', 'SDR', 
                      LEVEL1_PUBLISH_PORT) as publisher:        
