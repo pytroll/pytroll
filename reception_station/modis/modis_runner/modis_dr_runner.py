@@ -55,13 +55,15 @@ _MODIS_LVL1PROC_LOG_FILE = os.environ.get('MODIS_LVL1PROC_LOG_FILE', None)
 
 if _MODIS_LVL1PROC_LOG_FILE:
     #handler = logging.FileHandler(_MODIS_LVL1PROC_LOG_FILE)
+    ndays = int(OPTIONS.get("log_rotation_days", 1))
+    ncount = int(OPTIONS.get("log_rotation_backup", 5))
     handler = handlers.TimedRotatingFileHandler(_MODIS_LVL1PROC_LOG_FILE,
-                                                when='M', 
-                                                interval=10, 
-                                                backupCount=10, 
+                                                when='midnight', 
+                                                interval=ndays, 
+                                                backupCount=ncount, 
                                                 encoding=None, 
                                                 delay=False, 
-                                                utc=False)
+                                                utc=True)
 
 else:
     handler = logging.StreamHandler(sys.stderr)

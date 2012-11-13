@@ -18,7 +18,12 @@ setup(name='modis_lvl1_proc',
       long_description=long_description,
       license='GPLv3',
       version='0.1',
-      scripts = ['modis_dr_runner.sh', 'modis_runner/modis_dr_runner.py'],
+      scripts = ['modis_dr_runner.sh', 
+                 'modis_lvl1_check_runner_lib.sh',
+                 'modis_lvl1_runner_status.sh',
+                 'modis_lvl1_runner_start.sh',
+                 'modis_lvl1_runner_stop.sh',
+                 'modis_runner/modis_dr_runner.py'],
       packages=['modis_runner'],
       
       # Project should use reStructuredText, so ensure that the docutils get

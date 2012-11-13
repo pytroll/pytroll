@@ -29,8 +29,7 @@ echo "No SMHI_MODE set..."
    ;;
 esac
 
-#. ${APPLROOT}/npp_sdr_check_runner_lib.sh
-. ./npp_sdr_check_runner_lib.sh
+. ${APPLROOT}/npp_sdr_check_runner_lib.sh
 
 processname="npp_sdr_runner"
 
