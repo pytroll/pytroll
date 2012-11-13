@@ -5,12 +5,15 @@ import os, shutil
 from glob import glob
 from sdr_runner.orbitno import TBUS_STYLE
 
+import logging
+LOG = logging.getLogger(__name__)
+
 def cleanup_cspp_workdir(workdir):
     """Clean up the CSPP working dir after processing"""
 
     filelist = glob('%s/*' % workdir)
     this = [ os.remove(s) for s in filelist if os.path.isfile(s) ]
-    print "Number of files left after cleaning working dir = ", len(this)
+    LOG.info("Number of files left after cleaning working dir = " + str(len(this)))
     shutil.rmtree(workdir)
     #os.mkdir(workdir)
     return
@@ -64,11 +67,11 @@ def pack_sdr_files(sdrfiles, base_dir, subdir):
     if not os.path.exists(path):
         os.mkdir(path)
 
-    print "SDR files: ", sdrfiles
+    LOG.info("Number of SDR files: " + str(len(sdrfiles)))
     for sdrfile in sdrfiles:
-	newfilename = os.path.join(path, os.path.basename(sdrfile))
-	print "Copy sdrfile to destination: ", newfilename
-	shutil.copy(sdrfile, newfilename)
+        newfilename = os.path.join(path, os.path.basename(sdrfile))
+        LOG.info("Copy sdrfile to destination: " + newfilename)
+        shutil.copy(sdrfile, newfilename)
 
     return
 

@@ -5,8 +5,11 @@ import re
 
 from pyorbital.orbital import Orbital
 from pyorbital.tlefile import Tle
-from sdr_runner import TLE_DIRS, TLE_FILE_FORMAT, LOG
+from sdr_runner import TLE_DIRS, TLE_FILE_FORMAT
 from sdr_runner import get_npp_stamp
+
+import logging
+LOG = logging.getLogger(__name__)
 
 class NoTleFile(Exception):
     pass

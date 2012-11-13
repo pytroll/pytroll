@@ -47,7 +47,6 @@ from sdr_runner.post_cspp import (get_sdr_files,
                                   pack_sdr_files, make_okay_files,
                                   cleanup_cspp_workdir)
 from sdr_runner.pre_cspp import fix_rdrfile
-from sdr_runner import LOG
 
 #: Default time format
 _DEFAULT_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
@@ -60,17 +59,19 @@ _NPP_SDRPROC_LOG_FILE = os.environ.get('NPP_SDRPROC_LOG_FILE', None)
 import logging
 from logging import handlers
 
+LOG = logging.getLogger('npp_sdr_runner')
+
 if _NPP_SDRPROC_LOG_FILE:
     #handler = logging.FileHandler(_NPP_SDRPROC_LOG_FILE)
     ndays = int(OPTIONS["log_rotation_days"])
     ncount = int(OPTIONS["log_rotation_backup"])
     handler = handlers.TimedRotatingFileHandler(_NPP_SDRPROC_LOG_FILE,
-                                                when='D', 
+                                                when='midnight', 
                                                 interval=ndays, 
                                                 backupCount=ncount, 
                                                 encoding=None, 
                                                 delay=False, 
-                                                utc=False)
+                                                utc=True)
 else:
     handler = logging.StreamHandler(sys.stderr)
 
@@ -195,7 +196,8 @@ def start_npp_sdr_processing(level1_home, mypublisher, message):
 
             # Use the start time from the RDR message!:
             tobj = start_time
-            LOG.info("Time used in sub-dir name: " + str(tobj.strftime("%Y-%m-%d %H:%M")))
+            LOG.info("Time used in sub-dir name: " + 
+                     str(tobj.strftime("%Y-%m-%d %H:%M")))
             subd = create_subdirname(tobj)
             LOG.info("Create sub-directory for sdr files: %s" % str(subd))
             pack_sdr_files(result_files, level1_home, subd)
