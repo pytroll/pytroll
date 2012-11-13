@@ -8,7 +8,7 @@
 
 function process_id_list {
    PROCESS_NAME=$1
-   PROC_LIST=$(ps aux | grep -v grep | grep -i "${PROCESS_NAME}" | awk '{print $2}')
+   PROC_LIST=$(ps aux | grep -v grep | grep -i "${PROCESS_NAME}" | grep -v 'log' | awk '{print $2}')
    # NB! PROC may be a list   
 }
 
