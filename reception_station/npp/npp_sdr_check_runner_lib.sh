@@ -47,8 +47,9 @@ function process_check {
 	 fi
 	 
 	 if [[ $DO_KILL ]]; then
-	    status=`kill -9 $PROC`
-	    if [[ $status ]]; then
+	    kill -9 $PROC
+            status=$?
+	    if [[ $status == 0 ]]; then
 	       echo "Succeeded killing ${PROC}"
 	    else
 	       echo "Fails killing ${PROC}, terminates program with error code"
