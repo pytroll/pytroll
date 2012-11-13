@@ -62,8 +62,8 @@ from logging import handlers
 
 if _NPP_SDRPROC_LOG_FILE:
     #handler = logging.FileHandler(_NPP_SDRPROC_LOG_FILE)
-    ndays = OPTIONS["log_rotation_days"]
-    ncount = OPTIONS["log_rotation_backup"]
+    ndays = int(OPTIONS["log_rotation_days"])
+    ncount = int(OPTIONS["log_rotation_backup"])
     handler = handlers.TimedRotatingFileHandler(_NPP_SDRPROC_LOG_FILE,
                                                 when='D', 
                                                 interval=ndays, 

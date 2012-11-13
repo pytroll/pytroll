@@ -86,4 +86,5 @@ export CSPP_WORKDIR
 export NPP_SDRPROC_LOG_FILE
 
 source ${CSPP_HOME}/cspp_env.sh
-python ${APPL_HOME}/bin/npp_sdr_runner.py
+
+/usr/bin/python ${APPL_HOME}/bin/npp_sdr_runner.py

@@ -13,14 +13,18 @@ fi
 case $SMHI_MODE in
 utv)
    APPLROOT="/data/proj/safutv/usr/bin"
+   PYTHONPATH="/usr/local/lib64/python2.6/site-packages:/usr/local/lib/python2.6/site-packages"
+   PYTHONPATH="${PYTHONPATH}:/data/proj/safutv/usr/lib/python2.6/site-packages:/data/proj/safutv/usr/lib64/python2.6/site-packages"
 
    ;;
 test)
    APPLROOT="/usr/local/bin"
+   PYTHONPATH="/usr/local/lib64/python2.6/site-packages:/usr/local/lib/python2.6/site-packages"
 
    ;;
 prod)
    APPLROOT="/usr/local/bin"
+   PYTHONPATH="/usr/local/lib64/python2.6/site-packages:/usr/local/lib/python2.6/site-packages"
 
    ;;
 *)
@@ -30,6 +34,7 @@ echo "No SMHI_MODE set..."
 esac
 
 . ${APPLROOT}/npp_sdr_check_runner_lib.sh
+export PYTHONPATH
 
 processname="npp_sdr_runner"
 
@@ -48,7 +53,7 @@ fi
 if [[ $idx == 0 ]]
 then
    echo "Starting $processname"
-   nohup ${APPLROOT}/npp_sdr_runner.sh >/dev/null &
+   nohup ${APPLROOT}/npp_sdr_runner.sh > /dev/null 2>&1 &
 fi
 
 if [[ $idx > 2 ]]
