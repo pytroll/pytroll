@@ -33,7 +33,7 @@ MODIS_LVL1PROC_LOG_FILE="/san1/modislvl1b/work/modis_lvl1proc.log"
 test)
 
 SPA_HOME="/local_disk/opt/MODISL1DB_SPA/current"
-APPL_HOME="/usr"
+APPL_HOME="/usr/local"
 MODIS_LVL1PROC_LOG_FILE="/var/log/satellit"
 
         ;;
@@ -44,7 +44,7 @@ MODIS_LVL1PROC_LOG_FILE="/var/log/satellit"
 prod)
 
 SPA_HOME="/local_disk/opt/MODISL1DB_SPA/current"
-APPL_HOME="/usr"
+APPL_HOME="/usr/local"
 MODIS_LVL1PROC_LOG_FILE="/var/log/satellit"
 
         ;;
