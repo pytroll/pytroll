@@ -24,6 +24,7 @@ utv)
 SPA_HOME="/local_disk/opt/MODISL1DB_SPA/current"
 APPL_HOME="${HOME}/usr"
 MODIS_LVL1PROC_LOG_FILE="/san1/modislvl1b/work/modis_lvl1proc.log"
+#MODIS_LVL1PROC_CONFIG_DIR="${HOME}/usr/etc"
 
         ;;
 
@@ -35,6 +36,7 @@ test)
 SPA_HOME="/local_disk/opt/MODISL1DB_SPA/current"
 APPL_HOME="/usr/local"
 MODIS_LVL1PROC_LOG_FILE="/var/log/satellit"
+MODIS_LVL1PROC_CONFIG_DIR="/usr/local/etc"
 
         ;;
 
@@ -46,6 +48,7 @@ prod)
 SPA_HOME="/local_disk/opt/MODISL1DB_SPA/current"
 APPL_HOME="/usr/local"
 MODIS_LVL1PROC_LOG_FILE="/var/log/satellit"
+MODIS_LVL1PROC_CONFIG_DIR="/usr/local/etc"
 
         ;;
 
