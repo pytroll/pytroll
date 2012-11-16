@@ -269,9 +269,8 @@ def run_terra_l0l1(pdsfile):
 
     mod01files = glob.glob("%s/%s*hdf" % (level1b_home, firstpart))
     if len(mod01files) > 0:
-        LOG.warning("Level 1 file already exists: %s" % mod01files[0])
-        #os.close(fdwork) # Close working directory
-        return retv
+        LOG.warning("Level 1 file for this scene already exists: %s" % mod01files[0])
+        #return retv
         
     LOG.info("Level-1 filename: " + str(mod01_file))
     satellite = "Terra"
@@ -298,7 +297,6 @@ def run_terra_l0l1(pdsfile):
 
     modislvl1b_proc.poll()
     #modislvl1b_status = modislvl1b_proc.returncode
-    #os.system(cmdstr)
 
     # Now do the level1a-1b processing:
     lut_home = os.path.join(SPA_HOME, "modisl1db/algorithm/data/modist/cal")
@@ -311,7 +309,6 @@ def run_terra_l0l1(pdsfile):
               (wrapper_home, mod01_file, mod03_file,
                refl_lut, emiss_lut, qa_lut, mod021km_file, mod02hkm_file, mod02qkm_file))
     # Run the command:
-    #os.system(cmdstr)
     modislvl1b_proc = Popen(cmdstr, shell=True, 
                             cwd=working_dir,
                             stderr=PIPE, stdout=PIPE)
@@ -394,10 +391,6 @@ def run_aqua_l0l1(pdsfile):
             working_dir = '/tmp'
             LOG.info("Will use /tmp")
 
-    # Change working directory:
-    #fdwork = os.open(working_dir, os.O_RDONLY)
-    #os.fchdir(fdwork)
-
     #ephemeris_home = OPTIONS['ephemeris_home']
     #attitude_home = OPTIONS['attitude_home']
     level1b_home = OPTIONS['level1b_home']
@@ -410,10 +403,7 @@ def run_aqua_l0l1(pdsfile):
 
     # Get the observation time from the filename as a datetime object:
     bname = os.path.basename(pdsfile)
-    #try:
     obstime = datetime.strptime(bname, filetype_aqua)
-    #except ValueError:
-        
         
     # Get ephemeris and attitude names! FIXME!
     attitude, ephemeris = run_aqua_gbad(obstime)
@@ -430,8 +420,8 @@ def run_aqua_l0l1(pdsfile):
     firstpart = obstime.strftime(level1a_aqua)
     mod01files = glob.glob("%s/%s*hdf" % (level1b_home, firstpart))
     if len(mod01files) > 0:
-        LOG.warning("Level 1 file already exists: %s" % mod01files[0])
-        return
+        LOG.warning("Level 1 file for this scene already exists: %s" % mod01files[0])
+        #return
         
     mod01_file = "%s/%s_%s" % (level1b_home, firstpart, lastpart)
     firstpart = obstime.strftime(geofile_aqua)
@@ -444,7 +434,6 @@ def run_aqua_l0l1(pdsfile):
               (wrapper_home, pdsfile, satellite, mod01_file, mod03_file,
                ephemeris, attitude, leapsec_name, utcpole_name, geocheck_threshold))
     # Run the command:
-    #os.system(cmdstr)
     modislvl1b_proc = Popen(cmdstr, shell=True, 
                             cwd=working_dir,
                             stderr=PIPE, stdout=PIPE)
@@ -483,8 +472,7 @@ def run_aqua_l0l1(pdsfile):
     cmdstr = ("%s/run modis.mxd01 %s modis.mxd03 %s modis_reflective_luts %s modis_emissive_luts %s modis_qa_luts %s modis.mxd021km %s modis.mxd02hkm %s modis.mxd02qkm %s" %
               (wrapper_home, mod01_file, mod03_file,
                refl_lut, emiss_lut, qa_lut, mod021km_file, mod02hkm_file, mod02qkm_file))
-    # Run the command:
-    #os.system(cmdstr)
+
     modislvl1b_proc = Popen(cmdstr, shell=True, 
                             cwd=working_dir,
                             stderr=PIPE, stdout=PIPE)
@@ -503,9 +491,6 @@ def run_aqua_l0l1(pdsfile):
 
     modislvl1b_proc.poll()
 
-    ## Close working directory:
-    #os.close(fdwork)
-
     retv = {'mod021km_file': mod021km_file,
             'mod02hkm_file': mod02hkm_file,
             'mod02qkm_file': mod02qkm_file,
@@ -513,7 +498,6 @@ def run_aqua_l0l1(pdsfile):
             'geo_file': mod03_file}
 
     return retv
-
 
 def send_message(this_publisher, msg):
     """Send a message for down-stream processing"""
