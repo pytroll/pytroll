@@ -35,7 +35,7 @@ test)
 
 SPA_HOME="/local_disk/opt/MODISL1DB_SPA/current"
 APPL_HOME="/usr/local"
-MODIS_LVL1PROC_LOG_FILE="/var/log/satellit"
+MODIS_LVL1PROC_LOG_FILE="/var/log/satellit/modis_lvl1proc.log"
 MODIS_LVL1PROC_CONFIG_DIR="/usr/local/etc"
 
         ;;
@@ -47,7 +47,7 @@ prod)
 
 SPA_HOME="/local_disk/opt/MODISL1DB_SPA/current"
 APPL_HOME="/usr/local"
-MODIS_LVL1PROC_LOG_FILE="/var/log/satellit"
+MODIS_LVL1PROC_LOG_FILE="/var/log/satellit/modis_lvl1proc.log"
 MODIS_LVL1PROC_CONFIG_DIR="/usr/local/etc"
 
         ;;
@@ -77,6 +77,7 @@ esac
 
 export SPA_HOME
 export MODIS_LVL1PROC_LOG_FILE
+export MODIS_LVL1PROC_CONFIG_DIR
 
 MODIS_LVL1PROC=${APPL_HOME}
 export MODIS_LVL1PROC
