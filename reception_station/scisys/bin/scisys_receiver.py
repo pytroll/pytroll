@@ -28,6 +28,7 @@ satellite, format, start_time, end_time, filename, uri, type, orbit_number, [ins
 """
 import os
 from datetime import datetime
+from time import sleep
 from urlparse import urlsplit, urlunsplit, SplitResult
 from posttroll.publisher import Publish
 from posttroll.message import Message
@@ -292,7 +293,7 @@ class GMCSubscriber(object):
     def __init__(self, host, port):
         self._host = host
         self._port = port
-        self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._sock = None
         self.msg = ""
         self._bufsize = 256
         self.loop = True
@@ -300,32 +301,40 @@ class GMCSubscriber(object):
     def recv(self):
         """Receive messages.
         """
-        self._sock.connect((self._host, self._port))
-        self._sock.settimeout(1.0)
-        try:
-            while LOOP:
-                try:
-                    data = self._sock.recv(self._bufsize)
-                except socket.timeout:
-                    pass
-                else:
-                    if not data:
-                        break
-                    self.msg += data
-                    messages = self.msg.split("</message>")
-                    if len(messages) > 1:
-                        for mess in messages[:-1]:
-                            yield mess + "</message>"
-                        if messages[-1].endswith("</body>"):
-                            yield messages[-1] + "</message>"
+        while LOOP:
+            self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                self._sock.connect((self._host, self._port))
+            except socket.error:
+                logger.error("Cannot connect to " + str((self._host, self._port))
+                             + ", retrying in 60 seconds.")
+                sleep(60)
+                continue
+            self._sock.settimeout(1.0)
+            try:
+                while LOOP:
+                    try:
+                        data = self._sock.recv(self._bufsize)
+                    except socket.timeout:
+                        pass
+                    else:
+                        if not data:
+                            break
+                        self.msg += data
+                        messages = self.msg.split("</message>")
+                        if len(messages) > 1:
+                            for mess in messages[:-1]:
+                                yield mess + "</message>"
+                            if messages[-1].endswith("</body>"):
+                                yield messages[-1] + "</message>"
+                                self.msg = ""
+                            else:
+                                self.msg = messages[-1]
+                        elif self.msg.endswith("</message>"):
+                            yield self.msg
                             self.msg = ""
-                        else:
-                            self.msg = messages[-1]
-                    elif self.msg.endswith("</message>"):
-                        yield self.msg
-                        self.msg = ""
-        finally:
-            self._sock.close()
+            finally:
+                self._sock.close()
 
 def receive_from_zmq(host, port, days=1):
     """Receive 2met! messages from zeromq.
@@ -376,13 +385,16 @@ if __name__ == '__main__':
         handler = logging.handlers.TimedRotatingFileHandler(opts.log,
                                                             "midnight",
                                                             backupCount = 7)
-        handler.setFormatter(logging.Formatter("[%(levelname)s: %(asctime)s :"
-                                                    " %(name)s] %(message)s",
-                                                    '%Y-%m-%d %H:%M:%S'))
-        handler.setLevel(logging.DEBUG)
-        logging.getLogger('').setLevel(logging.DEBUG)
-        logging.getLogger('').addHandler(handler)
-        logger = logging.getLogger("receiver")
+    else:
+        handler = logging.StreamHandler()
+
+    handler.setFormatter(logging.Formatter("[%(levelname)s: %(asctime)s :"
+                                                " %(name)s] %(message)s",
+                                                '%Y-%m-%d %H:%M:%S'))
+    handler.setLevel(logging.DEBUG)
+    logging.getLogger('').setLevel(logging.DEBUG)
+    logging.getLogger('').addHandler(handler)
+    logger = logging.getLogger("receiver")
 
     if opts.daemon is None:
         try:
@@ -450,8 +462,7 @@ if __name__ == '__main__':
             APP = App()
             sys.argv = [sys.argv[0], opts.daemon]
             angel = daemon.runner.DaemonRunner(APP)
-            if opts.log:
-                angel.daemon_context.files_preserve = [handler.stream]
+            angel.daemon_context.files_preserve = [handler.stream]
             angel.parse_args([sys.argv[0], opts.daemon])
             sys.exit(angel.do_action())
         except ImportError:

@@ -26,8 +26,8 @@
 
 from setuptools import setup
 
-setup(name="SMHI-posttroll",
-      version="0.2.0",
+setup(name="scisys_receiver",
+      version="0.2.1",
       description="Scisys message interface to pytroll",
       author='The pytroll team',
       author_email='martin.raspaud@smhi.se',
