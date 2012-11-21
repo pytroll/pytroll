@@ -36,6 +36,7 @@ DAYS_KEEP_OLD_ETC_FILES = OPTIONS.get('days_keep_old_etc_files', 60)
 URL = OPTIONS['url_modis_navigation']
 NAVIGATION_HELPER_FILES = ['utcpole.dat', 'leapsec.dat']
 
+SERVERNAME = OPTIONS['servername']
  
 from datetime import datetime
 from logging import handlers
@@ -83,7 +84,6 @@ packetfile_aqua_prfx = "P154095715409581540959"
 modisfile_aqua_prfx = "P1540064AAAAAAAAAAAAAA"
 modisfile_terra_prfx = "P0420064AAAAAAAAAAAAAA"
 
-servername = "safe.smhi.se"
 
 from urlparse import urlparse
 import posttroll.subscriber
@@ -519,7 +519,7 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
     LOG.info(message)
     urlobj = urlparse(message.data['uri'])
     LOG.info("Server = " + str(urlobj.netloc))
-    if urlobj.netloc != servername:
+    if urlobj.netloc != SERVERNAME:
         return aqua_files
     LOG.info("Ok... " + str(urlobj.netloc))
     LOG.info("Sat and Instrument: " + str(message.data['satellite']) + " " 
@@ -543,9 +543,10 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
         if fname.find(modisfile_terra_prfx) == 0 and fname.endswith('001.PDS'):
             # Check if the file exists:
             if not os.path.exists(urlobj.path):
-                raise IOError("File is reported to be dispatched " + 
-                              "but is not there! File = " + 
-                              urlobj.path)
+                LOG.warning("File is reported to be dispatched " + 
+                            "but is not there! File = " + 
+                            urlobj.path)
+                return aqua_files
 
             # Do processing:
             LOG.info("Level-0 to lvl1 processing on terra start!" + 
@@ -605,9 +606,10 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
             fname.endswith('001.PDS')):
             # Check if the file exists:
             if not os.path.exists(urlobj.path):
-                raise IOError("File is reported to be dispatched " + 
-                              "but is not there! File = " + 
-                              urlobj.path)
+                LOG.warning("File is reported to be dispatched " + 
+                            "but is not there! File = " + 
+                            urlobj.path)
+                return aqua_files
 
             if not scene_id in aqua_files:
                 aqua_files[scene_id] = []
