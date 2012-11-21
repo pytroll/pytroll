@@ -38,7 +38,7 @@ test)
 CSPP_HOME="/local_disk/opt/CSPP/current"
 CSPP_WORKDIR="/san1/cspp/work"
 APPL_HOME="/usr/local"
-NPP_SDRPROC_LOG_FILE=/var/log/satellit/npp_sdr_runner.log
+NPP_SDRPROC_LOG_FILE="/var/log/satellit/npp_sdr_runner.log"
 NPP_SDRPROC_CONFIG_DIR="/usr/local/etc"
 
         ;;
@@ -51,7 +51,7 @@ prod)
 CSPP_HOME="/local_disk/opt/CSPP/current"
 CSPP_WORKDIR="/san1/cspp/work"
 APPL_HOME="/usr/local"
-NPP_SDRPROC_LOG_FILE=/var/log/satellit/npp_sdr_runner.log
+NPP_SDRPROC_LOG_FILE="/var/log/satellit/npp_sdr_runner.log"
 NPP_SDRPROC_CONFIG_DIR="/usr/local/etc"
 
         ;;
@@ -65,7 +65,7 @@ offline)
 CSPP_HOME="/local_disk/opt/CSPP/1_2"
 APPL_HOME="${HOME}/usr"
 CSPP_WORKDIR="/local_disk/tmp"
-NPP_SDRPROC_LOG_FILE=/local_disk/tmp/npp_sdr_runner.log
+NPP_SDRPROC_LOG_FILE="/local_disk/tmp/npp_sdr_runner.log"
 NPP_SDRPROC_CONFIG_DIR="/usr/local/etc"
 
         ;;
