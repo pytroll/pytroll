@@ -10,7 +10,7 @@ _RE_NPP_STAMP = re.compile('.*?(([A-Za-z0-9]+)_d(\d+)_t(\d+)_e(\d+)_b(\d+)).*')
 
 import sdr_runner
 _PACKAGEDIR = sdr_runner.__path__[0]
-CONFIG_PATH = os.path.join(os.path.dirname(_PACKAGEDIR), 'etc')
+_CONFIG_PATH = os.path.join(os.path.dirname(_PACKAGEDIR), 'etc')
 
 #try:
 #    CONFIG_PATH = os.environ['NPP_SDRPROC_CONFIG_DIR']
@@ -21,6 +21,9 @@ CONFIG_PATH = os.path.join(os.path.dirname(_PACKAGEDIR), 'etc')
 #
 # Read config file (SITE and DOMAIN)
 #
+CONFIG_PATH = os.environ.get('NPP_SDRPROC_CONFIG_DIR', _CONFIG_PATH)
+print "CONFIG_PATH: ", CONFIG_PATH 
+
 CONF = ConfigParser.ConfigParser()
 CONF.read(os.path.join(CONFIG_PATH, "npp_sdr_config.cfg"))
 
