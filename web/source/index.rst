@@ -21,9 +21,24 @@ The provided python packages are designed to be used both in R&D environments
 and in 24/7 operational production.
 
 .. note::
-   A Pytroll workshop will be held in Norrköping, Sweden, week 48, end
-   of November, 2012. Please send a message on the pytroll mailing list
-   (pytroll@googlegroups.com) if you are interested.
+   The first Pytroll workshop held in Norrköping, Sweden, end of November,
+   2012, is soon coming to an end.  9 people from Holland, Finland, Romania and
+   EUMETSAT joined up with the pytroll teams at DMI and SMHI, to learn more on
+   the pytroll tools and how it can be used in their local environments for
+   satellite data production.
+
+.. figure:: _static/00004_tiny.jpg
+    :width: 256px
+    :align: left
+    :height: 170px
+    :alt: alternate text
+    :figclass: align-left
+
+    After evaluating the outcome of the workshop we will consider how to follow
+    up on this. We may host another workshop in 2013 at DMI or SMHI. We will as
+    usual announce this on the mailing list (pytroll@googlegroups.com).
+ 
+
 
 The available python packages at the moment are:
 
@@ -78,3 +93,4 @@ Contents:
    recipes
 
 Contact us: https://groups.google.com/group/pytroll
+
