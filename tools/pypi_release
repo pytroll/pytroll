@@ -1,0 +1,35 @@
+#!/bin/sh
+#
+# We expect to sit in the top af the MASTER branch of a GIT project.
+# We will:
+#     * Tag the MASTER branch with '[v]<version>'
+#     * Do an upload to pypi.
+# <version> is read from the setup.py file
+#
+branch=$(git describe --contains --all HEAD) || exit
+version=$(python ./setup.py --version) || exit
+
+tag="$version"
+test $(echo $tag | cut -c1) = 'v' || tag=v$tag
+
+what() {
+    while true; do
+        read -p "$* " yn
+        case $yn in
+            [Yy]* ) return 0;;
+            [Nn]* ) return 1;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+}
+
+test "$branch" = "master" || {
+    what "This is NOT the master branch, do you want to continue ?" || exit; }
+
+what "This HEAD will tagged by '$tag', OK ?" && { 
+    echo "git tag $tag";
+    git tag $tag || exit; }
+
+what "This released ($version) will be uploaded, OK ?" && {
+    echo "python setup.py sdist upload"
+    python setup.py sdist upload || exit; }
