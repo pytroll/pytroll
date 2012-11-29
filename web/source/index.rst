@@ -27,17 +27,17 @@ and in 24/7 operational production.
    the pytroll tools and how it can be used in their local environments for
    satellite data production.
 
-.. figure:: _static/00004_tiny.jpg
-    :width: 256px
-    :align: left
-    :height: 170px
-    :alt: alternate text
-    :figclass: align-left
+   +---------+---------+--------------+
+   | |pict1| | |pict2| | |figuretext| |
+   +---------+---------+--------------+
 
-    After evaluating the outcome of the workshop we will consider how to follow
-    up on this. We may host another workshop in 2013 at DMI or SMHI. We will as
-    usual announce this on the mailing list (pytroll@googlegroups.com).
- 
+.. |pict1| image:: _static/00004_tiny.jpg
+    :width: 230px
+
+.. |pict2| image:: _static/00008_tiny.jpg
+    :width: 230px
+
+.. |figuretext| replace:: After evaluating the outcome of the workshop we will consider how to follow up on this. We may host another workshop in 2013 at DMI or SMHI. We will as usual announce this on the mailing list (pytroll@googlegroups.com).
 
 
 The available python packages at the moment are:
