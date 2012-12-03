@@ -184,6 +184,7 @@ def start_npp_sdr_processing(level1_home, mypublisher, message):
                 LOG.error('Failed to fix orbit number in RDR file = ' + str(urlobj.path))
                 import traceback
                 traceback.print_exc(file=sys.stderr)
+                rdr_filename = urlobj.path
 
             LOG.info("Start CSPP: RDR file = " + str(rdr_filename))
             working_dir = run_cspp(rdr_filename)
