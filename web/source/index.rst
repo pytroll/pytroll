@@ -21,9 +21,24 @@ The provided python packages are designed to be used both in R&D environments
 and in 24/7 operational production.
 
 .. note::
-   A Pytroll workshop will be held in Norrköping, Sweden, week 48, end
-   of November, 2012. Please send a message on the pytroll mailing list
-   (pytroll@googlegroups.com) if you are interested.
+   The first Pytroll workshop held in Norrköping, Sweden, end of November,
+   2012, is soon coming to an end.  9 people from Holland, Finland, Romania and
+   EUMETSAT joined up with the pytroll teams at DMI and SMHI, to learn more on
+   the pytroll tools and how it can be used in their local environments for
+   satellite data production.
+
+   +---------+---------+--------------+
+   | |pict1| | |pict2| | |figuretext| |
+   +---------+---------+--------------+
+
+.. |pict1| image:: _static/00004_tiny.jpg
+    :width: 230px
+
+.. |pict2| image:: _static/00008_tiny.jpg
+    :width: 230px
+
+.. |figuretext| replace:: After evaluating the outcome of the workshop we will consider how to follow up on this. We may host another workshop in 2013 at DMI or SMHI. We will as usual announce this on the mailing list (pytroll@googlegroups.com).
+
 
 The available python packages at the moment are:
 
@@ -51,6 +66,19 @@ to have a look and give us a hand):
 .. _python-geotiepoints: http://www.github.com/adybbroe/python-geotiepoints
 .. _posttroll: http://github.com/mraspaud/posttroll
 
+
+Satellites supported (imager instruments) at the moment by the reader/processor
+modules include: 
+
+ - Meteosat series (tested with 7, 8, 9)
+ - GOES series, in HRIT/LRIT format (tested with 11, 12, 13, 15)
+ - MTSAT series, in HRIT/LRIT format (tested with 1R, 2)
+ - Electro L, in HRIT/LRIT format (tested with N1)
+ - NOAA series, in AAPP format (tested with 15, 16, 17, 18, 19)
+ - Metop-A, in EPS 1a and 1b format
+ - Aqua and Terra, in hdf-eos format
+ - NPP, in SDR hdf format
+
 Contents:
 
 .. toctree::
@@ -65,3 +93,4 @@ Contents:
    recipes
 
 Contact us: https://groups.google.com/group/pytroll
+

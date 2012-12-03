@@ -28,15 +28,17 @@ satellite, format, start_time, end_time, filename, uri, type, orbit_number, [ins
 """
 import os
 from datetime import datetime
+from time import sleep
 from urlparse import urlsplit, urlunsplit, SplitResult
 from posttroll.publisher import Publish
-from posttroll.subscriber import Subscriber
 from posttroll.message import Message
+from lxml import etree
 import logging
+import socket
 
 logger = logging.getLogger(__name__)
 
-EMITTER = "nimbus.smhi.se"
+LOOP = True
 
 class TwoMetMessage(object):
     """Interperter for 2met! messages.
@@ -49,9 +51,10 @@ class TwoMetMessage(object):
         self.body = ''
         if mstring is not None:
             self._decode(mstring.strip())
+        self._attrs = {}
 
-    def _decode(self, mstring):
-        """Decode 2met! messages.
+    def _internal_decode(self, mstring):
+        """Decode 2met! messages, internal format.
         """
         dummy, content = mstring.split("[", 1)
         content = content.rsplit("]", 1)[0]
@@ -64,6 +67,36 @@ class TwoMetMessage(object):
             self.body = str(dic["body"])
         self._type = eval(dic["type"])
 
+    def _xml_decode(self, mstring):
+        """Decode xml 2met! messages.
+        """
+        root = etree.fromstring(mstring)
+        self._attrs = dict(root.items())
+
+        self._id = int(root.get("sequence"))
+        self._type = root.get("type")
+        self._time = datetime.strptime(root.get("timestamp"),
+                                       "%Y-%m-%dT%H:%M:%S")
+        for child in root:
+            if child.tag == "body":
+                self.body = child.text
+
+
+
+    def _decode(self, mstring):
+        """Decode 2met! messages.
+        """
+
+        if mstring.startswith("Message["):
+            self._internal_decode(mstring)
+        elif mstring.startswith("<message"):
+            try:
+                self._xml_decode(mstring)
+            except:
+                logger.exception("Spurious message! " + str(mstring))
+        else:
+            logger.warning("Don't know how to decode message: " + str(mstring))
+        
 def pass_name(utctime, satellite):
     """Construct a unique pass name from a risetime and a satellite name.
     """
@@ -81,15 +114,14 @@ class PassRecorder(dict):
         return default
             
             
-
-
 class MessageReceiver(object):
     """Interprets received messages between stop reception and file dispatch.
     """
 
-    def __init__(self):
+    def __init__(self, emitter):
         self._received_passes = PassRecorder()
         self._distributed_files = {}
+        self._emitter = emitter
 
     def add_pass(self, message):
         """Formats pass info and adds it to the object.
@@ -226,7 +258,7 @@ class MessageReceiver(object):
         url = urlsplit(uri)
         if url.scheme in ["", "file"]:
             scheme = "ssh"
-            netloc = EMITTER
+            netloc = self._emitter
             uri = urlunsplit(SplitResult(scheme,
                                          netloc,
                                          url.path,
@@ -255,32 +287,76 @@ class MessageReceiver(object):
         
         elif message.body.startswith(dispatch_prefix):
             return self.handle_distrib(message.body[len(dispatch_prefix):])
-            
-def receive_from_zmq(days=1):
+
+class GMCSubscriber(object):
+
+    def __init__(self, host, port):
+        self._host = host
+        self._port = port
+        self._sock = None
+        self.msg = ""
+        self._bufsize = 256
+        self.loop = True
+        
+    def recv(self):
+        """Receive messages.
+        """
+        while LOOP:
+            self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                self._sock.connect((self._host, self._port))
+            except socket.error:
+                logger.error("Cannot connect to " + str((self._host, self._port))
+                             + ", retrying in 60 seconds.")
+                sleep(60)
+                continue
+            self._sock.settimeout(1.0)
+            try:
+                while LOOP:
+                    try:
+                        data = self._sock.recv(self._bufsize)
+                    except socket.timeout:
+                        pass
+                    else:
+                        if not data:
+                            break
+                        self.msg += data
+                        messages = self.msg.split("</message>")
+                        if len(messages) > 1:
+                            for mess in messages[:-1]:
+                                yield mess + "</message>"
+                            if messages[-1].endswith("</body>"):
+                                yield messages[-1] + "</message>"
+                                self.msg = ""
+                            else:
+                                self.msg = messages[-1]
+                        elif self.msg.endswith("</message>"):
+                            yield self.msg
+                            self.msg = ""
+            finally:
+                self._sock.close()
+
+def receive_from_zmq(host, port, days=1):
     """Receive 2met! messages from zeromq.
     """
     
-    socket = Subscriber(["tcp://localhost:9331"], ["2met!"])
-    
-    mr = MessageReceiver()
-    logger.debug("setting up publishers")
-    print "setting up publishers"
-    import sys
-    sys.stdout.flush()
+    #socket = Subscriber(["tcp://localhost:9331"], ["2met!"])
+    sock = GMCSubscriber(host, port)
+    msg_rec = MessageReceiver(host)
 
     with Publish("receiver", "HRPT 0", 9000) as hrpt_pub:
         with Publish("receiver", "PDS", 9001) as pds_pub:
             with Publish("receiver", "RDR", 9002) as npp_pub:
-                for rawmsg in socket.recv():
+                for rawmsg in sock.recv():
                     # TODO:
                     # - Watch for idle time in order to detect a hangout
-                    # - make recv interruptible.
                     logger.debug("receive from 2met! " + str(rawmsg))
-                    string = TwoMetMessage(rawmsg.data)
-                    to_send = mr.receive(string)
+                    string = TwoMetMessage(rawmsg)
+                    to_send = msg_rec.receive(string)
                     if to_send is None:
                         continue
-                    msg = Message('/oper/polar/direct_readout/norrköping', "file",
+                    msg = Message('/oper/polar/direct_readout/norrköping',
+                                  "file",
                                   to_send).encode()
                     logger.debug("publishing " + str(msg))
                     if to_send["format"] == "HRPT":
@@ -290,22 +366,104 @@ def receive_from_zmq(days=1):
                     if to_send["format"] == "RDR":
                         npp_pub.send(msg)
                     if days:
-                        mr.clean_passes(days)
+                        msg_rec.clean_passes(days)
 
 if __name__ == '__main__':
-    import sys
-    try:
-        logfile = sys.argv[1]
-    except IndexError:
-        logfile = "receiver.log"
+
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("host", help="GMC host")
+    parser.add_argument("port", help="Port to listen to", type=int)
+    parser.add_argument("-d", "--daemon", help="Run as a daemon",
+                        choices=["start", "stop", "status", "restart"])
+    parser.add_argument("-l", "--log", help="File to log to", default=None)
+    opts = parser.parse_args()
     
-    logging.basicConfig(filename=logfile,level=logging.DEBUG)
-    logger = logging.getLogger("Receiver")
-    try:
-        receive_from_zmq(1)
-    except KeyboardInterrupt:
-        print ("Thank you for using pytroll/receiver."
-               " See you soon on pytroll.org!")
+    if opts.log:
+        import logging.handlers
+        handler = logging.handlers.TimedRotatingFileHandler(opts.log,
+                                                            "midnight",
+                                                            backupCount = 7)
+    else:
+        handler = logging.StreamHandler()
+
+    handler.setFormatter(logging.Formatter("[%(levelname)s: %(asctime)s :"
+                                                " %(name)s] %(message)s",
+                                                '%Y-%m-%d %H:%M:%S'))
+    handler.setLevel(logging.DEBUG)
+    logging.getLogger('').setLevel(logging.DEBUG)
+    logging.getLogger('').addHandler(handler)
+    logger = logging.getLogger("receiver")
+
+    if opts.daemon is None:
+        try:
+            receive_from_zmq(opts.host, opts.port, 1)
+        except KeyboardInterrupt:
+            pass
+        except:
+            logger.exception("Something wrong happened...")
+        finally:
+            print ("Thank you for using pytroll/receiver."
+                   " See you soon on pytroll.org!")
+
+    else: # Running as a daemon
+        import sys
+        pidfile = '/tmp/pytroll.receiver.pid'
+        
+        if opts.daemon == "status":
+            if os.path.exists(pidfile):
+                with open(pidfile) as fd_:
+                    pid = int(fd_.read())
+                    try:
+                        os.kill(pid, 0)
+                    except OSError:
+                        sys.exit(1)
+                    else:
+                        sys.exit(0)
+            else:
+                sys.exit(1)
+
+        def _terminate(*args):
+            """terminate the receiver.
+            """
+            del args
+            global LOOP
+            LOOP = False
+
+        def _main(*args):
+            """Run the receiver.
+            """
+            del args
+            try:
+                receive_from_zmq(opts.host, opts.port, 1)
+            except:
+                logger.exception("Crashed.")
+                raise
+
+        try:
+            import daemon.runner
+            import signal
+
+            class App(object):
+                """App object for running the nameserver as daemon.
+                """
+                stdin_path = "/dev/null"
+                stdout_path = "/dev/null"
+                stderr_path = "/dev/null"
+                run = _main
+                pidfile_path = pidfile
+                pidfile_timeout = 90
+
+                
+            signal.signal(signal.SIGTERM, _terminate)
 
 
-
+            APP = App()
+            sys.argv = [sys.argv[0], opts.daemon]
+            angel = daemon.runner.DaemonRunner(APP)
+            angel.daemon_context.files_preserve = [handler.stream]
+            angel.parse_args([sys.argv[0], opts.daemon])
+            sys.exit(angel.do_action())
+        except ImportError:
+            print "Cannot run as a daemon, you need python-daemon installed."

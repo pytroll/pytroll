@@ -1,6 +1,6 @@
-=============================
- Trollcasting at its best :)
-=============================
+===========
+ Trollcast
+===========
 
 Server serve it's file(s) all the time. As soon at new scanlines come in,
 publish 'have' messages.

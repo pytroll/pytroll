@@ -24,15 +24,17 @@
 """
 from __future__ import with_statement 
 
+import logging
 from ConfigParser import ConfigParser
-from posttroll.subscriber import Subscriber
-from posttroll.message import Message, strp_isoformat
-from zmq import Context, REQ, LINGER, Poller, POLLIN
-from threading import Thread, Timer
-import numpy as np
 from Queue import Queue, Empty
 from datetime import timedelta, datetime
-import logging
+from threading import Thread, Timer
+
+import numpy as np
+from posttroll.message import Message, strp_isoformat
+from posttroll.subscriber import Subscriber
+from zmq import Context, REQ, LINGER, Poller, POLLIN
+
 
 logger = logging.getLogger("client")
 
@@ -127,6 +129,8 @@ class Requester(object):
 
 
     def get_slice(self, satellite, start_time, end_time):
+        """Get a slice of scanlines.
+        """
         msg = Message('/oper/polar/direct_readout/norrköping',
                       'request',
                       {"type": 'scanlines',
@@ -222,6 +226,8 @@ class HaveBuffer(Thread):
                         self.send_to_queues(sat, utctime)
                 
     def stop(self):
+        """Stop buffering.
+        """
         self._sub.stop()
 
 def compute_line_times(utctime, start_time, end_time):
@@ -245,6 +251,8 @@ def compute_line_times(utctime, start_time, end_time):
     return linepos
 
 class Client(HaveBuffer):
+    """The client class.
+    """
 
     def __init__(self, cfgfile="sattorrent.cfg"):
         HaveBuffer.__init__(self, cfgfile)
@@ -277,41 +285,53 @@ class Client(HaveBuffer):
             sat_lines[sat] = {}
         queue = Queue()
         self.add_queue(queue)
-        while True:
-            try:
-                sat, utctime, senders = queue.get(True,
-                                                  CLIENT_TIMEOUT.seconds)
-                if sat not in satellites:
-                    continue
-                sat_last_seen[sat] = datetime.utcnow()
-                logger.debug("Picking line " + " ".join([str(utctime),
-                                                     str(senders)]))
-                # choose the highest elevation
-                sender, elevation = max(senders, key=(lambda x: x[1]))
-                logger.debug("requesting " +
-                             " ".join([str(sat), str(utctime),
-                                       str(sender), str(elevation)]))
-                host = sender.split(":")[0]
-                # TODO: this should be parallelized, and timed. I case of
-                # failure, another source should be used. Choking ?
-                line = self._requesters[host].get_line(sat, utctime)
-                sat_lines[sat][utctime] = line
-            except Empty:
-                pass
-            for sat, utctime in sat_last_seen.items():
-                if utctime + CLIENT_TIMEOUT < datetime.utcnow():
-                    # write the lines to file
-                    logger.info(sat + " seems to be inactive now, writing file.")
-                    first_time = min(sat_lines[sat].keys())
-                    filename = first_time.isoformat() + sat + ".hmf"
-                    with open(filename, "wb") as fp_:
-                        for linetime in sorted(sat_lines[sat].keys()):
-                            fp_.write(sat_lines[sat][linetime])
+        try:
+            while True:
+                try:
+                    sat, utctime, senders = queue.get(True,
+                                                      CLIENT_TIMEOUT.seconds)
+                    if sat not in satellites:
+                        continue
+                    sat_last_seen[sat] = datetime.utcnow()
+                    logger.debug("Picking line " + " ".join([str(utctime),
+                                                         str(senders)]))
+                    # choose the highest elevation
+                    sender, elevation = max(senders, key=(lambda x: x[1]))
+                    logger.debug("requesting " +
+                                 " ".join([str(sat), str(utctime),
+                                           str(sender), str(elevation)]))
+                    # TODO: this should be parallelized, and timed. I case of
+                    # failure, another source should be used. Choking ?
+                    line = self._requesters[sender.split(":")[0]].get_line(sat,
+                                                                       utctime)
+                    sat_lines[sat][utctime] = line
+                except Empty:
+                    pass
+                for sat, utctime in sat_last_seen.items():
+                    if utctime + CLIENT_TIMEOUT < datetime.utcnow():
+                        # write the lines to file
+                        logger.info(sat +
+                                    " seems to be inactive now, writing file.")
+                        first_time = min(sat_lines[sat].keys())
+                        filename = first_time.isoformat() + sat + ".hmf"
+                        with open(filename, "wb") as fp_:
+                            for linetime in sorted(sat_lines[sat].keys()):
+                                fp_.write(sat_lines[sat][linetime])
 
-                    sat_lines[sat] = {}
-                    del sat_last_seen[sat]
-            
-            
+                        sat_lines[sat] = {}
+                        del sat_last_seen[sat]
+        except KeyboardInterrupt:
+            for sat, utctime in sat_last_seen.items():
+                logger.info(sat + ": writing file.")
+                first_time = min(sat_lines[sat].keys())
+                filename = first_time.isoformat() + sat + ".hmf"
+                with open(filename, "wb") as fp_:
+                    for linetime in sorted(sat_lines[sat].keys()):
+                        fp_.write(sat_lines[sat][linetime])
+
+                sat_lines[sat] = {}
+                del sat_last_seen[sat]
+            raise
 
         
 
@@ -359,8 +379,8 @@ class Client(HaveBuffer):
                         utctime = strp_isoformat(utcstr)
                         lines_to_get.setdefault(utctime, []).append((host,
                                                                      elevation))
-                except IOError, e:
-                    logger.warning(e)
+                except IOError, e__:
+                    logger.warning(e__)
 
 
                     
@@ -440,7 +460,6 @@ class Client(HaveBuffer):
 
             # shut down
             self.del_queue(queue)
-            print "Thanks for using pytroll/trollcast. See you soon on www.pytroll.org!"
             
     def send_lineinfo_to_server(self, *args, **kwargs):
         """Send information to our own server.
@@ -458,34 +477,44 @@ class Client(HaveBuffer):
         for req in self._requesters.values():
             req.stop()
 
-if __name__ == '__main__':
+def main():
+    """Run the client.
+    """
     import argparse
+    global LOG
     LOG = logging.getLogger("")
     LOG.setLevel(logging.DEBUG)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
+    ch1 = logging.StreamHandler()
+    ch1.setLevel(logging.DEBUG)
 
     class MyFormatter(logging.Formatter):
+        """New formatter with milliseconds
+        """
         converter = datetime.fromtimestamp
         
         def formatTime(self, record, datefmt=None):
-            ct = self.converter(record.created)
+            """Format with milliseconds if no date format is given.
+            """
+            ct_ = self.converter(record.created)
             if datefmt:
-                s = ct.strftime(datefmt)
+                s__ = ct_.strftime(datefmt)
             else:
-                t = ct.strftime("%Y-%m-%d %H:%M:%S")
-                s = "%s.%03d" % (t, record.msecs)
-            return s
+                t__ = ct_.strftime("%Y-%m-%d %H:%M:%S")
+                s__ = "%s.%03d" % (t__, record.msecs)
+            return s__
 
 
     formatter = MyFormatter('[ %(levelname)s %(name)s %(asctime)s] %(message)s')
-    ch.setFormatter(formatter)
-    LOG.addHandler(ch)
+    ch1.setFormatter(formatter)
+    LOG.addHandler(ch1)
     
     parser = argparse.ArgumentParser()
-    parser.add_argument("-t", "--times", nargs=2, help="Start and end times, <YYYYMMDDHHMMSS>")
-    parser.add_argument("-o", "--output", help="Output file (used only in conjuction with -t)")
-    parser.add_argument("-f" ,"--config_file", required=True, help="eg. sattorrent_local.cfg")
+    parser.add_argument("-t", "--times", nargs=2,
+                        help="Start and end times, <YYYYMMDDHHMMSS>")
+    parser.add_argument("-o", "--output",
+                        help="Output file (used only in conjuction with -t)")
+    parser.add_argument("-f", "--config_file", required=True,
+                        help="eg. sattorrent_local.cfg")
     parser.add_argument("satellite", nargs="+", help="eg. noaa_18")
     args = parser.parse_args()
     times = args.times
@@ -499,17 +528,21 @@ if __name__ == '__main__':
             end_time = datetime.strptime(times[1], "%Y%m%d%H%M%S")
             
             time_slice = slice(start_time, end_time)
-            satellite = " ".join(args.satellite[0].split("_")).upper()
-            client.order(time_slice, satellite, args.output)
+            platform = " ".join(args.satellite[0].split("_")).upper()
+            client.order(time_slice, platform, args.output)
         else:
-            satellites = [" ".join(sat.split("_")).upper() for sat in args.satellite]
+            platforms = [" ".join(plat.split("_")).upper()
+                         for plat in args.satellite]
             
-            client.get_all(satellites)
+            client.get_all(platforms)
     except KeyboardInterrupt:
-        print "Thanks for using pytroll/trollcast. See you soon on www.pytroll.org!"
-
+        pass
+    
     finally:
         client.stop()
+        print ("Thanks for using pytroll/trollcast. "
+               "See you soon on www.pytroll.org!")
 
     
-    
+if __name__ == '__main__':
+    main()
