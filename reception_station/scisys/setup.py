@@ -26,13 +26,14 @@
 
 from setuptools import setup
 
-setup(name="scisys_receiver",
+setup(name="SMHI-SAF-scisys_receiver",
       version="0.2.1",
       description="Scisys message interface to pytroll",
       author='The pytroll team',
       author_email='martin.raspaud@smhi.se',
       #packages=['scisys_receiver'],
       scripts = ['bin/scisys_receiver.py'],
+      data_files = [('/etc/init.d', ['etc/init.d/SMHI-scisys-receiver']),
       zip_safe=False,
       license="GPLv3",
       install_requires=["posttroll"],
