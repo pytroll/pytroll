@@ -409,7 +409,7 @@ if __name__ == '__main__':
 
     else: # Running as a daemon
         import sys
-        pidfile = '/tmp/pytroll.receiver.pid'
+        pidfile = '/var/run/satellit/pytroll.receiver.pid'
         
         if opts.daemon == "status":
             if os.path.exists(pidfile):
