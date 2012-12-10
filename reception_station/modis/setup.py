@@ -10,7 +10,7 @@ messages in pytroll format from the reception station telling when a file is
 being dispatched to the server.
 """ 
 
-setup(name='modis_lvl1_proc',
+setup(name='SMHI-SAF-modis_lvl1_proc',
       description="Run scripts for MODIS level 0 to level 1 processing",
       author="Adam Dybbroe",
       author_email="adam.dybbroe@smhi.se",
@@ -25,7 +25,6 @@ setup(name='modis_lvl1_proc',
                  'modis_lvl1_runner_stop.sh',
                  'modis_runner/modis_dr_runner.py'],
       packages=['modis_runner'],
-      data_files = [('/etc/init.d', ['etc/init.d/SMHI-modis-lvl1-preproc'])],
       
       # Project should use reStructuredText, so ensure that the docutils get
       # installed or upgraded on the target machine
@@ -34,7 +33,8 @@ setup(name='modis_lvl1_proc',
                           'numpy'
                          ],
 
-      data_files=[('etc', ['etc/modis_dr_config.cfg'])],
+      data_files=[('etc', ['etc/modis_dr_config.cfg']),
+                  ('/etc/init.d', ['etc/init.d/SMHI-modis-lvl1-preproc'])],
       test_suite="nose.collector",
       tests_require=[],
       zip_safe=False
