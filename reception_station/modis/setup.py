@@ -25,6 +25,7 @@ setup(name='modis_lvl1_proc',
                  'modis_lvl1_runner_stop.sh',
                  'modis_runner/modis_dr_runner.py'],
       packages=['modis_runner'],
+      data_files = [('/etc/init.d', ['etc/init.d/SMHI-modis-lvl1-preproc'])],
       
       # Project should use reStructuredText, so ensure that the docutils get
       # installed or upgraded on the target machine
