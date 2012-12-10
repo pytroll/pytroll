@@ -26,7 +26,8 @@ setup(name='npp_sdr_proc',
                  'npp_sdr_check_runner_lib.sh',
                  'sdr_runner/npp_sdr_runner.py'],
       packages=['sdr_runner'],
-      
+      data_files = [('/etc/init.d', ['etc/init.d/SMHI-npp-lvl1-preproc'])],
+
       # Project should use reStructuredText, so ensure that the docutils get
       # installed or upgraded on the target machine
       install_requires = ['docutils>=0.3', 

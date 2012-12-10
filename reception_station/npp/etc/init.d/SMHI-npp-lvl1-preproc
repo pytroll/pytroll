@@ -1,0 +1,209 @@
+#!/bin/bash
+#
+# SMHI-npp-lvl1-preproc          Start/Stop SMHI-npp-lvl1-preproc.
+#
+# chkconfig: 2345 80 60
+# description: SMHI-npp-lvl1-preproc
+
+# Source files as with normal login.
+. /etc/profile
+
+# Source function library.
+. /etc/init.d/functions
+
+# Source local definitions
+DIR=/usr/local/bin
+#. $DIR/etc/.profile
+
+RETVAL=0
+
+# Set PROGNAME to what the program is called.  
+# PROGNAME="SMHI-startscript"
+PROGNAME="SMHI-npp-lvl1-preproc"
+
+# Set START to the full commandline for start the program, 
+# including the path to the program. 
+# STARTU - for dev environment (ex. /data/proj/X-app/bin/start.sh):
+# STARTT - for test env (ex. /data/prodtest/...):
+# STARTP - for prod env (ex. /data/24/...):
+STARTU="$DIR/npp_lvl1_runner_start.sh"
+STARTT="$DIR/npp_lvl1_runner_start.sh"
+STARTP="$DIR/npp_lvl1_runner_start.sh"
+# Set STOP to the full commandline to stop the program, 
+# including the path to the program. 
+# STOPU - for dev environment (ex. /data/proj/X-app/bin/stop.sh):
+# STOPT - for test env (ex. /data/prodtest/...):
+# STOPP - for prod env (ex. /data/24/...):
+STOPU="$DIR/npp_lvl1_runner_stop.sh"
+STOPT="$DIR/npp_lvl1_runner_stop.sh"
+STOPP="$DIR/npp_lvl1_runner_stop.sh"
+# Set USER to the username that the program shall run as.
+# USERU - for dev environment (i.e. appuser.u):
+# USERT - for test environment (i.e. appuser.t):
+# USERP - for prod env (i.e. appuser):
+USERU="safusr.u"
+USERT="safusr.t"
+USERP="safuser"
+
+# Set STATUS to the full commandline to check status of the program,
+# including the path to the program
+# STATUSU - for dev environment
+# STATUST - for test environment
+# STATUSP - for prod environment
+STATUSU="$DIR/npp_lvl1_runner_status.sh"
+STATUST="$DIR/npp_lvl1_runner_status.sh"
+STATUSP="$DIR/npp_lvl1_runner_status.sh"
+
+# You may not need to edit more below, but there are some 
+# suggestions marked with SMHI-TODO, depending on your what
+# your software can do.
+
+# SMHI-TODO-end
+
+case $SMHI_MODE in
+    utv)
+	if [[ $USERU && $STARTU && $STOPU && $STATUSU ]] ; then
+	   USER=$USERU
+	   START=$STARTU
+	   STOP=$STOPU
+	   STATUS=$STATUSU
+	else
+	    echo "ERROR: USERU, STARTU, STATUSU or STOPU not set."
+	    exit 1
+	fi
+	;;
+    test)
+	if [[ $USERT && $STARTT && $STOPT && $STATUST ]] ; then
+	   USER=$USERT
+	   START=$STARTT
+	   STOP=$STOPT
+	   STATUS=$STATUST
+	else
+	    echo "ERROR: USERT, STARTT, STATUST or STOPT not set."
+	    exit 1
+	fi
+	;;
+    prod)
+	if [[ $USERP && $STARTP && $STOPP && $STATUSP ]] ; then
+	   USER=$USERP
+	   START=$STARTP
+	   STOP=$STOPP
+	   STATUS=$STATUSP
+	else
+	    echo "ERROR: USERP, STARTP, STATUSP or STOPP not set."
+	    exit 1
+	fi
+	;;
+    *)
+	echo "ERROR: SMHI_MODE not set correct."
+	exit 1
+esac
+
+start() {
+	smhistatus &> /dev/null
+	RETVAL=$?
+        # If the process not running, start the process.
+	if [ $RETVAL -ne 1 ]; then
+	#	echo "Starting $PROGNAME"
+		su - $USER -c "$START"
+		RETVAL=$?
+		# If it not possible to start, return 2.
+		if [ $RETVAL -ne 0 ]; then 
+	#		echo "$PROGNAME Could not be started"
+			return 2
+		else
+	#		echo "$PROGNAME Successfully started"
+			touch /var/lock/subsys/$PROGNAME
+			return $RETVAL
+		fi
+	else
+	#	echo "$PROGNAME is already started."
+		return $RETVAL
+	fi
+
+}
+
+stop() {
+	smhistatus &> /dev/null
+	RETVAL=$?
+	# If the process is running, stop the process.
+	if [ $RETVAL -eq 0 ]; then
+	#	echo "Stopping $PROGNAME"
+		su - $USER -c "$STOP"
+		RETVAL=$?
+		# If it´s possible to stop the process or not.
+		if [ $RETVAL -eq 0 ]; then
+	#		echo "$PROGNAME is stopped"
+			rm -f /var/lock/subsys/$PROGNAME
+			return 0
+		else
+	#		echo "$PROGNAME could not be stopped" 
+			return $RETVAL
+		fi
+	else
+        #        echo "$PROGNAME is already stopped."
+                return $RETVAL
+	fi
+}	
+
+smhistatus() {
+        # SMHI-TODO: Change the following line to how to check status
+        # of your program.
+	# If this application will run in a clustered environment a status 
+	# check MUST be implemented. 
+        # If the program using a pid file, uncomment the following line:
+        #status
+        # If you have no way to check the status of the program, use:
+	#echo "Status not implemented in $PROGNAME"
+ 	su - $USER -c "$STATUS"
+	# OBS! Activate the "eval" line below if an external startscript returns a status value!!
+#        eval "$STATUS"
+#	RETVAL=$?
+        if [ $RETVAL -ne 0 ]; then
+        # OBS! Inactivate the echo line below if an external startscript returns a status value!!
+	#	echo "$PROGNAME is NOT running on `hostname`."
+		return 3
+        else
+        # OBS! Inactivate the echo line below if an external startscript returns a status value!!        
+	#	echo "$PROGNAME is up and running on `hostname`."
+		return 0
+        fi
+}	
+
+restart() {
+  	stop
+	start
+}	
+
+#reload() {
+	# SMHI-TODO: If you have a way to reload configuration 
+	# without restart, then change the following line.
+	
+	#echo $"Reloading $PROGNAME configuration: "
+#}	
+
+case "$1" in
+  start)
+  	start
+	;;
+  stop)
+  	stop
+	;;
+  restart)
+  	restart
+	;;
+#  reload)
+#  	reload
+#	;;
+  status)
+  	smhistatus
+	;;
+  condrestart)
+  	[ -f /var/lock/subsys/$PROGNAME ] && restart || :
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|status|reload|restart|condrestart}"
+	exit 1
+esac
+
+exit $?
