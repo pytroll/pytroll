@@ -26,7 +26,6 @@ setup(name='npp_sdr_proc',
                  'npp_sdr_check_runner_lib.sh',
                  'sdr_runner/npp_sdr_runner.py'],
       packages=['sdr_runner'],
-      data_files = [('/etc/init.d', ['etc/init.d/SMHI-npp-lvl1-preproc'])],
 
       # Project should use reStructuredText, so ensure that the docutils get
       # installed or upgraded on the target machine
@@ -36,7 +35,8 @@ setup(name='npp_sdr_proc',
                           'pyorbital'
                           ],
 
-      data_files=[('etc', ['etc/npp_sdr_config.cfg'])],
+      data_files=[('etc', ['etc/npp_sdr_config.cfg']),
+                  ('/etc/init.d', ['etc/init.d/SMHI-npp-lvl1-preproc'])],
       test_suite="nose.collector",
       tests_require=[],
       zip_safe=False
