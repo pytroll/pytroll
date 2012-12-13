@@ -21,23 +21,9 @@ The provided python packages are designed to be used both in R&D environments
 and in 24/7 operational production.
 
 .. note::
-   The first Pytroll workshop held in Norrköping, Sweden, end of November,
-   2012, has come to an end. 9 people from Holland, Finland, Romania and
-   EUMETSAT joined up with the pytroll teams at DMI and SMHI, to get more
-   acquainted with the pytroll tools and how it can be used in their local
-   environments for satellite data production.
+   The first open Pytroll workshop was held at SMHI in Norrköping, Sweden, end of November,
+   2012. See :doc:`workshop2012` for further info.
 
-   +---------+---------+--------------+
-   | |pict1| | |pict2| | |figuretext| |
-   +---------+---------+--------------+
-
-.. |pict1| image:: _static/00004_tiny.jpg
-    :width: 230px
-
-.. |pict2| image:: _static/00008_tiny.jpg
-    :width: 230px
-
-.. |figuretext| replace:: We will consider how to follow up on this. We may host another workshop in 2013 or later at DMI or SMHI. We will as usual announce this on the mailing list (pytroll@googlegroups.com).
 
 
 The available python packages at the moment are:
@@ -91,6 +77,7 @@ Contents:
    quickstart_custom
    quickstart_bufr
    recipes
+   workshop2012
 
 Contact us: https://groups.google.com/group/pytroll
 
