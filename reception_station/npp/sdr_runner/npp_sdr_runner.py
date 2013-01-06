@@ -178,13 +178,17 @@ def start_npp_sdr_processing(level1_home, mypublisher, message):
                 LOG.info("Orb = %d" % orbnum)
             LOG.info("File = %s" % str(urlobj.path))
             # Fix orbit number in RDR file:
+            rdr_filename = urlobj.path
             try:
                 rdr_filename = fix_rdrfile(urlobj.path)
             except IOError:
                 LOG.error('Failed to fix orbit number in RDR file = ' + str(urlobj.path))
                 import traceback
                 traceback.print_exc(file=sys.stderr)
-                rdr_filename = urlobj.path
+            except AttributeError:
+                LOG.error('Failed to fix orbit number in RDR file = ' + str(urlobj.path))
+                import traceback
+                traceback.print_exc(file=sys.stderr)
 
             LOG.info("Start CSPP: RDR file = " + str(rdr_filename))
             working_dir = run_cspp(rdr_filename)
