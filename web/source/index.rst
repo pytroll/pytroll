@@ -21,9 +21,9 @@ The provided python packages are designed to be used both in R&D environments
 and in 24/7 operational production.
 
 .. note::
-   The first open Pytroll workshop was held at SMHI in Norrköping, Sweden, end of November,
-   2012. See :doc:`workshop2012` for further info.
+   mipp_ version 0.9 with support for Meteosat-10 is out now!
 
+   Met-10 will take over from Met-9 as the prime satellite for the 0-degree service January 21.
 
 
 The available python packages at the moment are:
