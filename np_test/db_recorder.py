@@ -96,50 +96,55 @@ class DBRecorder(object):
                 break
         LOG.info("Stop listening")
 
+    def insert_line(self, msg):
+        """Insert the line corresponding to *msg* in the database.
+        """
+        if msg.type == "file":
+            try:
+                file_obj = File(msg.data["filename"], self.dbm,
+                                filetype=msg.data.get("type", None),
+                                fileformat=msg.data.get("format", None))
+            except NoResultFound:
+                LOG.warning("Cannot process: " + str(msg))
+                return
+            for key, val in msg.data.items():
+                if key == "filename":
+                    continue
+                if key == "uri":
+                    file_obj["URIs"] += [val]
+                    continue
+                try:
+                    file_obj[key] = val
+                except NoResultFound:
+                    LOG.warning("Cannot add: " + str((key, val)))
+
+            LOG.debug("adding :" + str(msg))
+
+
+            # compute sub_satellite_track
+            satname = msg.data["satellite"]
+            sat = Orbital(sat_lookup.get(satname, satname))
+            dt_ = timedelta(seconds=10)
+            current_time = msg.data["start_time"] 
+            lonlat_list = []
+            while current_time <= msg.data["end_time"]:
+                pos = sat.get_lonlatalt(current_time)
+                lonlat_list.append(pos[:2])
+                current_time += dt_
+
+            LOG.debug("Computed sub-satellite track")
+
+            file_obj["sub_satellite_track"] = lonlat_list
+
+            LOG.debug("Added sub-satellite track")
+
+
     def record(self):
         """Log stuff.
         """
         for msg in self.subscriber.recv(1):
             if msg:
-                if msg.type == "file":
-                    try:
-                        file_obj = File(msg.data["filename"], self.dbm,
-                                        filetype=msg.data.get("type", None),
-                                        fileformat=msg.data.get("format", None))
-                    except NoResultFound:
-                        LOG.warning("Cannot process: " + str(msg))
-                        continue
-                    for key, val in msg.data.items():
-                        if key == "filename":
-                            continue
-                        if key == "uri":
-                            file_obj["URIs"] += [val]
-                            continue
-                        try:
-                            file_obj[key] = val
-                        except NoResultFound:
-                            LOG.warning("Cannot add: " + str((key, val)))
-
-                    LOG.debug("adding :" + str(msg))
-
-
-                    # compute sub_satellite_track
-                    satname = msg.data["satellite"]
-                    sat = Orbital(sat_lookup.get(satname, satname))
-                    dt_ = timedelta(seconds=10)
-                    current_time = msg.data["start_time"] 
-                    lonlat_list = []
-                    while current_time <= msg.data["end_time"]:
-                        pos = sat.get_lonlatalt(current_time)
-                        lonlat_list.append(pos[:2])
-                        current_time += dt_
-
-                    LOG.debug("Computed sub-satellite track")
-                
-                    file_obj["sub_satellite_track"] = lonlat_list
-
-                    LOG.debug("Added sub-satellite track")
-                
+                self.insert_line(self, msg)
             if not self.loop:
                 LOG.info("Stop recording")
                 break
