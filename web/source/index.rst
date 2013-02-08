@@ -21,9 +21,9 @@ The provided python packages are designed to be used both in R&D environments
 and in 24/7 operational production.
 
 .. note::
-   mipp_ version 0.9 with support for Meteosat-10 is out now!
+   mipp_ version 0.9.1 with support for Meteosat-10 is out.
 
-   Met-10 will take over from Met-9 as the prime satellite for the 0-degree service January 21.
+   Met-10 became the prime satellite for the 0-degree service January 21.
 
 
 The available python packages at the moment are:
@@ -32,14 +32,15 @@ The available python packages at the moment are:
 * mipp_ for reading weather satellite data
 * mpop_ for processing weather satellite data
 * python-bufr_ for reading bufr files
-* pycoast_ for putting coast lines on an image 
+* pycoast_ for putting coastlines, borders and rivers on an image 
+* pyorbital_ for computing satellite orbital parameters and reading TLE's
 
-Some more packages are in the process of being developped (you're very welcome
+Some more packages are in the process of being developed (you're very welcome
 to have a look and give us a hand):
 
-* pyorbital_ for computing satellite orbital parameters and reading TLE's
 * python-geotiepoints_ for interpolating (and extrapolation) geographic tiepoints
 * posttroll_ for a higher-level messaging library for pytroll
+* pykdtree_ for really fast nearest neighbour search
 
 .. _DMI: http://www.dmi.dk
 .. _SMHI: http://www.smhi.se
@@ -51,6 +52,7 @@ to have a look and give us a hand):
 .. _pycoast: http://pycoast.googlecode.com
 .. _python-geotiepoints: http://www.github.com/adybbroe/python-geotiepoints
 .. _posttroll: http://github.com/mraspaud/posttroll
+.. _pykdtree: https://github.com/storpipfugl/pykdtree
 
 
 Satellites supported (imager instruments) at the moment by the reader/processor
