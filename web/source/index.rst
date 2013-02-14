@@ -5,7 +5,7 @@
 
 .. meta::
    :description: Weather satellite data reading and processing with python
-   :keywords: Meteosat, SEVIRI, AVHRR, METOP, NOAA, MODIS, TERRA, AQUA, VIIRS, NPP, SDR, AAPP, HRPT, read, reading, reader, process, processing, python, pytroll, weather, satellite, data
+   :keywords: Meteosat, SEVIRI, AVHRR, Metop, NOAA, MODIS, Terra, Aqua, VIIRS, NPP, SDR, AAPP, HRPT, read, reading, reader, process, processing, python, pytroll, weather, satellite, data
 
 
 Welcome to pytroll!
@@ -65,7 +65,7 @@ modules include:
  - NOAA series, in AAPP format (tested with 15, 16, 17, 18, 19)
  - Metop-A, in EPS 1a and 1b format
  - Aqua and Terra, in hdf-eos format
- - NPP, in SDR hdf format
+ - NPP, in SDR hdf5 format
 
 Contents:
 
@@ -78,6 +78,7 @@ Contents:
    quickstart_viirs
    quickstart_custom
    quickstart_bufr
+   quickstart_earsnwc
    recipes
    workshop2012
 
