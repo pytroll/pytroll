@@ -6,15 +6,21 @@
  Quickstart with EARS-NWC
 =========================
 
-In December 2012 EUMETSAT_ introduced another EARS_ pilot service on EUMETCast_
-named EARS-NWC. This new service provides cloud parameters derived using the Polar
-Platform System (PPS_) software package from the `NWC SAF`_ from direct readout
-AVHRR data at the EARS core stations covering the European and North
-Atlantic. The `NWC SAF`_ parameters *Cloud Mask*, *Cloud Type* and *Cloud Top
-Temperature and Height (CTTH)* are being disseminated in near-real
-time over EUMETCast with a timeliness better than 30 minutes. At the moment the
-satellites contributing to the service are Metop-A (being substituted by
-Metop-B later during the spring 2013) and NOAA-19.
+In December 2012 EUMETSAT_ extended the EARS_ services to include a new pilot
+service with the purpose of supporting European users with cloud information
+from polar orbiting satellites in near real time.
+
+This *EARS-NWC* service provides the parameters *Cloud Mask*, *Cloud Type* and
+*Cloud Top Temperature and Height (CTTH)* as derived using the Polar Platform
+System (PPS_) software package from the `NWC SAF`_. The products are derived
+from AVHRR data received at the EARS core stations with a reception coverage
+including Europe and the North Atlantic. Products are disseminated on
+EUMETCast_ (EUMETSAT `data channel 1`_) with a timeliness better than 30
+minutes, and available in hdf5 format. The geolocation information is available
+on a tie-point grid and stored in each product.
+
+At the moment the satellites contributing to the service are Metop-A (being
+substituted by Metop-B later during the spring 2013) and NOAA-19.
 
 For this tutorial template config files (see :doc:`install`) can be used. These
 are located in the *etc* dir of the mpop_ source. Copy *mpop.cfg.template*,
@@ -94,8 +100,8 @@ And for Metop-A:
     [ 6  8  8 ...,  1  1  1]]
 
 
-Stiching together the granules
-==============================
+Stitching together the granules
+===============================
 
 The assemble_segments function in mpop.scene as for instance demonstrated in
 the :doc:`quickstart_viirs` tutorial does not yet support stiching together
@@ -200,7 +206,7 @@ re-project or map the data:
                                  mode = "P",
                                  palette = palette)
 
-And then add some coast lines and political borders using pycoast_:
+And then add coast lines and political borders using pycoast_:
 
     >>> from pycoast import ContourWriter
     >>> cw_ = ContourWriter('/local_disk/data/shapes')
@@ -220,3 +226,4 @@ And then add some coast lines and political borders using pycoast_:
 .. _mpop: http://www.github.com/mraspaud/mpop
 .. _pyresample: http://pyresample.googlecode.com
 .. _pycoast: http://pycoast.googlecode.com
+.. _`data channel 1`: http://www.eumetsat.int/home/main/dataaccess/eumetcast/receptionstationset-up/sp_20100623124251305?l=en
