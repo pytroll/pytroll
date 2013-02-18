@@ -102,6 +102,18 @@ class DBRecorder(object):
             except NoResultFound:
                 LOG.warning("Cannot process: " + str(msg))
                 return
+
+            required_fields = ["start_time", "end_time"]
+
+            for field in required_fields:
+                if field not in msg.data.keys():
+                    LOG.warning("Missing required " + field
+                                + ", not creating record from "
+                                + str(msg))
+                    return
+            
+            LOG.debug("adding :" + str(msg))
+
             for key, val in msg.data.items():
                 if key in ["filename", "type"]:
                     continue
@@ -112,8 +124,6 @@ class DBRecorder(object):
                     file_obj[key] = val
                 except NoResultFound:
                     LOG.warning("Cannot add: " + str((key, val)))
-
-            LOG.debug("adding :" + str(msg))
 
 
             # compute sub_satellite_track
