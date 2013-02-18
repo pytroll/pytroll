@@ -103,7 +103,7 @@ class DBRecorder(object):
                 LOG.warning("Cannot process: " + str(msg))
                 return
             for key, val in msg.data.items():
-                if key == "filename":
+                if key in ["filename", "type"]:
                     continue
                 if key == "uri":
                     file_obj["URIs"] += [val]
