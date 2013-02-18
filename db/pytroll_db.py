@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2010-2012.
+# Copyright (c) 2010-2013.
 
 # Author(s):
 
@@ -497,12 +497,17 @@ class DCManager(object):
         return self._session.query(File).\
                filter(File.filename == filename).one()
 
-    def get_files(self, file_type_name, oldest_creation_time=None, 
+    def get_files(self, file_type_name=None, oldest_creation_time=None, 
                   newest_creation_time=None):
         if newest_creation_time is None:
             newest_creation_time = datetime.datetime.utcnow()
         if oldest_creation_time is None:
             oldest_creation_time = datetime.datetime(1, 1, 1)
+
+        if file_type_name is None:
+            return self._session.query(File).\
+                   filter(File.creation_time > oldest_creation_time).\
+                   filter(File.creation_time < newest_creation_time).all() 
         
         return self._session.query(File).\
             filter(FileType.file_type_name == file_type_name).\
