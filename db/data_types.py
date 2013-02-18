@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2012 Martin Raspaud
+# Copyright (c) 2012, 2013 Martin Raspaud
 
 # Author(s):
 
@@ -24,27 +24,30 @@
 """
 
 
-from db.pytroll_db import DCManager
-dbm = DCManager('postgresql://polar:polar@localhost:5432/sat_db')
-dbm.create_file_type(1, 'HRPT 0', 'HRPT level 0 data')
-dbm.create_file_type(2, 'EOS 0', 'EOS level 0 data')
-dbm.create_file_type(3, 'RDR', 'RDR data')
-dbm.create_file_type(4, 'SDR', 'SDR data')
+from pytroll_db import DCManager
+dbm = DCManager('postgresql://safusr.u:NWCsaf22@postgresutv01/sat_db')
+dbm.create_file_format(1, 'HRPT', 'HRPT level 0 data')
+dbm.create_file_format(2, 'EOS 0', 'EOS level 0 data')
+dbm.create_file_format(3, 'RDR', 'RDR data')
+dbm.create_file_format(4, 'SDR', 'SDR data')
 
-dbm.create_file_format(1, '16-bit HRPT Minor Frame', 'HRPT level 0 data')
+dbm.create_file_type(1, 'binary', 'binary')
+dbm.create_file_type(2, 'PDS', 'TERRA/AQUA file format')
+dbm.create_file_type(3, 'HDF', 'HDF5')
+dbm.create_file_type(4, 'HDF5', 'HDF5')
 
 dbm.create_parameter_type(1, "normal_parameter", "")
 
 dbm.create_parameter(1, 1, "start_time", "")
 dbm.create_parameter(2, 1, "end_time", "")
-dbm.create_parameter(3, 1, "orbit number", "")
-dbm.create_parameter(4, 1, "risetime", "")
-dbm.create_parameter(5, 1, "falltime", "")
-dbm.create_parameter(6, 1, "satellite", "")
-dbm.create_parameter(7, 1, "format", "")
-dbm.create_parameter(8, 1, "type", "")
-dbm.create_parameter(9, 1, "uri", "")
-dbm.create_parameter(10, 1, "sub_satellite_track", "")
+dbm.create_parameter(3, 1, "orbit_number", "")
+dbm.create_parameter(4, 1, "satellite", "")
+dbm.create_parameter(5, 1, "format", "")
+dbm.create_parameter(6, 1, "type", "")
+dbm.create_parameter(7, 1, "uri", "")
+dbm.create_parameter(8, 1, "sub_satellite_track", "")
+dbm.create_parameter(9, 1, "instrument", "")
+dbm.create_parameter(10, 1, "level", "")
 
 
 
