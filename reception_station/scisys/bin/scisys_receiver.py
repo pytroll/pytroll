@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2012 SMHI
+# Copyright (c) 2012, 2013 SMHI
 
 # Author(s):
 
@@ -127,6 +127,7 @@ class MessageReceiver(object):
         """Formats pass info and adds it to the object.
         """
         info = dict((item.split(": ", 1) for item in message.split(", ", 3)))
+        logger.info("Adding pass: " + str(info))
         pass_info = {}
         for key, val in info.items():
             pass_info[key.lower()] = val
@@ -142,13 +143,15 @@ class MessageReceiver(object):
             pass_info['orbit_number'] = int(pass_info['orbit number'])
             del pass_info['orbit number']
         else:
-            LOG.warning("No 'orbit number' in message!")
+            logger.warning("No 'orbit number' in message!")
 
         
         pname = pass_name(pass_info["start_time"], pass_info["satellite"])
         self._received_passes[pname] = pass_info
 
     def clean_passes(self, days=1):
+        """Clean old passes from the pass dict (_received_passes).
+        """
         oldies = []
 
         for key, val in self._received_passes.iteritems():
