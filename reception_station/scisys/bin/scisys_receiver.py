@@ -108,7 +108,7 @@ class PassRecorder(dict):
         utctime, satellite = key
         for (rectime, recsat), val in self.iteritems():
             if(recsat == satellite and
-               (abs(rectime - utctime)).seconds < 5 and
+               (abs(rectime - utctime)).seconds < 30 and
                (abs(rectime - utctime)).days == 0):
                 return val
         return default
@@ -470,3 +470,5 @@ if __name__ == '__main__':
             sys.exit(angel.do_action())
         except ImportError:
             print "Cannot run as a daemon, you need python-daemon installed."
+
+
