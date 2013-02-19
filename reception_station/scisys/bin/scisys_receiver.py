@@ -108,7 +108,7 @@ class PassRecorder(dict):
         utctime, satellite = key
         for (rectime, recsat), val in self.iteritems():
             if(recsat == satellite and
-               (abs(rectime - utctime)).seconds < 30 and
+               (abs(rectime - utctime)).minutes < 30 and
                (abs(rectime - utctime)).days == 0):
                 return val
         return default
@@ -245,6 +245,7 @@ class MessageReceiver(object):
             swath = self._received_passes.get(pname, {"satellite": satellite,
                                                       "start_time": risetime})
 
+            # FIXME: swath start and end time is granule dependent.
             swath["instrument"] = mda["instrument"]
             swath["format"] = "RDR"
             swath["type"] = "HDF5"
