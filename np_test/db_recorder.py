@@ -95,14 +95,6 @@ class DBRecorder(object):
         """Insert the line corresponding to *msg* in the database.
         """
         if msg.type == "file":
-            try:
-                file_obj = File(msg.data["filename"], self.dbm,
-                                filetype=msg.data.get("type", None),
-                                fileformat=msg.data.get("format", None))
-            except NoResultFound:
-                LOG.warning("Cannot process: " + str(msg))
-                return
-
             required_fields = ["start_time", "end_time"]
 
             for field in required_fields:
@@ -111,6 +103,14 @@ class DBRecorder(object):
                                 + ", not creating record from "
                                 + str(msg))
                     return
+
+            try:
+                file_obj = File(msg.data["filename"], self.dbm,
+                                filetype=msg.data.get("type", None),
+                                fileformat=msg.data.get("format", None))
+            except NoResultFound:
+                LOG.warning("Cannot process: " + str(msg))
+                return
             
             LOG.debug("adding :" + str(msg))
 

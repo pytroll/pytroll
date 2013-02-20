@@ -50,6 +50,7 @@ dbm.create_parameter(7, 1, "uri", "")
 dbm.create_parameter(8, 1, "sub_satellite_track", "")
 dbm.create_parameter(9, 1, "instrument", "")
 dbm.create_parameter(10, 1, "level", "")
+dbm.create_parameter(11, 1, "number", "")
 
 
 
