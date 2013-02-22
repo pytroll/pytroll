@@ -108,7 +108,7 @@ class PassRecorder(dict):
         utctime, satellite = key
         for (rectime, recsat), val in self.iteritems():
             if(recsat == satellite and
-               (abs(rectime - utctime)).minutes < 30 and
+               (abs(rectime - utctime)).seconds < 30 * 60 and
                (abs(rectime - utctime)).days == 0):
                 return val
         return default
@@ -180,6 +180,7 @@ class MessageReceiver(object):
                 swath["format"] = "CHRPT"
             else:
                 swath["format"] = "HRPT"
+                swath["instrument"] = ("avhrr/3", "mhs", "amsu")
             swath["level"] = "0"
             
 
@@ -227,6 +228,7 @@ class MessageReceiver(object):
             swath["level"] = "0"
             swath["number"] = int(pds["ufn"])
 
+        # NPP RDRs
         elif filename.startswith("R") and filename.endswith(".h5"):
             mda = {}
             mda["format"] = filename[0]
@@ -251,6 +253,37 @@ class MessageReceiver(object):
             swath["type"] = "HDF5"
             swath["level"] = "0"
 
+        # metop
+        elif filename[4:12] == "_HRP_00_":
+            instruments = {"AVHR": "avhrr",
+                           "ASCA": "ascat",
+                           "AMSA": "amsu-a",
+                           "ASCA": "ascat",
+                           "ATOV": "atovs",
+                           "AVHR": "avhrr/3",
+                           "GOME": "gome",
+                           "GRAS": "gras",
+                           "HIRS": "hirs/4",
+                           "IASI": "iasi",
+                           "MHSx": "mhs",
+                           "SEMx": "sem",
+                           "ADCS": "adcs",
+                           "SBUV": "sbuv",
+                           "HKTM": "vcdu34"}
+
+            satellites = {"M02": "METOP-A",
+                          "M01": "METOP-B"}
+
+            satellite = satellites[filename[12:15]]
+            risetime = datetime.strptime(filename[16:31], "%Y%m%d%H%M%SZ")
+            #falltime = datetime.strptime(filename[16:47], "%Y%m%d%H%M%SZ")
+            
+            swath = self._received_passes.get(pname, {"satellite": satellite,
+                                                      "start_time": risetime})
+            swath["instrument"] = instruments[filename[:4]]
+            swath["format"] = "EPS"
+            swath["type"] = "binary"
+            swath["level"] = "0"
         else:
             return
 
