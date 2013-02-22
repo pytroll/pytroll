@@ -277,7 +277,8 @@ class MessageReceiver(object):
             satellite = satellites[filename[12:15]]
             risetime = datetime.strptime(filename[16:31], "%Y%m%d%H%M%SZ")
             #falltime = datetime.strptime(filename[16:47], "%Y%m%d%H%M%SZ")
-            
+
+            pname = pass_name(risetime, satellite)
             swath = self._received_passes.get(pname, {"satellite": satellite,
                                                       "start_time": risetime})
             swath["instrument"] = instruments[filename[:4]]
