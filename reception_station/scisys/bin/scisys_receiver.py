@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2012 SMHI
+# Copyright (c) 2012, 2013 SMHI
 
 # Author(s):
 
@@ -108,7 +108,7 @@ class PassRecorder(dict):
         utctime, satellite = key
         for (rectime, recsat), val in self.iteritems():
             if(recsat == satellite and
-               (abs(rectime - utctime)).seconds < 5 and
+               (abs(rectime - utctime)).seconds < 30 * 60 and
                (abs(rectime - utctime)).days == 0):
                 return val
         return default
@@ -127,6 +127,7 @@ class MessageReceiver(object):
         """Formats pass info and adds it to the object.
         """
         info = dict((item.split(": ", 1) for item in message.split(", ", 3)))
+        logger.info("Adding pass: " + str(info))
         pass_info = {}
         for key, val in info.items():
             pass_info[key.lower()] = val
@@ -142,13 +143,15 @@ class MessageReceiver(object):
             pass_info['orbit_number'] = int(pass_info['orbit number'])
             del pass_info['orbit number']
         else:
-            LOG.warning("No 'orbit number' in message!")
+            logger.warning("No 'orbit number' in message!")
 
         
         pname = pass_name(pass_info["start_time"], pass_info["satellite"])
         self._received_passes[pname] = pass_info
 
     def clean_passes(self, days=1):
+        """Clean old passes from the pass dict (_received_passes).
+        """
         oldies = []
 
         for key, val in self._received_passes.iteritems():
@@ -177,6 +180,7 @@ class MessageReceiver(object):
                 swath["format"] = "CHRPT"
             else:
                 swath["format"] = "HRPT"
+                swath["instrument"] = ("avhrr/3", "mhs", "amsu")
             swath["level"] = "0"
             
 
@@ -224,6 +228,7 @@ class MessageReceiver(object):
             swath["level"] = "0"
             swath["number"] = int(pds["ufn"])
 
+        # NPP RDRs
         elif filename.startswith("R") and filename.endswith(".h5"):
             mda = {}
             mda["format"] = filename[0]
@@ -242,11 +247,44 @@ class MessageReceiver(object):
             swath = self._received_passes.get(pname, {"satellite": satellite,
                                                       "start_time": risetime})
 
+            # FIXME: swath start and end time is granule dependent.
             swath["instrument"] = mda["instrument"]
             swath["format"] = "RDR"
             swath["type"] = "HDF5"
             swath["level"] = "0"
 
+        # metop
+        elif filename[4:12] == "_HRP_00_":
+            instruments = {"AVHR": "avhrr",
+                           "ASCA": "ascat",
+                           "AMSA": "amsu-a",
+                           "ASCA": "ascat",
+                           "ATOV": "atovs",
+                           "AVHR": "avhrr/3",
+                           "GOME": "gome",
+                           "GRAS": "gras",
+                           "HIRS": "hirs/4",
+                           "IASI": "iasi",
+                           "MHSx": "mhs",
+                           "SEMx": "sem",
+                           "ADCS": "adcs",
+                           "SBUV": "sbuv",
+                           "HKTM": "vcdu34"}
+
+            satellites = {"M02": "METOP-A",
+                          "M01": "METOP-B"}
+
+            satellite = satellites[filename[12:15]]
+            risetime = datetime.strptime(filename[16:31], "%Y%m%d%H%M%SZ")
+            #falltime = datetime.strptime(filename[16:47], "%Y%m%d%H%M%SZ")
+
+            pname = pass_name(risetime, satellite)
+            swath = self._received_passes.get(pname, {"satellite": satellite,
+                                                      "start_time": risetime})
+            swath["instrument"] = instruments[filename[:4]]
+            swath["format"] = "EPS"
+            swath["type"] = "binary"
+            swath["level"] = "0"
         else:
             return
 
@@ -467,3 +505,5 @@ if __name__ == '__main__':
             sys.exit(angel.do_action())
         except ImportError:
             print "Cannot run as a daemon, you need python-daemon installed."
+
+

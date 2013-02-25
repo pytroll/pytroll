@@ -5,7 +5,7 @@
 
 .. meta::
    :description: Weather satellite data reading and processing with python
-   :keywords: Meteosat, SEVIRI, AVHRR, METOP, NOAA, MODIS, TERRA, AQUA, VIIRS, NPP, SDR, AAPP, HRPT, read, reading, reader, process, processing, python, pytroll, weather, satellite, data
+   :keywords: Meteosat, SEVIRI, AVHRR, Metop, NOAA, MODIS, Terra, Aqua, VIIRS, NPP, SDR, AAPP, HRPT, read, reading, reader, process, processing, python, pytroll, weather, satellite, data
 
 
 Welcome to pytroll!
@@ -21,23 +21,9 @@ The provided python packages are designed to be used both in R&D environments
 and in 24/7 operational production.
 
 .. note::
-   The first Pytroll workshop held in Norrköping, Sweden, end of November,
-   2012, has come to an end. 9 people from Holland, Finland, Romania and
-   EUMETSAT joined up with the pytroll teams at DMI and SMHI, to get more
-   acquainted with the pytroll tools and how it can be used in their local
-   environments for satellite data production.
+   mipp_ version 0.9.1 with support for Meteosat-10 is out.
 
-   +---------+---------+--------------+
-   | |pict1| | |pict2| | |figuretext| |
-   +---------+---------+--------------+
-
-.. |pict1| image:: _static/00004_tiny.jpg
-    :width: 230px
-
-.. |pict2| image:: _static/00008_tiny.jpg
-    :width: 230px
-
-.. |figuretext| replace:: We will consider how to follow up on this. We may host another workshop in 2013 or later at DMI or SMHI. We will as usual announce this on the mailing list (pytroll@googlegroups.com).
+   Met-10 became the prime satellite for the 0-degree service January 21.
 
 
 The available python packages at the moment are:
@@ -46,14 +32,15 @@ The available python packages at the moment are:
 * mipp_ for reading weather satellite data
 * mpop_ for processing weather satellite data
 * python-bufr_ for reading bufr files
-* pycoast_ for putting coast lines on an image 
+* pycoast_ for putting coastlines, borders and rivers on an image 
+* pyorbital_ for computing satellite orbital parameters and reading TLE's
 
-Some more packages are in the process of being developped (you're very welcome
+Some more packages are in the process of being developed (you're very welcome
 to have a look and give us a hand):
 
-* pyorbital_ for computing satellite orbital parameters and reading TLE's
 * python-geotiepoints_ for interpolating (and extrapolation) geographic tiepoints
 * posttroll_ for a higher-level messaging library for pytroll
+* pykdtree_ for really fast nearest neighbour search
 
 .. _DMI: http://www.dmi.dk
 .. _SMHI: http://www.smhi.se
@@ -65,6 +52,7 @@ to have a look and give us a hand):
 .. _pycoast: http://pycoast.googlecode.com
 .. _python-geotiepoints: http://www.github.com/adybbroe/python-geotiepoints
 .. _posttroll: http://github.com/mraspaud/posttroll
+.. _pykdtree: https://github.com/storpipfugl/pykdtree
 
 
 Satellites supported (imager instruments) at the moment by the reader/processor
@@ -77,7 +65,7 @@ modules include:
  - NOAA series, in AAPP format (tested with 15, 16, 17, 18, 19)
  - Metop-A, in EPS 1a and 1b format
  - Aqua and Terra, in hdf-eos format
- - NPP, in SDR hdf format
+ - NPP, in SDR hdf5 format
 
 Contents:
 
@@ -90,7 +78,9 @@ Contents:
    quickstart_viirs
    quickstart_custom
    quickstart_bufr
+   quickstart_earsnwc
    recipes
+   workshop2012
 
 Contact us: https://groups.google.com/group/pytroll
 
