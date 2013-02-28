@@ -21,7 +21,7 @@ case $SMHI_MODE in
 
 utv)
 
-CSPP_HOME="/local_disk/opt/CSPP/1_2"
+CSPP_HOME="/local_disk/opt/CSPP/1_3"
 CSPP_WORKDIR="/san1/cspp/work"
 APPL_HOME="${HOME}/usr"
 #NPP_SDRPROC_LOG_FILE=/san1/cspp/work/npp_sdr_runner.log
