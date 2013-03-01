@@ -274,6 +274,7 @@ def start_npp_sdr_processing(level1_home, mypublisher, message):
     if (message.data['satellite'] == "NPP" and 
         message.data['instrument'] == 'viirs'):
         start_time = message.data['start_time']
+        end_time = message.data['end_time']
         try:
             orbnum = int(message.data['orbit_number'])            
         except KeyError:
@@ -339,6 +340,7 @@ def start_npp_sdr_processing(level1_home, mypublisher, message):
             to_send['format'] = 'SDR'
             to_send['type'] = 'HDF5'
             to_send['start_time'] = start_time #start_time.isoformat()
+            to_send['end_time'] = end_time
             message = Message('/oper/polar/direct_readout/norrkoping',
                           "file", to_send).encode()
             mypublisher.send(message)
