@@ -25,7 +25,7 @@ CSPP_SDR_HOME="/local_disk/opt/CSPP/1_3"
 CSPP_WORKDIR="/san1/cspp/work"
 APPL_HOME="${HOME}/usr"
 #NPP_SDRPROC_LOG_FILE=/san1/cspp/work/npp_sdr_runner.log
-NPP_SDRPROC_LOG_FILE="/var/tmp/satsa_log/npp_sdr_runner.log"
+NPP_SDRPROC_LOG_FILE="/var/log/satellit/npp_sdr_runner.log"
 #NPP_SDRPROC_CONFIG_DIR="/data/proj/safutv/dev/npp_dev/pytroll/reception_station/npp/etc/"
 
         ;;

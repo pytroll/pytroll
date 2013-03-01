@@ -42,7 +42,7 @@ THR_LUT_FILES_AGE_DAYS = OPTIONS.get('threshold_lut_files_age_days', 14)
 URL_JPSS_REMOTE_ANC_DIR = OPTIONS['url_jpss_remote_anc_dir']
 LUT_DIR = OPTIONS.get('lut_dir', CSPP_RT_SDR_LUTS)
 LUT_UPDATE_STAMPFILE_RPEFIX = OPTIONS['lut_update_stampfile_prefix']
-URL_DOWNLOAD_TRIAL_FREQUENCY_HOURS = OPTIONS('url_download_trial_frequency_hours')
+URL_DOWNLOAD_TRIAL_FREQUENCY_HOURS = OPTIONS['url_download_trial_frequency_hours']
 
 from urlparse import urlparse
 import posttroll.subscriber
@@ -133,7 +133,7 @@ def check_lut_files(thr_days=14):
 
     now = datetime.utcnow()
 
-    tdelta = timedelta(days=float(URL_DOWNLOAD_TRIAL_FREQUENCY_HOURS/24.))
+    tdelta = timedelta(days=float(URL_DOWNLOAD_TRIAL_FREQUENCY_HOURS)/24.)
     # Get the time of the last update trial:
     files = glob(LUT_UPDATE_STAMPFILE_RPEFIX + '*')
     # Can we count on glob sorting the most recent file first. In case we can,
@@ -157,6 +157,10 @@ def check_lut_files(thr_days=14):
     files_ok = True
     LOG.info("Directory " + str(LUT_DIR) + "...")
     files = glob(os.path.join(LUT_DIR, '*'))
+    if len(files) == 0:
+        LOG.info("No LUT files available!")
+        return False
+
     filename = files[0]
     tstamp = os.stat(filename)[stat.ST_MTIME]
     first_time = datetime.utcfromtimestamp(tstamp)
@@ -205,11 +209,11 @@ def update_lut_files():
     lftp_proc.poll()
 
     now = datetime.utcnow()
-    timestamp = now.strftime('.%Y%m%d%H%M')
-    filename = os.path.join(LUT_UPDATE_STAMPFILE_RPEFIX, timestamp)
+    timestamp = now.strftime('%Y%m%d%H%M')
+    filename = LUT_UPDATE_STAMPFILE_RPEFIX + '.' + timestamp
     try:
         fpt = open(filename, "w")
-        fpt.write()
+        fpt.write(timestamp)
     except OSError:
         LOG.warning('Failed to write LUT-update time-stamp file')
     else:
