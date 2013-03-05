@@ -20,6 +20,9 @@ reading, interpretation, and writing of weather satellite data.
 The provided python packages are designed to be used both in R&D environments
 and in 24/7 operational production.
 
+If you want to contact us, you can use the following mailing list:
+https://groups.google.com/group/pytroll
+
 .. note::
    mipp_ version 0.9.1 with support for Meteosat-10 is out.
 
@@ -63,9 +66,9 @@ modules include:
  - MTSAT series, in HRIT/LRIT format (tested with 1R, 2)
  - Electro L, in HRIT/LRIT format (tested with N1)
  - NOAA series, in AAPP format (tested with 15, 16, 17, 18, 19)
- - Metop-A, in EPS 1a and 1b format
+ - Metop-A/B, in EPS 1a and 1b format
  - Aqua and Terra, in hdf-eos format
- - NPP, in SDR hdf5 format
+ - Suomi NPP, in SDR hdf5 format
 
 Contents:
 
