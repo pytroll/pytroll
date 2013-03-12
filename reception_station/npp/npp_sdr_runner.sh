@@ -21,11 +21,11 @@ case $SMHI_MODE in
 
 utv)
 
-CSPP_HOME="/local_disk/opt/CSPP/1_2"
+CSPP_SDR_HOME="/local_disk/opt/CSPP/1_3"
 CSPP_WORKDIR="/san1/cspp/work"
 APPL_HOME="${HOME}/usr"
 #NPP_SDRPROC_LOG_FILE=/san1/cspp/work/npp_sdr_runner.log
-NPP_SDRPROC_LOG_FILE="/var/tmp/satsa_log/npp_sdr_runner.log"
+NPP_SDRPROC_LOG_FILE="/var/log/satellit/npp_sdr_runner.log"
 #NPP_SDRPROC_CONFIG_DIR="/data/proj/safutv/dev/npp_dev/pytroll/reception_station/npp/etc/"
 
         ;;
@@ -35,7 +35,7 @@ NPP_SDRPROC_LOG_FILE="/var/tmp/satsa_log/npp_sdr_runner.log"
 
 test)
 
-CSPP_HOME="/local_disk/opt/CSPP/current"
+CSPP_SDR_HOME="/local_disk/opt/CSPP/current"
 CSPP_WORKDIR="/san1/cspp/work"
 APPL_HOME="/usr/local"
 NPP_SDRPROC_LOG_FILE="/var/log/satellit/npp_sdr_runner.log"
@@ -48,7 +48,7 @@ NPP_SDRPROC_CONFIG_DIR="/usr/local/etc"
 
 prod)
 
-CSPP_HOME="/local_disk/opt/CSPP/current"
+CSPP_SDR_HOME="/local_disk/opt/CSPP/current"
 CSPP_WORKDIR="/san1/cspp/work"
 APPL_HOME="/usr/local"
 NPP_SDRPROC_LOG_FILE="/var/log/satellit/npp_sdr_runner.log"
@@ -62,7 +62,7 @@ NPP_SDRPROC_CONFIG_DIR="/usr/local/etc"
 
 offline)
 
-CSPP_HOME="/local_disk/opt/CSPP/1_2"
+CSPP_SDR_HOME="/local_disk/opt/CSPP/1_3"
 APPL_HOME="${HOME}/usr"
 CSPP_WORKDIR="/local_disk/tmp"
 NPP_SDRPROC_LOG_FILE="/local_disk/tmp/npp_sdr_runner.log"
@@ -82,13 +82,13 @@ echo "No SMHI_MODE set..."
 esac
 
 
-export CSPP_HOME
+export CSPP_SDR_HOME
 NPP_SDRPROC=${APPL_HOME}
 export NPP_SDRPROC
 export CSPP_WORKDIR
 export NPP_SDRPROC_CONFIG_DIR
 export NPP_SDRPROC_LOG_FILE
 
-source ${CSPP_HOME}/cspp_env.sh
+source ${CSPP_SDR_HOME}/cspp_sdr_env.sh
 
 /usr/bin/python ${APPL_HOME}/bin/npp_sdr_runner.py
