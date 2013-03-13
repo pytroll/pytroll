@@ -278,7 +278,11 @@ def start_npp_sdr_processing(level1_home, mypublisher, message):
     if (message.data['satellite'] == "NPP" and 
         message.data['instrument'] == 'viirs'):
         start_time = message.data['start_time']
-        end_time = message.data['end_time']
+        try:
+            end_time = message.data['end_time']
+        except KeyError:
+            LOG.warning("No end_time in message! Using start_time...")
+            end_time = message.data['start_time']
         try:
             orbnum = int(message.data['orbit_number'])            
         except KeyError:
