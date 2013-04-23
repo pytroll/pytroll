@@ -397,13 +397,20 @@ def npp_runner():
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
 
-    npp_runner()
+    #npp_runner()
 
+    from glob import glob
+    files = glob('/san1/NPP/lvl0/RNSCA-RVIRS_npp_*')
+    #files = glob('/data/proj6/safutv/rt_stps/data/RNSCA-RVIRS_npp_*')
     #rdr_filename = "/san1/polar_in/direct_readout/npp/RNSCA-RVIRS_npp_d20121111_t0825276_e0837086_b05391_c20121111084036199000_nfts_drl.h5"
-    #LOG.info("Start CSPP: RDR file = " + str(rdr_filename))
-    #working_dir = run_cspp(rdr_filename)
-    #LOG.info("CSPP SDR processing finished...")
+    files.sort()
+    LOG.info("Start CSPP: RDR file = " + str(files[0:3]))
+    working_dir = run_cspp(files[1:5])
 
+    #for rdr_filename in files:
+    #   LOG.info("Start CSPP: RDR file = " + str(rdr_filename))
+    #   working_dir = run_cspp(rdr_filename)
+    #   LOG.info("CSPP SDR processing finished...")
 
     """
     # Testing:
