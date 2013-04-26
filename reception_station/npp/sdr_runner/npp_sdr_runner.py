@@ -149,7 +149,7 @@ def check_lut_files(thr_days=14):
 
     if not update_it:
         LOG.info('An URL update trial has been attempted recently. Continue')
-        return
+        return True
 
     LOG.info('No update trial seems to have been attempted recently')
     tdelta = timedelta(days=int(thr_days))
@@ -375,6 +375,7 @@ def npp_runner():
     except AttributeError:
         LOG.warning("No log rotation supported for this handler...")
     LOG.info("*** Start the Suomi NPP SDR runner:")
+    LOG.info("THR_LUT_FILES_AGE_DAYS = " + str(THR_LUT_FILES_AGE_DAYS))
 
     fresh = check_lut_files(THR_LUT_FILES_AGE_DAYS)
     if fresh:
@@ -397,8 +398,9 @@ def npp_runner():
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
 
-    #npp_runner()
+    npp_runner()
 
+    """
     from glob import glob
     files = glob('/san1/NPP/lvl0/RNSCA-RVIRS_npp_*')
     #files = glob('/data/proj6/safutv/rt_stps/data/RNSCA-RVIRS_npp_*')
@@ -411,6 +413,7 @@ if __name__ == "__main__":
     #   LOG.info("Start CSPP: RDR file = " + str(rdr_filename))
     #   working_dir = run_cspp(rdr_filename)
     #   LOG.info("CSPP SDR processing finished...")
+    """
 
     """
     # Testing:
