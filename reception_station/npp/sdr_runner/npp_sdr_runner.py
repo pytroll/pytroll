@@ -237,7 +237,7 @@ def run_cspp(*viirs_rdr_files):
 
     # Run the command:
     cmdlist = [viirs_sdr_call]
-	cmdlist.extend(viirs_rdr_files)
+    cmdlist.extend(viirs_rdr_files)
     t0_clock = time.clock()
     t0_wall = time.time()
     viirs_sdr_proc = Popen(cmdlist,
