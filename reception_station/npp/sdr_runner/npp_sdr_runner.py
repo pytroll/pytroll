@@ -222,7 +222,7 @@ def update_lut_files():
     return
 
 # ---------------------------------------------------------------------------
-def run_cspp(viirs_rdr_file):
+def run_cspp(*viirs_rdr_files):
     """Run CSPP on VIIRS RDR files"""
     from subprocess import Popen, PIPE, STDOUT
     import time
@@ -236,7 +236,8 @@ def run_cspp(viirs_rdr_file):
         working_dir = tempfile.mkdtemp()
 
     # Run the command:
-    cmdlist = [viirs_sdr_call, viirs_rdr_file]
+    cmdlist = [viirs_sdr_call]
+	cmdlist.extend(viirs_rdr_files)
     t0_clock = time.clock()
     t0_wall = time.time()
     viirs_sdr_proc = Popen(cmdlist,
@@ -395,10 +396,174 @@ def npp_runner():
 
     return
 
+def get_sdr_times(filename):
+    from datetime import datetime, timedelta
+
+    bname = os.path.basename(filename)
+    sll = bname.split('_')
+    start_time = datetime.strptime(sll[2] + sll[3][:-1], 
+                                   "d%Y%m%dt%H%M%S")
+    end_time = datetime.strptime(sll[2] + sll[4][:-1], 
+                                 "d%Y%m%dt%H%M%S")
+    if end_time < start_time:
+        end_time += timedelta(days=1)
+    return start_time, end_time
+
+def publish_sdr(publisher, result_files):
+    # Now publish:
+    for result_file in result_files:
+        path, filename = os.path.split(result_file)
+        to_send = {}
+        # FIXME: Hardcoded machine name ! This is bad !!!
+        to_send['uri'] = ('ssh://safe.smhi.se/' + result_file)
+        to_send['filename'] = filename
+        to_send['instrument'] = 'viirs'
+        to_send['satellite'] = 'NPP'
+        to_send['format'] = 'HDF5'
+        to_send['type'] = 'SDR'
+        
+        to_send['start_time'], to_send['end_time'] = get_sdr_times(filename)
+        msg = Message('/oper/polar/direct_readout/norrkoping',
+                      "file", to_send).encode()
+        LOG.debug("sending: " + str(msg))
+        publisher.send(msg)
+
+
+# ---------------------------------------------------------------------------
+def npp_rolling_runner():
+    """The NPP/VIIRS runner. Listens and triggers processing on RDR granules."""
+
+    level1_home = OPTIONS['level1_home']
+    working_dir = OPTIONS['working_dir']
+
+    with posttroll.subscriber.Subscribe('RDR') as subscr:
+        with Publish('npp_dr_runner', 'SDR', 
+                     LEVEL1_PUBLISH_PORT) as publisher:
+            while True:
+                glist = []
+                pass_start_time = None
+                result_files = []
+                for msg in subscr.recv(timeout=90):
+                    LOG.debug("Received message: " + str(msg))
+                    if msg is None and glist:
+                        del glist[0]
+                        keeper = glist[1]
+                        LOG.info("Start CSPP: RDR files = " + str(glist))
+                        run_cspp(*glist)
+                        LOG.info("CSPP SDR processing finished...")
+                        # Assume everything has gone well! 
+                        # Move the files from working dir:
+                        new_result_files = get_files4pps(working_dir)
+                        if len(new_result_files) == 0:
+                            LOG.warning("No SDR files available. CSPP probably failed!")
+                            continue
+
+
+                        start_time = get_datetime(keeper)
+                        start_str = start_time.strftime("d%Y%m%d_t%H%M%S")
+                        result_files.extend([new_file
+                                             for new_file in new_result_files
+                                             if start_str in new_file])
+                        publish_sdr(publisher, new_result_files)
+                        break # end the loop and reinitialize !
+
+                    LOG.debug("")
+                    LOG.debug("\tMessage:")
+                    LOG.debug(str(msg))
+                    urlobj = urlparse(msg.data['uri'])
+                    LOG.debug("Server = " + str(urlobj.netloc))
+                    if urlobj.netloc != servername:
+                        continue
+                    LOG.info("Ok... " + str(urlobj.netloc))
+                    LOG.info("Sat and Instrument: " + str(msg.data['satellite']) 
+                             + " " + str(msg.data['instrument']))
+
+                    if (msg.data['satellite'] == "NPP" and 
+                        msg.data['instrument'] == 'viirs'):
+                        start_time = msg.data['start_time']
+                        try:
+                            orbnum = int(msg.data['orbit_number'])            
+                        except KeyError:
+                            orbnum = None
+                        rdr_filename = urlobj.path
+                        path, fname =  os.path.split(rdr_filename)
+                        if fname.endswith('.h5'):
+                            # Check if the file exists:
+                            if not os.path.exists(rdr_filename):
+                                raise IOError("File is reported to be dispatched " + 
+                                              "but is not there! File = " + 
+                                              rdr_filename)
+
+                            # Do processing:
+                            LOG.info("RDR to SDR processing on npp/viirs with CSPP start!" + 
+                                     " Start time = ", start_time)
+                            if orbnum:
+                                LOG.info("Orb = %d" % orbnum)
+                            LOG.info("File = %s" % str(rdr_filename))
+                            LOG.info("Cleanup working dir before CSPP start...")
+                            cleanup_cspp_workdir(working_dir)
+
+                            # Fix orbit number in RDR file:
+                            try:
+                                rdr_filename = fix_rdrfile(rdr_filename)
+                            except IOError:
+                                LOG.error('Failed to fix orbit number in RDR file = ' + str(urlobj.path))
+                                import traceback
+                                traceback.print_exc(file=sys.stderr)
+
+                            glist.append(rdr_filename)
+
+                            if len(glist) > 4:
+                                raise RuntimeError("Invalid number of granules to "
+                                                   "process!!!")
+                            if len(glist) == 4:
+                                del glist[0]
+                            if len(glist) == 3:
+                                keeper = glist[1]
+                            if len(glist) == 2:
+                                keeper = glist[0]
+
+                            LOG.info("Start CSPP: RDR files = " + str(glist))
+                            run_cspp(*glist)
+                            LOG.info("CSPP SDR processing finished...")
+                            # Assume everything has gone well! 
+                            # Move the files from working dir:
+                            new_result_files = get_files4pps(working_dir)
+                            if len(new_result_files) == 0:
+                                LOG.warning("No SDR files available. CSPP probably failed!")
+                                continue
+
+                            result_files.extend(new_result_files)
+                            
+                            start_time = get_datetime(keeper)
+                            start_str = start_time.strftime("d%Y%m%d_t%H%M%S")
+                            result_files.extend([new_file
+                                                 for new_file in new_result_files
+                                                 if start_str in new_file])
+                            if pass_start_time is None:
+                                pass_start_time = start_time
+
+                            publish_sdr(publisher, new_result_files)
+                            
+                        
+                tobj = pass_start_time
+                LOG.info("Time used in sub-dir name: " + str(tobj.strftime("%Y-%m-%d %H:%M")))
+                subd = create_pps_subdirname(tobj)
+                LOG.info("Create sub-directory for sdr files: %s" % str(subd))
+                pack_sdr_files4pps(result_files, subd)
+                make_okay_files(subd)
+
+
+
+    return
+
+
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
 
-    npp_runner()
+    #npp_runner()
+    npp_rolling_runner()
+
 
     """
     from glob import glob
