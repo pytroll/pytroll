@@ -441,8 +441,10 @@ def spawn_cspp(current_granule, *glist):
     if len(new_result_files) == 0:
         LOG.warning("No SDR files available. CSPP probably failed!")
         return working_dir, []
-    
-    if current_granule == glist:
+
+    LOG.info("current_granule = " + str(current_granule))
+    LOG.info("glist = " + str(glist))
+    if current_granule in glist and len(glist) == 1:
         LOG.info("Current granule is identical to the 'list of granules'" + 
                  " No sdr result files will be skipped")
         return working_dir, new_result_files
