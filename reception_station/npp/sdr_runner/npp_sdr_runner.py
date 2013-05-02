@@ -454,10 +454,15 @@ def spawn_cspp(current_granule, *glist):
 def npp_rolling_runner():
     """The NPP/VIIRS runner. Listens and triggers processing on RDR granules."""
     from multiprocessing.pool import ThreadPool
+    from multiprocessing import cpu_count
 
     level1_home = OPTIONS['level1_home']
 
-    pool = ThreadPool(4)
+    ncpus_available = cpu_count()
+    LOG.info("Number of CPUs available = " + str(ncpus_available))
+    ncpus = int(OPTIONS.get('ncpus', 1))
+    LOG.info("Will use %d CPUs when running CSPP instances" % ncpus)
+    pool = ThreadPool(ncpus)
     with posttroll.subscriber.Subscribe('RDR') as subscr:
         with Publish('npp_dr_runner', 'SDR', 
                      LEVEL1_PUBLISH_PORT) as publisher:
