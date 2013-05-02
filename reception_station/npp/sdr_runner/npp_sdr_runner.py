@@ -497,72 +497,81 @@ def npp_rolling_runner():
                     LOG.info("Sat and Instrument: " + str(msg.data['satellite']) 
                              + " " + str(msg.data['instrument']))
                     
-                    
-                    if (msg.data['satellite'] == "NPP" and 
-                        msg.data['instrument'] == 'viirs'):
-                        start_time = msg.data['start_time']
-                        end_time = msg.data['end_time']
-                        try:
-                            orbnum = int(msg.data['orbit_number'])            
-                        except KeyError:
-                            orbnum = None
-                        rdr_filename = urlobj.path
-                        path, fname =  os.path.split(rdr_filename)
-                        if fname.endswith('.h5'):
-                            # Check if the file exists:
-                            if not os.path.exists(rdr_filename):
-                                raise IOError("File is reported to be dispatched " + 
-                                              "but is not there! File = " + 
-                                              rdr_filename)
+                    if not (msg.data['satellite'] == "NPP" and 
+                            msg.data['instrument'] == 'viirs'):
+                        LOG.info("Not a Suomi NPP VIIRS scene. Continue...")
+                        continue
 
-                            # Do processing:
-                            LOG.info("RDR to SDR processing on npp/viirs with CSPP start!" + 
-                                     " Start time = " + str(start_time))
-                            if orbnum:
-                                LOG.info("Orb = %d" % orbnum)
-                            LOG.info("File = %s" % str(rdr_filename))
+                    start_time = msg.data['start_time']
+                    end_time = msg.data['end_time']
+                    try:
+                        orbnum = int(msg.data['orbit_number'])            
+                    except KeyError:
+                        orbnum = None
+                    rdr_filename = urlobj.path
+                    path, fname =  os.path.split(rdr_filename)
+                    if not fname.endswith('.h5'):
+                        LOG.warning("Not an rdr file! Continue")
 
-                            # Fix orbit number in RDR file:
-                            try:
-                                rdr_filename = fix_rdrfile(rdr_filename)
-                            except IOError:
-                                LOG.error('Failed to fix orbit number in RDR file = ' + str(urlobj.path))
-                                import traceback
-                                traceback.print_exc(file=sys.stderr)
+                    # Check if the file exists:
+                        if not os.path.exists(rdr_filename):
+                            raise IOError("File is reported to be dispatched " + 
+                                          "but is not there! File = " + 
+                                          rdr_filename)
 
-                            glist.append(rdr_filename)
+                    # Do processing:
+                    LOG.info("RDR to SDR processing on npp/viirs with CSPP start!" + 
+                             " Start time = " + str(start_time))
+                    if orbnum:
+                        LOG.info("Orb = %d" % orbnum)
+                    LOG.info("File = %s" % str(rdr_filename))
 
-                            if len(glist) > 4:
-                                raise RuntimeError("Invalid number of granules to "
+                    # Fix orbit number in RDR file:
+                    try:
+                        rdr_filename = fix_rdrfile(rdr_filename)
+                    except IOError:
+                        LOG.error('Failed to fix orbit number in RDR file = ' + 
+                                  str(urlobj.path))
+                        import traceback
+                        traceback.print_exc(file=sys.stderr)
+
+                    glist.append(rdr_filename)
+
+                    if len(glist) > 4:
+                        raise RuntimeError("Invalid number of granules to "
                                                    "process!!!")
-                            if len(glist) == 4:
-                                del glist[0]
-                            if len(glist) == 3:
-                                keeper = glist[1]
-                            if len(glist) == 2:
-                                keeper = glist[0]
-                            if len(glist) == 1:
-                                # Check start and end time and check if the RDR file
-                                # contains several granules (a full local swath):
-                                tdiff = end_time - start_time
-                                if tdiff.seconds > 4*60:
-                                    LOG.info("RDR file contains 3 or more granules. " + 
-                                             "We assume it is a full local swath!")
-                                    keeper = glist[0]
-                                    fullswath = True
-                                else:
-                                    LOG.info("Only one granule. This is not enough for CSPP" + 
-                                             " Continue")
-                                    continue
+                    if len(glist) == 4:
+                        del glist[0]
+                    if len(glist) == 3:
+                        keeper = glist[1]
+                    if len(glist) == 2:
+                        keeper = glist[0]
+                    if len(glist) == 1:
+                        # Check start and end time and check if the RDR file
+                        # contains several granules (a full local swath):
+                        tdiff = end_time - start_time
+                        if tdiff.seconds > 4*60:
+                            LOG.info("RDR file contains 3 or more granules. " + 
+                                     "We assume it is a full local swath!")
+                            keeper = glist[0]
+                            fullswath = True
+                        else:
+                            LOG.info("Only one granule. This is not enough for CSPP" + 
+                                     " Continue")
+                            continue
 
-                            start_time = get_datetime_from_filename(keeper)
-                            if pass_start_time is None:
-                                pass_start_time = start_time
+                    start_time = get_datetime_from_filename(keeper)
+                    if pass_start_time is None:
+                        pass_start_time = start_time
 
-                            cspp_results.append(pool.apply_async(spawn_cspp, [keeper] + glist))
-                            if fullswath:
-                                break
+                    LOG.info("Before call to spawn_cspp. Argument list = " + 
+                             str([keeper] + glist))
+                    cspp_results.append(pool.apply_async(spawn_cspp, [keeper] + glist))
+                    if fullswath:
+                        LOG.info("Full swath. Break granules loop")
+                        break
 
+                LOG.info("Get the results from the multiptocessing pool-run")
                 for res in cspp_results:
                     working_dir, tmp_result_files = res.get()
                     working_dirs.append(working_dir)
@@ -578,7 +587,8 @@ def npp_rolling_runner():
                 publish_sdr(publisher, sdr_files)
                 
                 for working_dir in working_dirs:
-                    cleanup_cspp_workdir(working_dir)
+                    LOG.info("Cleaning up directory %s" % working_dir)
+                    #cleanup_cspp_workdir(working_dir)
                 working_dirs = []
 
     return
