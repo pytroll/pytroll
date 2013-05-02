@@ -430,16 +430,39 @@ def publish_sdr(publisher, result_files):
         publisher.send(msg)
 
 
+def spawn_cspp(current_granule, *glist):
+    """Spawn a CSPP run on the set of RDR files given"""
+
+    LOG.info("Start CSPP: RDR files = " + str(glist))
+    working_dir = run_cspp(*glist)
+    LOG.info("CSPP SDR processing finished...")
+    # Assume everything has gone well!
+    new_result_files = get_sdr_files(working_dir)
+    if len(new_result_files) == 0:
+        LOG.warning("No SDR files available. CSPP probably failed!")
+        return working_dir, []
+    
+    start_time = get_datetime_from_filename(current_granule)
+    start_str = start_time.strftime("d%Y%m%d_t%H%M%S")
+    result_files = [new_file
+                    for new_file in new_result_files
+                    if start_str in new_file]
+    
+    return working_dir, result_files
+
 # ---------------------------------------------------------------------------
 def npp_rolling_runner():
     """The NPP/VIIRS runner. Listens and triggers processing on RDR granules."""
+    from multiprocessing.pool import ThreadPool
 
     level1_home = OPTIONS['level1_home']
 
+    pool = ThreadPool(4)
     with posttroll.subscriber.Subscribe('RDR') as subscr:
         with Publish('npp_dr_runner', 'SDR', 
                      LEVEL1_PUBLISH_PORT) as publisher:
             while True:
+                cspp_results = []
                 working_dirs = []
                 glist = []
                 pass_start_time = None
@@ -451,22 +474,26 @@ def npp_rolling_runner():
                         del glist[0]
                         keeper = glist[1]
                         LOG.info("Start CSPP: RDR files = " + str(glist))
-                        working_dir = run_cspp(*glist)
-                        working_dirs.append(working_dir)
-                        LOG.info("CSPP SDR processing finished...")
-                        # Assume everything has gone well! 
-                        # Move the files from working dir:
-                        new_result_files = get_sdr_files(working_dir)
-                        if len(new_result_files) == 0:
-                            LOG.warning("No SDR files available. CSPP probably failed!")
-                            continue
+                        
+                        cspp_results.append(pool.apply_async(spawn_cspp, [keeper] + glist))
+
+                        # LOG.info("Start CSPP: RDR files = " + str(glist))
+                        # working_dir = run_cspp(*glist)
+                        # working_dirs.append(working_dir)
+                        # LOG.info("CSPP SDR processing finished...")
+                        # # Assume everything has gone well! 
+                        # # Move the files from working dir:
+                        # new_result_files = get_sdr_files(working_dir)
+                        # if len(new_result_files) == 0:
+                        #     LOG.warning("No SDR files available. CSPP probably failed!")
+                        #     continue
 
 
-                        start_time = get_datetime_from_filename(keeper)
-                        start_str = start_time.strftime("d%Y%m%d_t%H%M%S")
-                        result_files.extend([new_file
-                                             for new_file in new_result_files
-                                             if start_str in new_file])
+                        # start_time = get_datetime_from_filename(keeper)
+                        # start_str = start_time.strftime("d%Y%m%d_t%H%M%S")
+                        # result_files.extend([new_file
+                        #                      for new_file in new_result_files
+                        #                      if start_str in new_file])
                         # We should not yet publish the sdr files. 
                         # This should be done when we are finished
                         #publish_sdr(publisher, new_result_files)
@@ -532,40 +559,41 @@ def npp_rolling_runner():
                                          " Continue")
                                 continue
 
-                            LOG.info("Start CSPP: RDR files = " + str(glist))
-                            working_dir = run_cspp(*glist)
-                            working_dirs.append(working_dir)
-                            LOG.info("CSPP SDR processing finished...")
-                            # Assume everything has gone well! 
-                            # Move the files from working dir:
-                            new_result_files = get_sdr_files(working_dir)
-                            if len(new_result_files) == 0:
-                                LOG.warning("No SDR files available. CSPP probably failed!")
-                                continue
+                            # LOG.info("Start CSPP: RDR files = " + str(glist))
+                            # working_dir = run_cspp(*glist)
+                            # working_dirs.append(working_dir)
+                            # LOG.info("CSPP SDR processing finished...")
+                            # # Assume everything has gone well! 
+                            # # Move the files from working dir:
+                            # new_result_files = get_sdr_files(working_dir)
+                            # if len(new_result_files) == 0:
+                            #     LOG.warning("No SDR files available. CSPP probably failed!")
+                            #     continue
 
                             start_time = get_datetime_from_filename(keeper)
-                            start_str = start_time.strftime("d%Y%m%d_t%H%M%S")
-                            result_files.extend([new_file
-                                                 for new_file in new_result_files
-                                                 if start_str in new_file])
+                            #start_str = start_time.strftime("d%Y%m%d_t%H%M%S")
                             if pass_start_time is None:
                                 pass_start_time = start_time
 
-                            #working_dir, result_files = spawn_cspp(*glist)
-                        
+                            cspp_results.append(pool.apply_async(spawn_cspp, [keeper] + glist))
+
+                for res in cspp_results:
+                    working_dir, tmp_result_files = res.get()
+                    working_dirs.append(working_dir)
+                    result_files.extend(tmp_result_files)
+
                 tobj = pass_start_time
                 LOG.info("Time used in sub-dir name: " + str(tobj.strftime("%Y-%m-%d %H:%M")))
-                subd = create_pps_subdirname(tobj)
+                subd = create_subdirname(tobj)
                 LOG.info("Create sub-directory for sdr files: %s" % str(subd))
-                sdr_files = pack_sdr_files(result_files, subd)
-                make_okay_files(subd)
+                sdr_files = pack_sdr_files(result_files, level1_home, subd)
+                make_okay_files(level1_home, subd)
 
                 publish_sdr(publisher, sdr_files)
                 
                 for working_dir in working_dirs:
                     cleanup_cspp_workdir(working_dir)
                 working_dirs = []
-
 
     return
 
