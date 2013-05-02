@@ -467,6 +467,7 @@ def npp_rolling_runner():
         with Publish('npp_dr_runner', 'SDR', 
                      LEVEL1_PUBLISH_PORT) as publisher:
             while True:
+                fullswath = False
                 cspp_results = []
                 working_dirs = []
                 glist = []
@@ -481,27 +482,6 @@ def npp_rolling_runner():
                         LOG.info("Start CSPP: RDR files = " + str(glist))
                         
                         cspp_results.append(pool.apply_async(spawn_cspp, [keeper] + glist))
-
-                        # LOG.info("Start CSPP: RDR files = " + str(glist))
-                        # working_dir = run_cspp(*glist)
-                        # working_dirs.append(working_dir)
-                        # LOG.info("CSPP SDR processing finished...")
-                        # # Assume everything has gone well! 
-                        # # Move the files from working dir:
-                        # new_result_files = get_sdr_files(working_dir)
-                        # if len(new_result_files) == 0:
-                        #     LOG.warning("No SDR files available. CSPP probably failed!")
-                        #     continue
-
-
-                        # start_time = get_datetime_from_filename(keeper)
-                        # start_str = start_time.strftime("d%Y%m%d_t%H%M%S")
-                        # result_files.extend([new_file
-                        #                      for new_file in new_result_files
-                        #                      if start_str in new_file])
-                        # We should not yet publish the sdr files. 
-                        # This should be done when we are finished
-                        #publish_sdr(publisher, new_result_files)
                         break # end the loop and reinitialize !
                     if msg is None:
                         continue
@@ -516,10 +496,12 @@ def npp_rolling_runner():
                     LOG.info("Ok... " + str(urlobj.netloc))
                     LOG.info("Sat and Instrument: " + str(msg.data['satellite']) 
                              + " " + str(msg.data['instrument']))
-
+                    
+                    
                     if (msg.data['satellite'] == "NPP" and 
                         msg.data['instrument'] == 'viirs'):
                         start_time = msg.data['start_time']
+                        end_time = msg.data['end_time']
                         try:
                             orbnum = int(msg.data['orbit_number'])            
                         except KeyError:
@@ -560,27 +542,26 @@ def npp_rolling_runner():
                             if len(glist) == 2:
                                 keeper = glist[0]
                             if len(glist) == 1:
-                                LOG.info("Only one granule. This is not enough for CSPP" + 
-                                         " Continue")
-                                continue
-
-                            # LOG.info("Start CSPP: RDR files = " + str(glist))
-                            # working_dir = run_cspp(*glist)
-                            # working_dirs.append(working_dir)
-                            # LOG.info("CSPP SDR processing finished...")
-                            # # Assume everything has gone well! 
-                            # # Move the files from working dir:
-                            # new_result_files = get_sdr_files(working_dir)
-                            # if len(new_result_files) == 0:
-                            #     LOG.warning("No SDR files available. CSPP probably failed!")
-                            #     continue
+                                # Check start and end time and check if the RDR file
+                                # contains several granules (a full local swath):
+                                tdiff = end_time - start_time
+                                if tdiff.seconds > 4*60:
+                                    LOG.info("RDR file contains 3 or more granules. " + 
+                                             "We assume it is a full local swath!")
+                                    keeper = glist[0]
+                                    fullswath = True
+                                else:
+                                    LOG.info("Only one granule. This is not enough for CSPP" + 
+                                             " Continue")
+                                    continue
 
                             start_time = get_datetime_from_filename(keeper)
-                            #start_str = start_time.strftime("d%Y%m%d_t%H%M%S")
                             if pass_start_time is None:
                                 pass_start_time = start_time
 
                             cspp_results.append(pool.apply_async(spawn_cspp, [keeper] + glist))
+                            if fullswath:
+                                break
 
                 for res in cspp_results:
                     working_dir, tmp_result_files = res.get()
