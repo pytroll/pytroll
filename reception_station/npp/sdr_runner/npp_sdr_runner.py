@@ -442,6 +442,12 @@ def spawn_cspp(current_granule, *glist):
         LOG.warning("No SDR files available. CSPP probably failed!")
         return working_dir, []
     
+    if current_granule == glist:
+        LOG.info("Current granule is identical to the 'list of granules'" + 
+                 " No sdr result files will be skipped")
+        return working_dir, new_result_files
+        
+    # Only bother about the "current granule" - skip the rest
     start_time = get_datetime_from_filename(current_granule)
     start_str = start_time.strftime("d%Y%m%d_t%H%M%S")
     result_files = [new_file
