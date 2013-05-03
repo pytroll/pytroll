@@ -596,7 +596,7 @@ def npp_rolling_runner():
                 
                 for working_dir in working_dirs:
                     LOG.info("Cleaning up directory %s" % working_dir)
-                    #cleanup_cspp_workdir(working_dir)
+                    cleanup_cspp_workdir(working_dir)
                 working_dirs = []
 
     return
