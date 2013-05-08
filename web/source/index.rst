@@ -24,7 +24,7 @@ If you want to contact us, you can use the following mailing list:
 https://groups.google.com/group/pytroll
 
 .. note::
-   mpop_ version 0.13.0 with a new aapp/avhrr level1b reader in pure python is out!
+   mpop_ version 0.13.0 with a new avhrr aapp level1b reader in pure python is out!
 
 
 The available python packages at the moment are:
