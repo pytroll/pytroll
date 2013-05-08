@@ -24,9 +24,7 @@ If you want to contact us, you can use the following mailing list:
 https://groups.google.com/group/pytroll
 
 .. note::
-   mipp_ version 0.9.1 with support for Meteosat-10 is out.
-
-   Met-10 became the prime satellite for the 0-degree service January 21.
+   mpop_ version 0.13.0 with a new aapp/avhrr level1b reader in pure python is out!
 
 
 The available python packages at the moment are:
