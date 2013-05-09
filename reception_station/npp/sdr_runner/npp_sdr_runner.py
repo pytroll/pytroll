@@ -267,7 +267,6 @@ def publish_sdr(publisher, result_files):
     for result_file in result_files:
         path, filename = os.path.split(result_file)
         to_send = {}
-        # FIXME: Hardcoded machine name ! This is bad !!!
         to_send['uri'] = ('ssh://%s/' % SERVERNAME + result_file)
         to_send['filename'] = filename
         to_send['instrument'] = 'viirs'
