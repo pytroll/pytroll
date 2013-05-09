@@ -91,24 +91,6 @@ handler.setLevel(logging.DEBUG)
 LOG.setLevel(logging.DEBUG)
 LOG.addHandler(handler)
 
-
-CSPP_ENVS = {"CSPP_SDR_HOME": CSPP_SDR_HOME,
-             "CSPP_REV": "20120215",
-             "CSPP_ANC_CACHE_DIR " : os.path.join(CSPP_SDR_HOME,'cache'),
-             "CSPP_ANC_HOME" : os.path.join(CSPP_SDR_HOME,'static'),
-             "CSPP_ANC_TILE_PATH" : "%s/static/ADL/data/tiles/Terrain-Eco-ANC-Tile/withMetadata" % (CSPP_SDR_HOME),
-             "PATH" : '%s/atms/sdr:%s/atms/sdr:%s/viirs/edr:%s/viirs/sdr' % (CSPP_SDR_HOME, 
-                                                                             CSPP_SDR_HOME,
-                                                                             CSPP_SDR_HOME,
-                                                                             CSPP_SDR_HOME),
-             "ADL_HOME" : "%s/ADL" % (CSPP_SDR_HOME),
-             "NPP_GRANULE_ID_BASETIME" : "1698019234000000",
-             "DSTATICDATA" : '%s/ADL/CMN/Utilities/INF/util/time/src' % CSPP_SDR_HOME,
-             "DPE_SITE_ID" : "cspp",
-             "DPE_DOMAIN" : "dev",
-             "INFTK_DM_ROOT" : "JUST_NEED_TO_HAVE_AN_ENV_VARIABLE"
-             }
-
 # ---------------------------------------------------------------------------
 def check_lut_files(thr_days=14):
     """Check if the LUT files under ${path_to_cspp_cersion}/anc/cache/luts are
@@ -262,142 +244,10 @@ def run_cspp(*viirs_rdr_files):
 
     return working_dir
 
-# ---------------------------------------------------------------------------
-def start_npp_sdr_processing(level1_home, mypublisher, message):
-    """From a posttroll message start the npp processing"""
-
-    LOG.info("")
-    LOG.info("\tMessage:")
-    LOG.info(str(message))
-    urlobj = urlparse(message.data['uri'])
-    LOG.info("Server = " + str(urlobj.netloc))
-    if urlobj.netloc != SERVERNAME:
-        return
-    LOG.info("Ok... " + str(urlobj.netloc))
-    LOG.info("Sat and Instrument: " + str(message.data['satellite']) 
-             + " " + str(message.data['instrument']))
-
-    if (message.data['satellite'] == "NPP" and 
-        message.data['instrument'] == 'viirs'):
-        start_time = message.data['start_time']
-        end_time = message.data['end_time']
-        try:
-            orbnum = int(message.data['orbit_number'])            
-        except KeyError:
-            orbnum = None
-        path, fname =  os.path.split(urlobj.path)
-        if fname.endswith('.h5'):
-            # Check if the file exists:
-            if not os.path.exists(urlobj.path):
-                raise IOError("File is reported to be dispatched " + 
-                              "but is not there! File = " + 
-                              urlobj.path)
-
-            # Do processing:
-            LOG.info("RDR to SDR processing on npp/viirs with CSPP start!" + 
-                     " Start time = ", start_time)
-            if orbnum:
-                LOG.info("Orb = %d" % orbnum)
-            LOG.info("File = %s" % str(urlobj.path))
-            # Fix orbit number in RDR file:
-            rdr_filename = urlobj.path
-            try:
-                rdr_filename = fix_rdrfile(urlobj.path)
-            except IOError:
-                LOG.error('Failed to fix orbit number in RDR file = ' + str(urlobj.path))
-                import traceback
-                traceback.print_exc(file=sys.stderr)
-            except AttributeError:
-                LOG.error('Failed to fix orbit number in RDR file = ' + str(urlobj.path))
-                import traceback
-                traceback.print_exc(file=sys.stderr)
-
-            LOG.info("Start CSPP: RDR file = " + str(rdr_filename))
-            working_dir = run_cspp(rdr_filename)
-            LOG.info("CSPP SDR processing finished...")
-            # Assume everything has gone well! 
-            # Move the files from working dir:
-            result_files = get_sdr_files(working_dir)
-            if len(result_files) == 0:
-                LOG.warning("No SDR files available. CSPP probably failed!")
-                return
-
-            # Use the start time from the RDR message!:
-            tobj = start_time
-            LOG.info("Time used in sub-dir name: " + 
-                     str(tobj.strftime("%Y-%m-%d %H:%M")))
-            subd = create_subdirname(tobj)
-            LOG.info("Create sub-directory for sdr files: %s" % str(subd))
-            pack_sdr_files(result_files, level1_home, subd)
-            make_okay_files(level1_home, subd)
-
-            cleanup_cspp_workdir(working_dir)
-
-            # Now publish:
-            filename = result_files[0]
-            LOG.info("Filename = %s" % filename)
-            to_send = {}
-            to_send['uri'] = ('ssh://safe.smhi.se/' +  
-                              os.path.join(level1_home, 
-                                           filename))
-            to_send['filename'] = filename
-            to_send['instrument'] = 'viirs'
-            to_send['satellite'] = 'NPP'
-            to_send['format'] = 'SDR'
-            to_send['type'] = 'HDF5'
-            to_send['start_time'] = start_time #start_time.isoformat()
-            to_send['end_time'] = end_time
-            message = Message('/oper/polar/direct_readout/norrkoping',
-                          "file", to_send).encode()
-            mypublisher.send(message)
-
-            LOG.info("Now that SDR processing has completed, " + 
-                     "check for new LUT files...")
-            fresh = check_lut_files(THR_LUT_FILES_AGE_DAYS)
-            if fresh:
-                LOG.info("Files in the LUT dir are fresh...")
-                LOG.info("...or download has been attempted recently! " + 
-                         "No url downloading....")
-            else:
-                LOG.warning("Files in the LUT dir are non existent or old. " +
-                            "Start url fetch...")
-                update_lut_files()
-
-    return
-
-
-# ---------------------------------------------------------------------------
-def npp_runner():
-    """The NPP/VIIRS runner. Listens and triggers processing"""
-
-    sdr_home = OPTIONS['level1_home']
-    # Roll over log files at application start:
-    try:
-        LOG.handlers[0].doRollover()
-    except AttributeError:
-        LOG.warning("No log rotation supported for this handler...")
-    LOG.info("*** Start the Suomi NPP SDR runner:")
-    LOG.info("THR_LUT_FILES_AGE_DAYS = " + str(THR_LUT_FILES_AGE_DAYS))
-
-    fresh = check_lut_files(THR_LUT_FILES_AGE_DAYS)
-    if fresh:
-        LOG.info("Files in the LUT dir are fresh...")
-        LOG.info("...or download has been attempted recently! " + 
-                 "No url downloading....")
-    else:
-        LOG.warning("Files in the LUT dir are non existent or old. " +
-                    "Start url fetch...")
-        update_lut_files()
-
-    with posttroll.subscriber.Subscribe('RDR') as subscr:
-        with Publish('npp_dr_runner', 'SDR', 
-                     LEVEL1_PUBLISH_PORT) as publisher:        
-            for msg in subscr.recv():
-                start_npp_sdr_processing(sdr_home, publisher, msg)
-
-    return
-
+# -------------------------------------------------------------------------
 def get_sdr_times(filename):
+    """Get the start and end times from the sdr file. The start and end time of
+    the granule is published"""
     from datetime import datetime, timedelta
 
     bname = os.path.basename(filename)
@@ -410,7 +260,9 @@ def get_sdr_times(filename):
         end_time += timedelta(days=1)
     return start_time, end_time
 
+# -------------------------------------------------------------------------
 def publish_sdr(publisher, result_files):
+    """Set the content of the message to be sent to the publisher"""
     # Now publish:
     for result_file in result_files:
         path, filename = os.path.split(result_file)
@@ -422,7 +274,6 @@ def publish_sdr(publisher, result_files):
         to_send['satellite'] = 'NPP'
         to_send['format'] = 'HDF5'
         to_send['type'] = 'SDR'
-        
         to_send['start_time'], to_send['end_time'] = get_sdr_times(filename)
         msg = Message('/oper/polar/direct_readout/norrkoping',
                       "file", to_send).encode()
@@ -465,6 +316,25 @@ def npp_rolling_runner():
     from multiprocessing import cpu_count
 
     level1_home = OPTIONS['level1_home']
+
+    # Roll over log files at application start:
+    try:
+        LOG.handlers[0].doRollover()
+    except AttributeError:
+        LOG.warning("No log rotation supported for this handler...")
+    LOG.info("*** Start the Suomi NPP SDR runner:")
+    LOG.info("THR_LUT_FILES_AGE_DAYS = " + str(THR_LUT_FILES_AGE_DAYS))
+
+    fresh = check_lut_files(THR_LUT_FILES_AGE_DAYS)
+    if fresh:
+        LOG.info("Files in the LUT dir are fresh...")
+        LOG.info("...or download has been attempted recently! " + 
+                 "No url downloading....")
+    else:
+        LOG.warning("Files in the LUT dir are non existent or old. " +
+                    "Start url fetch...")
+        update_lut_files()
+
 
     ncpus_available = cpu_count()
     LOG.info("Number of CPUs available = " + str(ncpus_available))
@@ -601,11 +471,9 @@ def npp_rolling_runner():
 
     return
 
-
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
 
-    #npp_runner()
     npp_rolling_runner()
 
     """
