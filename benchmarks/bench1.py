@@ -56,25 +56,71 @@ import mpop.scene
 
 g = mpop.scene.assemble_segments(gs)
 
-#l = g.project("worldeqc3km")
+l = g.project("worldeqc30km")
 
-#l.image.green_snow().save("/tmp/gs_world.png")
-#l.image.hr_overview().save("/tmp/ov_world.png")
+l.image.green_snow().save("/tmp/gs_world.png")
+l.image.hr_overview().save("/tmp/ov_world.png")
+l.image.dnb().save("/tmp/dnb_world.png")
 
 
 l = g.project("euron1")
 
 l.image.green_snow().save("/tmp/gs_euron1.png")
 l.image.hr_overview().save("/tmp/ov_euron1.png")
+l.image.dnb().save("/tmp/dnb_euron1.png")
 
 l = g.project("scan")
 
 l.image.green_snow().save("/tmp/gs_scan.png")
 l.image.hr_overview().save("/tmp/ov_scan.png")
+l.image.dnb().save("/tmp/dnb_scan.png")
 
 l = g.project("ssea250")
 
 l.image.green_snow().save("/tmp/gs_ssea250.png")
 l.image.hr_overview().save("/tmp/ov_ssea250.png")
+l.image.dnb().save("/tmp/dnb_ssea250.png")
+
+# areas:
+
+"""
+REGION: worldeqc30km {
+        NAME:       World in 3km, platecarree
+        PCS_ID:     plate_carree
+        PCS_DEF:    units=m, proj=eqc, ellps=WGS84
+        XSIZE:      820
+        YSIZE:      410
+        AREA_EXTENT: (-20037508.3428, -10018754.1714, 20037508.3428, 10018754.1714)
+};
 
 
+REGION: euron1 {
+	NAME:		Northern Europe - 1km
+	PCS_ID:		ps60wgs84
+	PCS_DEF:	proj=stere,ellps=WGS84,lat_0=90,lon_0=0,lat_ts=60
+	XSIZE:		3072
+	YSIZE:		3072
+	AREA_EXTENT:	(-1000000.0, -4500000.0, 2072000.0, -1428000.0)
+
+};
+
+REGION: ssea250 {
+        NAME:		South Baltic Sea
+	PCS_ID: 	merc
+	PCS_DEF:	proj=merc,ellps=WGS84,lat_ts=0,lon_0=15
+	XSIZE:		4096
+	YSIZE:		4096
+	AREA_EXTENT:    (-801407.36204689811, 7003690.6636438016, 1246592.6379531019, 9051690.6636438016)
+};
+
+REGION: scan {
+	NAME:		Scandinavia
+	PCS_ID:		ps60n
+	PCS_DEF:	proj=stere,ellps=bessel,lat_0=90,lon_0=14,lat_ts=60
+	XSIZE:		512
+	YSIZE:		512
+	AREA_EXTENT:	(-1268854.1266382949, -4150234.8425892727, 779145.8733617051, -2102234.8425892727)
+};
+
+
+"""
