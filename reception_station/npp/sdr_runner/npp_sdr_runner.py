@@ -4,11 +4,6 @@ Listen for pytroll messages from nimbus (NPP file dispatch) and trigger
 processing on direct readout data
 """
 
-# Does'nt handle the execution of several instances of CSPP at the same time
-# So, it assumes CSPP is finished before the next pass arrives, which will also
-# normally (hopefully!) always be the case.
-# FIXME!
-
 import os
 
 import sdr_runner
@@ -323,6 +318,7 @@ class ViirsProcessing(object):
         self.pool = ThreadPool(ncpus)
 
     def initialise(self):
+        """Initialise the cspp runner house keeping data"""
         self.fullswath = False
         self.cspp_results = []
         self.working_dirs = []
@@ -332,7 +328,7 @@ class ViirsProcessing(object):
 
 
     def start_viirs_processing(self, message):
-        """
+        """Start the CSPP SDR processing on the granules
         """
 
         LOG.debug("Received message: " + str(message))
@@ -418,7 +414,7 @@ class ViirsProcessing(object):
                 keeper = self.glist[0]
                 self.fullswath = True
             else:
-                LOG.info("Only one granule. This is not enough for CSPP" + 
+                LOG.info("Only one granule file. This is not enough for CSPP" + 
                          " Continue")
                 return True
 
