@@ -20,13 +20,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Test reading just corners in HDF5 files.
+"""Benchmarking the pytroll/mpop chain on 4 areas of different sizes and areas,
+for different npp channels.
 """
 
 from mpop.satellites import PolarFactory
 from datetime import datetime
-
-t = datetime(2013, 3, 12, 10, 48)
 
 tslots = [datetime(2013, 3, 12, 10, 34),
           datetime(2013, 3, 12, 10, 35),
