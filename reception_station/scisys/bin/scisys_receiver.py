@@ -385,26 +385,29 @@ def receive_from_zmq(host, port, days=1):
     with Publish("receiver", "HRPT 0", 9000) as hrpt_pub:
         with Publish("receiver", "PDS", 9001) as pds_pub:
             with Publish("receiver", "RDR", 9002) as npp_pub:
-                for rawmsg in sock.recv():
-                    # TODO:
-                    # - Watch for idle time in order to detect a hangout
-                    logger.debug("receive from 2met! " + str(rawmsg))
-                    string = TwoMetMessage(rawmsg)
-                    to_send = msg_rec.receive(string)
-                    if to_send is None:
-                        continue
-                    msg = Message('/oper/polar/direct_readout/norrköping',
-                                  "file",
-                                  to_send).encode()
-                    logger.debug("publishing " + str(msg))
-                    if to_send["format"] == "HRPT":
-                        hrpt_pub.send(msg)
-                    if to_send["format"] == "PDS":
-                        pds_pub.send(msg)
-                    if to_send["format"] == "RDR":
-                        npp_pub.send(msg)
-                    if days:
-                        msg_rec.clean_passes(days)
+                with Publish("receiver", "EPS 0", 9003) as metop_pub:
+                    for rawmsg in sock.recv():
+                        # TODO:
+                        # - Watch for idle time in order to detect a hangout
+                        logger.debug("receive from 2met! " + str(rawmsg))
+                        string = TwoMetMessage(rawmsg)
+                        to_send = msg_rec.receive(string)
+                        if to_send is None:
+                            continue
+                        msg = Message('/oper/polar/direct_readout/norrköping',
+                                      "file",
+                                      to_send).encode()
+                        logger.debug("publishing " + str(msg))
+                        if to_send["format"] == "HRPT":
+                            hrpt_pub.send(msg)
+                        if to_send["format"] == "PDS":
+                            pds_pub.send(msg)
+                        if to_send["format"] == "RDR":
+                            npp_pub.send(msg)
+                        if to_send["format"] == "EPS":
+                            metop_pub.send(msg)
+                        if days:
+                            msg_rec.clean_passes(days)
 
 if __name__ == '__main__':
 

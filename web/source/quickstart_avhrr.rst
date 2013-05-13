@@ -5,41 +5,24 @@
 ======================
  Quickstart with AVHRR
 ======================
-For this tutorial, we will use AVHRR HRPT data in the level1b format produced by AAPP_, read into
-mpop_, resample it with pyresample_ and process it a bit. Install theses packages first.
+For this tutorial, we will use AVHRR HRPT data in the level1b format produced
+by AAPP_, read the data into mpop_, generate the full geolocation using
+python-geotiepoints_, and resample it with pyresample_ and process it a
+bit. Install theses packages first.
 
-For this tutorial template config files (see :doc:`install`) can be used. These are located in the *etc* dir of the mpop_ source. Copy *mpop.cfg.template*, *areas.def.template* and *noaa19.cfg.template* to another dir and remove the *.template* extension. In the config file *noaa19.cfg* locate the section :attr:`avhrr-level2` and modify the defined :attr:`dir` to point to the dir of your level1b AVHRR data.
+Observe that the AAPP_ level1b file does not contain the geolocation in full
+resolution, but with the python-geotiepoints_ plugged in the full resolution
+longitudes and latitudes will be provided to you when reading the data. You
+should not normally notice that the interpolation and extrapolation is invoked.
+
+For this tutorial template config files (see :doc:`install`) can be used. These
+are located in the *etc* dir of the mpop_ source. Copy *mpop.cfg.template*,
+*areas.def.template* and *noaa19.cfg.template* to another dir and remove the
+*.template* extension. In the config file *noaa19.cfg* locate the section
+:attr:`avhrr-level2` and modify the defined :attr:`dir` to point to the dir of
+your level1b AVHRR data.
 
 Set PPP_CONFIG_DIR to the directory containing your modified mpop_ config files.
-
-Making mpop read level1b AVHRR
-==============================
-mpop reads level1b AVHRR using a plugin based on AHAMAP. `Download the latest patched version of AHAMAP here`_. 
-
-AHAMAP is a parts of EUMETSAT's `NWC SAF`_ PPS package. The full PPS package with license can be obtained from the `NWC SAF homepage`_.
-
-Unpack the AHAMAP tarball. In order to make AHAMAP build numpy_ and the proj4_ library and proj4_ development files must be installed on the system. Assuming standard install directories for proj4_ configure AHAMAP like this:
-
-.. code-block:: bash
-
-    $> ./configure --prefix=/some/where --with-proj=/usr/include,/usr/lib --with-python=yes 
-       --without-aapp --with-numpy=/usr/lib/python2.6/dist-packages/numpy/core/include/numpy
-    
-Adapt the specified paths to match your system.
-
-Build, check and install AHAMAP:
-
-.. code-block:: bash
-
-    $> make
-    $> make check
-    $> make install 
-
-Now add */some/where/lib* to your PYTHONPATH. E.g.:
-
-.. code-block:: bash
-
-    $> export PYTHONPATH=$PYTHONPATH:/some/where/lib
     
 First example: Loading data
 ===========================
@@ -150,6 +133,7 @@ Add the dir containing *my_composites.py* to your PYTHONPATH. Now your new :attr
 .. _`NWC SAF`: http://www.nwcsaf.org/HD/MainNS.jsp
 .. _`NWC SAF homepage`: http://www.nwcsaf.org/HD/MainNS.jsp
 .. _mpop: http://www.github.com/mraspaud/mpop
+.. _python-geotiepoints: http://www.github.com/adybbroe/python-geotiepoints
 .. _pyresample: http://pyresample.googlecode.com
 .. _`Download the latest patched version of AHAMAP here`: _static/ahamap-pps-2010-patches_20110831-1.tgz
 .. _numpy: http://numpy.scipy.org/
