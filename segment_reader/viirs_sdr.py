@@ -34,6 +34,7 @@ http://npp.gsfc.nasa.gov/science/sciencedocuments/082012/474-00001-03_CDFCBVolII
 """
 import os.path
 from ConfigParser import ConfigParser
+from datetime import datetime, timedelta
 
 import numpy as np
 import h5py
@@ -44,12 +45,13 @@ from mpop.satin.logger import LOG
 from mpop.utils import strftime
 
 # ------------------------------------------------------------------------------
+
 class ViirsBandData(object):
     """Placeholder for the VIIRS M&I-band data.
     Reads the SDR data - one hdf5 file for each band.
     Not yet considering the Day-Night Band
     """
-    def __init__(self, filename):
+    def __init__(self, filename, calibrate=1):
         self.global_info = {}
         self.band_info = {}
         self.orbit = -9
@@ -62,12 +64,21 @@ class ViirsBandData(object):
         self.filename = filename
         self.units = 'unknown'
         self.geo_filename = None
+        self.calibrate = calibrate
 
         self.latitude = None
         self.longitude = None
 
-
-    def read(self, calibrate=1):
+    def append(self, other):
+        if other.band_id != self.band_id:
+            raise ValueError("Can't append diffent bands ('%s' and '%s')" % (
+                    self.band_id, other.band_id))
+        self.orbit_end = other.orbit_end
+        self.data = np.ma.concatenate([self.data, other.data])
+        self.longitude = np.ma.concatenate([self.longitude, other.longitude])
+        self.latitude = np.ma.concatenate([self.latitude, other.latitude])
+        
+    def read(self):
         """Read one VIIRS M- or I-band channel: Data and attributes (meta data)
 
         - *calibrate* set to 1 (default) returns reflectances for visual bands,
@@ -133,12 +144,12 @@ class ViirsBandData(object):
         bname = keys[idx]
         keys = h5f['All_Data'][bname].keys()
 
-        if calibrate == 1:
+        if self.calibrate == 1:
             # Get the M-band Tb or Reflectance:
             # First check if we have reflectances or brightness temperatures:
             tb_name = 'BrightnessTemperature'
             refl_name = 'Reflectance'
-        elif calibrate == 2:
+        elif self.calibrate == 2:
             tb_name = 'Radiance'
             refl_name = 'Radiance'
             
@@ -152,9 +163,9 @@ class ViirsBandData(object):
             except KeyError:
                 scale_factors = 1.0, 0.0
             self.scale, self.offset = scale_factors[0:2]
-            if calibrate == 1:
+            if self.calibrate == 1:
                 self.units = 'K'
-            elif calibrate == 2:
+            elif self.calibrate == 2:
                 self.units == 'W m-2 um-1 sr-1'
         elif refl_name in keys:
             band_data = h5f['All_Data'][bname][refl_name].value
@@ -163,9 +174,9 @@ class ViirsBandData(object):
             # In the data from CLASS this tuple is repeated 4 times!???
             # FIXME!
             self.scale, self.offset = h5f['All_Data'][bname][factors_name].value[0:2]
-            if calibrate == 1:
+            if self.calibrate == 1:
                 self.units = '%'
-            elif calibrate == 2:
+            elif self.calibrate == 2:
                 self.units == 'W m-2 um-1 sr-1'
         elif refl_name not in keys and tb_name not in keys and rad_name in keys:
             band_data = h5f['All_Data'][bname][rad_name].value
@@ -194,6 +205,7 @@ class ViirsBandData(object):
                                                   self.offset),
                                        0)
         h5f.close()
+        return self
 
     def read_lonlat(self, geodir, **kwargs):
         """Read the lons and lats from the seperate geolocation file.
@@ -273,7 +285,6 @@ def globify(filename):
     return filename
 
 def _get_times_from_npp(filename):
-    from datetime import datetime, timedelta
 
     bname = os.path.basename(filename)
     sll = bname.split('_')
@@ -286,7 +297,7 @@ def _get_times_from_npp(filename):
     return start_time, end_time
 
 
-def _get_swathsegment(filelist, time_interval):
+def _get_swathsegment(filelist, time_start, time_end=None):
     """
     Return only the granule files for the time interval
     """
@@ -294,16 +305,28 @@ def _get_swathsegment(filelist, time_interval):
     segment_files = []
     for filename in filelist:
         timetup = _get_times_from_npp(filename)
-        if timetup[1] < time_interval[0]:
-            # Data too early
-            continue
-        if timetup[0] > time_interval[1]:
-            # Data too late
-            continue
-        segment_files.append(filename)
+        if time_start >= timetup[0] and time_start <= timetup[1]:
+            segment_files.append(filename)
+        elif time_end and time_end >= timetup[0] and time_end <= timetup[1]:
+            segment_files.append(filename)
 
     segment_files.sort()
     return segment_files
+
+"""
+def load_viirs_sdr(satscene, options, *args, **kwargs):
+    if "time_interval" not in kwargs:
+        time_interval = (satscene.time_slot,
+                         satscene.time_slot + timedelta(seconds=86)/2)
+    segments = []
+    for timeslot in _get_timeslots(options, time_interval):
+        _satscene = satscene.copy()
+        _satscene.time_slot = timeslot
+        load_viirs_sdr_granule(_satscene, options, *args, **kwargs)
+        segments.append(_satscene)
+    satscene.copy(mpop.scene.assemble_segments(segments))
+"""    
+
 
 def load_viirs_sdr(satscene, options, *args, **kwargs):
     """Read viirs SDR reflectances and Tbs from file and load it into
@@ -315,15 +338,15 @@ def load_viirs_sdr(satscene, options, *args, **kwargs):
     if len(chns) == 0:
         return
 
+    if "time_interval" in kwargs:
+        time_start, time_end = kwargs['time_interval']
+    else:
+        time_start, time_end = satscene.time_slot, None
+
     import glob
 
     if "filename" not in options:
         raise IOError("No filename given, cannot load")
-
-    if "time_interval" in kwargs:
-        time_interval = kwargs['time_interval']
-    else:
-        time_interval = None
 
     values = {"orbit": satscene.orbit,
               "satname": satscene.satname,
@@ -355,7 +378,7 @@ def load_viirs_sdr(satscene, options, *args, **kwargs):
     for fname in file_list:
         if os.path.basename(fname).startswith("SVM14"):
             LOG.debug("File before segmenting: " + os.path.basename(fname))
-    file_list = _get_swathsegment(file_list, time_interval)
+    file_list = _get_swathsegment(file_list, time_start, time_end)
     LOG.debug("Number of files after segment selection: " + str(len(file_list)))
     for fname in file_list:
         if os.path.basename(fname).startswith("SVM14"):
@@ -368,6 +391,7 @@ def load_viirs_sdr(satscene, options, *args, **kwargs):
     #    raise IOError("More than 22 files matching!")
     #elif len(file_list) == 0:
     #    raise IOError("No VIIRS SDR file matching!: " + os.path.join(directory,
+    #                                                                 filename_tmpl))
     if len(file_list) == 0:
         raise IOError("No VIIRS SDR file matching!: " + os.path.join(directory,
                                                                      filename_tmpl))
@@ -375,7 +399,7 @@ def load_viirs_sdr(satscene, options, *args, **kwargs):
     geo_filenames_tmpl = strftime(satscene.time_slot, options["geo_filenames"]) %values
     geofile_list = glob.glob(os.path.join(directory, geo_filenames_tmpl))
     # Only take the files in the interval given:
-    geofile_list = _get_swathsegment(geofile_list, time_interval)
+    geofile_list = _get_swathsegment(geofile_list, time_start, time_end)
 
     m_lats = None
     m_lons = None
@@ -387,7 +411,6 @@ def load_viirs_sdr(satscene, options, *args, **kwargs):
     glob_info = {}
 
     LOG.debug("Channels to load: " + str(satscene.channels_to_load))
-
     for chn in satscene.channels_to_load:
         # Take only those files in the list matching the band:
         # (Filename starts with 'SV' and then the band-name)
@@ -399,19 +422,13 @@ def load_viirs_sdr(satscene, options, *args, **kwargs):
             LOG.warning('Band frequency not available from VIIRS!')
             LOG.info('Asking for channel' + str(chn) + '!')
 
-        LOG.debug("fnames_band = " + str(fnames_band))
         if len(fnames_band) == 0:
             continue
 
-        filename_band = glob.glob(os.path.join(directory, 
-                                               fnames_band[0]))
+        filename_band = [os.path.join(directory, fname) for fname in fnames_band]
+        LOG.debug("fnames_band = " + str(filename_band))
         
-        if len(filename_band) > 1:
-            raise IOError("More than one file matching band-name %s" % chn)
-
-
-        band = ViirsBandData(filename_band[0])
-        band.read(calibrate)
+        band = ViirsBandData(filename_band[0], calibrate=calibrate).read()
         LOG.debug('Band id = ' + band.band_id)
 
         band_desc = None # I-band or M-band or Day/Night band?

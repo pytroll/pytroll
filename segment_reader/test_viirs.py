@@ -28,14 +28,14 @@ from datetime import datetime
 from mpop.utils import debug_on
 debug_on()
 
-tslot = datetime(2013, 3, 12, 10, 0)
+tslot = datetime(2013, 3, 12, 10, 45)
 
-tstart = datetime(2013, 4, 25, 11, 55)
-tend = datetime(2013, 4, 25, 12, 1)
+tstart = datetime(2013, 3, 12, 10, 39)
+tend = datetime(2013, 3, 12, 10, 45)
 
-g = PolarFactory.create_scene("npp", "", "viirs", tslot, orbit="07734")
+g = PolarFactory.create_scene("npp", "", "viirs", tslot, orbit="07108")
     
 g.load(g.image.green_snow.prerequisites | g.image.hr_overview.prerequisites
-       | g.image.dnb.prerequisites, time_interval=(tstart,tend))
+       | g.image.dnb.prerequisites) # time_interval=(tstart,tend))
 
 
