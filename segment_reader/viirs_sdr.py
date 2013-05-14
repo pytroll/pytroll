@@ -51,34 +51,81 @@ class ViirsBandData(object):
     Reads the SDR data - one hdf5 file for each band.
     Not yet considering the Day-Night Band
     """
-    def __init__(self, filename, calibrate=1):
-        self.global_info = {}
-        self.band_info = {}
-        self.orbit = -9
-        self.orbit_begin = -9
-        self.orbit_end = -9
+    def __init__(self, filenames, calibrate=1):
+        self.start_time = 0
+        self.end_time = 0 
+        self.orbit_begin = 0
+        self.orbit_end = 0
         self.band_id = 'unknown'
         self.data = None
         self.scale = 1.0    # gain
         self.offset = 0.0   # intercept
-        self.filename = filename
+        self.filenames = sorted(filenames)
         self.units = 'unknown'
         self.geo_filename = None
         self.calibrate = calibrate
 
+        self.data = None
         self.latitude = None
         self.longitude = None
 
-    def append(self, other):
-        if other.band_id != self.band_id:
-            raise ValueError("Can't append diffent bands ('%s' and '%s')" % (
-                    self.band_id, other.band_id))
-        self.orbit_end = other.orbit_end
-        self.data = np.ma.concatenate([self.data, other.data])
-        self.longitude = np.ma.concatenate([self.longitude, other.longitude])
-        self.latitude = np.ma.concatenate([self.latitude, other.latitude])
-        
     def read(self):
+        self._read_metadata()
+    
+    def _read_metadata(self):
+        for fname in self.filenames:
+            h5f = h5py.File(self.filename, 'r')
+
+            keys = h5f['Data_Products'].keys()
+            idx = 0
+            for key in keys:
+                if key.find('SDR') >= 0:
+                    break
+                idx = idx + 1
+
+            date_begin, time_begin = 0, 0
+            date_end, time_end = 0, 0
+            shapes = []
+
+            # Then get the band info (Data_Products attributes):
+            bname = h5f['Data_Products'].keys()[idx]
+            for gran_aggr in h5f['Data_Products'][bname].keys():
+                attributes = h5f['Data_Products'][bname][gran_aggr].attrs
+                for key in attributes.keys():
+                    if key == 'Band_ID':
+                        bid = attributes[key][0, 0]
+                        if bname.find('DNB') > 0: # and bid == 'N/A':
+                            self.band_id = 'DNB'
+                        else:
+                            self.band_id = bid
+                    if key == 'AggregateBeginningOrbitNumber':
+                        if not self.orbit_begin:
+                            self.orbit_begin = attributes[key][0, 0]
+                    elif key == 'AggregateEndingOrbitNumber':
+                        self.orbit_end = attributes[key][0, 0]
+                    elif key == 'AggregateBeginningDate':
+                        if not date_begin:
+                            date_begin = attributes[key][0, 0]
+                    elif key == 'AggregateBeginningTime':
+                        if not time_begin:
+                            time_begin = attributes[key][0, 0]
+                    elif key == 'AggregateEndingDate':
+                        date_end = attributes[key][0, 0]
+                    elif key == 'AggregateEndingTime':
+                        time_end = attributes[key][0, 0]
+                
+
+
+
+            self.shape = 
+            self.orbit_begin = 
+            self.orbit_end = 
+        self.data = np.zeros(self.shape, dtype=np.float) 
+        self.latitude = np.zeros(self.shape, dtype=np.float) 
+        self.longitude = np.zeros(self.shape, dtype=np.float) 
+        
+   
+    def _read_data(self, filename):
         """Read one VIIRS M- or I-band channel: Data and attributes (meta data)
 
         - *calibrate* set to 1 (default) returns reflectances for visual bands,
