@@ -40,9 +40,13 @@ tslots = [datetime(2013, 3, 12, 10, 34),
           datetime(2013, 3, 12, 10, 48)
     ]
 
+import mpop.utils
+mpop.utils.debug_on()
+
 gs = []
 
-for t in tslots:
+
+for t in tslots[5:6]:
 
     g = PolarFactory.create_scene("npp", "", "viirs", t, orbit="07108")
     
