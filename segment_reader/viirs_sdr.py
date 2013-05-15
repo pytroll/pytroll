@@ -47,6 +47,7 @@ from mpop.utils import strftime
 NO_DATE = datetime(1958, 1, 1)
 EPSILON_TIME = timedelta(days=2)
 VIIRS_MBAND_GRANULE_SIZE = (768, 3200)
+VIIRS_DNB_GRANULE_SIZE = (768, 4064)
 VIIRS_IBAND_GRANULE_SIZE = (768*2, 3200*2)
 
 VIIRS_IR_BANDS = ('M16', 'M15', 'M14', 'M13', 'M12', 'I5', 'I4')
@@ -140,7 +141,7 @@ class NPPMetaData(HDF5MetaData):
             if shape != VIIRS_MBAND_GRANULE_SIZE:
                 raise ValueError("Unsupported granule size %s for %s" % (shape, band))
         elif band == "DNB":
-            if shape != VIIRS_MBAND_GRANULE_SIZE:
+            if shape != VIIRS_DNB_GRANULE_SIZE:
                 raise ValueError("Unsupported granule size %s for %s" % (shape, band))
         elif band[0] == "I":
             if shape != VIIRS_IBAND_GRANULE_SIZE:
@@ -153,13 +154,11 @@ class NPPMetaData(HDF5MetaData):
 
         band = self['Band_ID']
 
-        if band.startswith('I'):
-            return  "I"
-        elif band.startswith('M'):
-            return "M"
-        elif band.startswith('DNB'):
-            return "DNB"
-
+        for band_desc in ('I', 'M', 'DNB', "N/A"):
+            if band.startswith(band_desc):
+                if band_desc == 'N/A':
+                    return 'DNB'
+                return  band_desc
         return None
 
 
@@ -205,26 +204,50 @@ class NPPMetaData(HDF5MetaData):
         return None
 
 
-class ViirsGeolocationData(object)
-    def __init__(self, band_type, shape, filenames):
-        self.band_type = band_type
+#
+#
+# http://yloiseau.dnsalias.net/articles/DesignPatterns/flyweight/
+class GeolocationFlyweight(object):
+    def __init__(self, cls):
+        self._cls = cls
+        self._instances = dict()
+    
+    def __call__(self, *args, **kargs):
+        """ 
+        we assume that this is only used for the gelocation object,
+        filenames are listed in the second argument
+        
+        """
+        return self._instances.setdefault(tuple(args[1]), self._cls(*args, **kargs))
+
+
+@GeolocationFlyweight
+class ViirsGeolocationData(object):
+    def __init__(self, shape, filenames):
         self.filenames = filenames
-        self.longitudes = np.ma.array(np.zeros(shape, dtype=np.float), fill_value=0)
-        self.latitudes = np.ma.array(np.zeros(shape, dtype=np.float), fill_value=0)
+        self.longitudes = None
+        self.shape = shape
+        self.latitudes = None
 
     def read(self):
         """ 
         Read longitudes and latitudes from geo filenames and assemble
         """
 
-        for filename in self.filenames:
+        if self.longitudes is not None:
+            return self
+        
+        self.longitudes = np.ma.array(np.zeros(self.shape, dtype=np.float), fill_value=0)
+        self.latitudes = np.ma.array(np.zeros(self.shape, dtype=np.float), fill_value=0)
 
-            lon , lat = get_lonlat(filename, self.band_type)
-            self.longitudes[index:index+granule_length,:]  = lon 
-            self.latitudes[index:index+granule_length,:]  = lat 
-            
-            
+        granule_length = self.shape[0]/len(self.filenames)
 
+        for index, filename in enumerate(self.filenames):
+
+            lon, lat = get_lonlat(filename)
+            self.longitudes[index:index+granule_length,:] = lon 
+            self.latitudes[index:index+granule_length,:] = lat 
+            
 
         return self
 
@@ -252,10 +275,10 @@ class ViirsBandData(object):
         self.calibrate = calibrate
 
         self.data = None
-        self.latitude = None
-        self.longitude = None
+        self.geolocation = None
 
         self.band_desc = None
+        self.band_uid = None
         self.metadata = []
 
     def read(self):
@@ -293,6 +316,8 @@ class ViirsBandData(object):
         self.band_desc = self.metadata[0].get_band_description()
 
         self.band_id = self.metadata[0]['Band_ID']
+        if self.band_id == "N/A":
+            self.band_id = "DNB"
    
     def _read_data(self):
         """Read one VIIRS M- or I-band channel: Data and attributes (meta data)
@@ -315,13 +340,27 @@ class ViirsBandData(object):
                 data_key, factors_key = md.get_reflectance_keys()
                 if data_key is None:
                     data_key, factors_key = md.get_brightness_temperature_keys()
+                # handle dnb data
+                if data_key is None and self.band_id == "DNB":
+                    data_key, factors_key = md.get_radiance_keys()
+
             elif self.calibrate == 2:
                 data_key, factors_key = md.get_radiance_keys()
 
             #
             # get granule data and scale and offset values
-            granule_factors_data = h5f[factors_key].value
+            try:
+                granule_factors_data = h5f[factors_key].value
+            except KeyError:
+                #
+                # We can't find the factors this must be DNB
+                if self.band_id != "DNB":
+                    raise
+                # The unit is W/sr cm-2 in the file! but we need 'W sr-1 m-2'
+                granule_factors_data = (10000., 0.) 
+                
             granule_data = h5f[data_key].value
+
 
             scale, offset = granule_factors_data[0:2] 
 
@@ -345,58 +384,33 @@ class ViirsBandData(object):
                                                         scale +
                                                         offset),0)
 
+        self.band_uid = self.band_desc + hashlib.sha1(self.data.mask).hexdigest()
 
-    def read_lonlat(self, geodir, **kwargs):
-        """Read the lons and lats from the seperate geolocation file.
-        In case of M-bands: GMODO (Geoid) or GMTCO (terrain corrected).
-        In case of I-bands: GIMGO (Geoid) or GITCO (terrain corrected).
-        """
-        if 'filename' in kwargs:
-            # Overwriting the geo-filename:
-            self.geo_filenames = kwargs['filename']
+    def read_lonlat(self, geofilepaths=None, geodir=None):
 
-        if not self.geo_filenames:
-            LOG.warning("Trying to read geo-location without" +
-                        "knowledge of which geolocation file to read it from!")
-            LOG.warning("Do nothing...")
-            return
-        
-        lon, lat = get_lonlat(os.path.join(geodir, 
-                                           self.geo_filenames),
-                              self.band_id)
+        if geofilepaths is None:
+            if geodir is None:
+                geodir = os.path.dir(self.metadata[0].filename)
+            geofilepaths = [os.path.join(geodir, geofilepath) for geofilepath in self.geo_filenames]
 
-        self.longitude = lon
-        self.latitude = lat
+        self.geolocation = ViirsGeolocationData(self.data.shape, geofilepaths).read()
 
 
 # ------------------------------------------------------------------------------
-def get_lonlat(filename, band_id):
+def get_lonlat(filename):
     """Read lon,lat from hdf5 file"""
     LOG.debug("Geo File = " + filename)
 
+    md = HDF5MetaData(filename).read()
+
+    lats , lons = None, None
     h5f = h5py.File(filename, 'r')
-    # Doing it a bit dirty for now - AD:
-    if band_id.find('M') == 0:
-        try:
-            lats = h5f['All_Data']['VIIRS-MOD-GEO-TC_All']['Latitude'].value
-            lons = h5f['All_Data']['VIIRS-MOD-GEO-TC_All']['Longitude'].value
-        except KeyError:
-            lats = h5f['All_Data']['VIIRS-MOD-GEO_All']['Latitude'].value
-            lons = h5f['All_Data']['VIIRS-MOD-GEO_All']['Longitude'].value
-    elif band_id.find('I') == 0:
-        try:
-            lats = h5f['All_Data']['VIIRS-IMG-GEO-TC_All']['Latitude'].value
-            lons = h5f['All_Data']['VIIRS-IMG-GEO-TC_All']['Longitude'].value
-        except KeyError:
-            lats = h5f['All_Data']['VIIRS-IMG-GEO_All']['Latitude'].value
-            lons = h5f['All_Data']['VIIRS-IMG-GEO_All']['Longitude'].value
-    elif band_id.find('D') == 0:
-        lats = h5f['All_Data']['VIIRS-DNB-GEO_All']['Latitude'].value
-        lons = h5f['All_Data']['VIIRS-DNB-GEO_All']['Longitude'].value
-    else:
-        raise IOError("Failed reading lon,lat: " + 
-                      "Band-id not supported = %s" % (band_id))
-    h5f.close()
+    for key in md.get_data_keys():
+        if key.endswith("Latitude"):
+            lats = h5f[key].value
+        if key.endswith("Longitude"):
+            lons = h5f[key].value
+
     return (np.ma.masked_less(lons, -999, False), 
             np.ma.masked_less(lats, -999, False))
 
@@ -568,9 +582,11 @@ def load_viirs_sdr(satscene, options, *args, **kwargs):
         LOG.debug("fnames_band = " + str(filename_band))
         
         band = ViirsBandData(filename_band, calibrate=calibrate).read()
+        
         LOG.debug('Band id = ' + band.band_id)
 
-        import pdb; pdb.set_trace()
+        band.read_lonlat(geodir=directory)
+
 
         if not band.band_desc:
             LOG.warning('Band name = ' + band.band_id)
@@ -584,71 +600,29 @@ def load_viirs_sdr(satscene, options, *args, **kwargs):
         # We assume the same geolocation should apply to all M-bands!
         # ...and the same to all I-bands:
 
-        if band.band_desc == "M":
-            if not m_lonlat_is_loaded:
-                mband_geos = [ s for s in geofile_list 
-                             if os.path.basename(s).find('GMTCO') == 0 ]
-                if len(mband_geos) == 1 and os.path.exists(mband_geos[0]):
-                    band.read_lonlat(directory,
-                                     filename=os.path.basename(mband_geos[0]))
-                else:
-                    band.read_lonlat(directory)
-                m_lons = band.longitude
-                m_lats = band.latitude
-                m_lonlat_is_loaded = True
-            else:
-                band.longitude = m_lons
-                band.latitude = m_lats
-
-        if band.band_desc == "I":
-            if not i_lonlat_is_loaded:
-                iband_geos = [ s for s in geofile_list 
-                             if os.path.basename(s).find('GITCO') == 0 ]
-                if len(iband_geos) == 1 and os.path.exists(iband_geos[0]):
-                    band.read_lonlat(directory,
-                                     filename=os.path.basename(iband_geos[0]))
-                else:
-                    band.read_lonlat(directory)
-                i_lons = band.longitude
-                i_lats = band.latitude
-                i_lonlat_is_loaded = True
-            else:
-                band.longitude = i_lons
-                band.latitude = i_lats
-
-        if band.band_desc == "DNB":
-            dnb_geos = [ s for s in geofile_list 
-                         if os.path.basename(s).find('GDNBO') == 0 ]
-            if len(dnb_geos) == 1 and os.path.exists(dnb_geos[0]):
-                band.read_lonlat(directory,
-                                 filename=os.path.basename(dnb_geos[0]))
-            else:
-                band.read_lonlat(directory)
-
-        band_uid = band_desc + hashlib.sha1(band.data.mask).hexdigest()
         
-        try:
+        if True:
             from pyresample import geometry
         
             satscene[chn].area = geometry.SwathDefinition(
-                lons=np.ma.array(band.longitude, mask=band.data.mask),
-                lats=np.ma.array(band.latitude, mask=band.data.mask))
+                lons=np.ma.array(band.geolocation.longitudes, mask=band.data.mask),
+                lats=np.ma.array(band.geolocation.latitudes, mask=band.data.mask))
 
             area_name = ("swath_" + satscene.fullname + "_" +
                          str(satscene.time_slot) + "_"
                          + str(satscene[chn].data.shape) + "_" +
-                         band_uid)
+                         band.band_uid)
             satscene[chn].area.area_id = area_name
             satscene[chn].area_id = area_name
-        except ImportError:
-            satscene[chn].area = None
-            satscene[chn].lat = np.ma.array(band.latitude, mask=band.data.mask)
-            satscene[chn].lon = np.ma.array(band.longitude, mask=band.data.mask)
+        #except ImportError:
+        #    satscene[chn].area = None
+        #    satscene[chn].lat = np.ma.array(band.latitude, mask=band.data.mask)
+        #    satscene[chn].lon = np.ma.array(band.longitude, mask=band.data.mask)
 
-        if 'institution' not in glob_info:
-            glob_info['institution'] = band.global_info['N_Dataset_Source']
-        if 'mission_name' not in glob_info:
-            glob_info['mission_name'] = band.global_info['Mission_Name']
+        ##if 'institution' not in glob_info:
+        ##    glob_info['institution'] = band.global_info['N_Dataset_Source']
+        ##if 'mission_name' not in glob_info:
+        ##    glob_info['mission_name'] = band.global_info['Mission_Name']
 
     # Compulsory global attribudes
     satscene.info["title"] = (satscene.satname.capitalize() + 
