@@ -52,7 +52,7 @@ class ViirsBandData(object):
     Not yet considering the Day-Night Band
     """
     def __init__(self, filenames, calibrate=1):
-        self.start_time = 0
+        self.begin_time = 0
         self.end_time = 0 
         self.orbit_begin = 0
         self.orbit_end = 0
@@ -71,24 +71,57 @@ class ViirsBandData(object):
 
     def read(self):
         self._read_metadata()
-    
+
+        LOG.debug("Shape of data: " + str(self.data.shape))
+
+
     def _read_metadata(self):
+
+        no_date = datetime(1958, 1, 1)
+        epsilon_time = timedelta(days=2)
+
+        def _get_a_good_begintime(name, obj):
+            if isinstance(obj, h5py.Dataset):
+                date_key, time_key = ('AggregateBeginningDate', 'AggregateBeginningTime')
+                if date_key in obj.attrs.keys():
+                    if not good_time_val_[0]:
+                        time_val = datetime.strptime(
+                            obj.attrs[date_key][0][0] + 
+                            obj.attrs[time_key][0][0],
+                            '%Y%m%d%H%M%S.%fZ')
+                        if abs(time_val - no_date) > epsilon_time:
+                            good_time_val_[0] = time_val
+
+        def _get_a_good_endtime(name, obj):
+            if isinstance(obj, h5py.Dataset):
+                date_key, time_key = ('AggregateEndingDate', 'AggregateEndingTime')
+                if date_key in obj.attrs.keys():
+                    if not good_time_val_[0]:
+                        time_val = datetime.strptime(
+                            obj.attrs[date_key][0][0] + 
+                            obj.attrs[time_key][0][0],
+                            '%Y%m%d%H%M%S.%fZ')
+                        if abs(time_val - no_date) > epsilon_time:
+                            good_time_val_[0] = time_val
+
+        def _get_shape(name, obj):
+            if isinstance(obj, h5py.Group):
+                radiance_key = "Radiance"
+                if radiance_key in obj.keys():
+                    shape = obj[radiance_key].shape
+                    shape_[0] = shape
+
+        shape = (0, 0)
         for fname in self.filenames:
-            h5f = h5py.File(self.filename, 'r')
+            h5f = h5py.File(fname, 'r')
 
-            keys = h5f['Data_Products'].keys()
-            idx = 0
-            for key in keys:
-                if key.find('SDR') >= 0:
-                    break
-                idx = idx + 1
-
-            date_begin, time_begin = 0, 0
-            date_end, time_end = 0, 0
-            shapes = []
+            if not self.begin_time:
+                good_time_val_ = [None]
+                h5f.visititems(_get_a_good_begintime)
+                self.begin_time = good_time_val_[0]
 
             # Then get the band info (Data_Products attributes):
-            bname = h5f['Data_Products'].keys()[idx]
+            bname = h5f['Data_Products'].keys()[0]
             for gran_aggr in h5f['Data_Products'][bname].keys():
                 attributes = h5f['Data_Products'][bname][gran_aggr].attrs
                 for key in attributes.keys():
@@ -98,32 +131,26 @@ class ViirsBandData(object):
                             self.band_id = 'DNB'
                         else:
                             self.band_id = bid
-                    if key == 'AggregateBeginningOrbitNumber':
+                    elif key == 'AggregateBeginningOrbitNumber':
                         if not self.orbit_begin:
                             self.orbit_begin = attributes[key][0, 0]
                     elif key == 'AggregateEndingOrbitNumber':
                         self.orbit_end = attributes[key][0, 0]
-                    elif key == 'AggregateBeginningDate':
-                        if not date_begin:
-                            date_begin = attributes[key][0, 0]
-                    elif key == 'AggregateBeginningTime':
-                        if not time_begin:
-                            time_begin = attributes[key][0, 0]
-                    elif key == 'AggregateEndingDate':
-                        date_end = attributes[key][0, 0]
-                    elif key == 'AggregateEndingTime':
-                        time_end = attributes[key][0, 0]
-                
+
+            shape_ = [None]
+            h5f.visititems(_get_shape)
+            shape = (shape_[0][0] + shape[0], shape_[0][1])
 
 
+        good_time_val_ = [None]
+        h5f.visititems(_get_a_good_endtime)
+        self.end_time = good_time_val_[0]
 
-            self.shape = 
-            self.orbit_begin = 
-            self.orbit_end = 
-        self.data = np.zeros(self.shape, dtype=np.float) 
-        self.latitude = np.zeros(self.shape, dtype=np.float) 
-        self.longitude = np.zeros(self.shape, dtype=np.float) 
+        self.data = np.zeros(shape, dtype=np.float) 
+        self.latitude = np.zeros(shape, dtype=np.float) 
+        self.longitude = np.zeros(shape, dtype=np.float) 
         
+
    
     def _read_data(self, filename):
         """Read one VIIRS M- or I-band channel: Data and attributes (meta data)
@@ -475,7 +502,7 @@ def load_viirs_sdr(satscene, options, *args, **kwargs):
         filename_band = [os.path.join(directory, fname) for fname in fnames_band]
         LOG.debug("fnames_band = " + str(filename_band))
         
-        band = ViirsBandData(filename_band[0], calibrate=calibrate).read()
+        band = ViirsBandData(filename_band, calibrate=calibrate).read()
         LOG.debug('Band id = ' + band.band_id)
 
         band_desc = None # I-band or M-band or Day/Night band?
