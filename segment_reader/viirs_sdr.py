@@ -44,6 +44,192 @@ from mpop import CONFIG_PATH
 from mpop.satin.logger import LOG
 from mpop.utils import strftime
 
+NO_DATE = datetime(1958, 1, 1)
+EPSILON_TIME = timedelta(days=2)
+VIIRS_MBAND_GRANULE_SIZE = (768, 3200)
+VIIRS_IBAND_GRANULE_SIZE = (768*2, 3200*2)
+
+VIIRS_IR_BANDS = ('M16', 'M15', 'M14', 'M13', 'M12', 'I5', 'I4')
+VIIRS_VIS_BANDS = ('M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'M9', 'M10', 'M11',
+        'I1', 'I2', 'I3')
+VIIRS_DNB_BANDS = ('DNB', )
+
+
+class HDF5MetaData(object):
+    """
+
+    Small class for inspecting NPP SDR HDF5 files 
+
+    Supports 
+
+    """
+
+    def __init__(self, filename):
+        self.metadata = {}
+        self.filename = filename
+
+    def read(self):
+        h5f = h5py.File(self.filename, 'r')
+        h5f.visititems(self.collect_metadata)
+        self._collect_attrs('/', h5f.attrs)
+        return self
+
+    def _collect_attrs(self, name, attrs):
+        for key, value in attrs.iteritems():
+            value = list(value[0])
+            if len(value) == 1:
+                self.metadata["%s/attr/%s" % (name, key)] = value[0]
+            else:
+                self.metadata["%s/attr/%s" % (name, key)] = value
+    
+    def collect_metadata(self, name, obj):
+        if isinstance(obj, h5py.Dataset):
+            self.metadata["%s/shape" % name] = obj.shape
+        self._collect_attrs(name, obj.attrs)
+
+    def __getitem__(self, key):
+
+        long_key = None
+        for mkey in self.metadata.keys():
+            if mkey.endswith(key):
+                if long_key is not None:
+                    raise KeyError("Multiple keys called %s" % key)
+                long_key = mkey
+        return self.metadata[long_key]
+
+    def keys(self):
+        return self.metadata.keys()
+    
+    def get_data_keys(self):
+
+        data_keys = []
+        for key in self.metadata.keys():
+            if key.endswith("/shape"):
+                data_key = key.split("/shape")[0]
+                data_keys.append(data_key)
+        return data_keys
+
+class NPPMetaData(HDF5MetaData):
+
+    def _parse_npp_datatime(self, datestr, timestr):
+        time_val = datetime.strptime(datestr + timestr, '%Y%m%d%H%M%S.%fZ')
+        if abs(time_val - NO_DATE) < EPSILON_TIME:
+            raise ValueError("Datetime invalid %s " % time_val)
+        return time_val
+
+    def get_begin_time(self):
+        return self._parse_npp_datatime(self['AggregateBeginningDate'], self['AggregateBeginningTime'])
+
+    def get_end_time(self):
+        return self._parse_npp_datatime(self['AggregateEndingDate'], self['AggregateEndingTime'])
+
+    def get_begin_orbit_number(self):
+        return int(self['AggregateBeginningOrbitNumber'])
+
+    def get_end_orbit_number(self):
+        return int(self['AggregateEndingOrbitNumber'])
+
+    def get_geofilname(self):
+        return self['N_GEO_Ref']
+    
+    def get_shape(self):
+        
+        shape = self['Radiance/shape']
+        band = self['Band_ID']
+        if band[0] == 'M':
+            if shape != VIIRS_MBAND_GRANULE_SIZE:
+                raise ValueError("Unsupported granule size %s for %s" % (shape, band))
+        elif band == "DNB":
+            if shape != VIIRS_MBAND_GRANULE_SIZE:
+                raise ValueError("Unsupported granule size %s for %s" % (shape, band))
+        elif band[0] == "I":
+            if shape != VIIRS_IBAND_GRANULE_SIZE:
+                raise ValueError("Unsupported granule size %s for %s" % (shape, band))
+
+        return shape 
+
+
+    def get_band_description(self):
+
+        band = self['Band_ID']
+
+        if band.startswith('I'):
+            return  "I"
+        elif band.startswith('M'):
+            return "M"
+        elif band.startswith('DNB'):
+            return "DNB"
+
+        return None
+
+
+    def _band_data_keys(self, data_type):
+        """
+        :param data_type: Reflectance, Radiance or BrightnessTemperature
+        :type data_type: string
+        :returns: HDF5 data key and scale factor keys i a two element tuple
+
+        """
+
+        data_key = None
+        factors_keys = None
+        for key in self.get_data_keys():
+            if key.endswith(data_type):
+                data_key = key
+                factors_keys = key+"Factors"
+
+        return (data_key, factors_keys)
+
+    def get_reflectance_keys(self):
+        return self._band_data_keys("Reflectance")
+        
+    def get_radiance_keys(self):
+        return self._band_data_keys("Radiance")
+
+    def get_brightness_temperature_keys(self):
+        return self._band_data_keys("BrightnessTemperature")
+
+    def get_unit(self, calibrate = 1):
+
+        band = self['Band_ID']
+        if calibrate == 2 and  band not in VIIRS_DNB_BANDS:
+            return "W m-2 um-1 sr-1"
+
+        if band in VIIRS_IR_BANDS:  
+            return "K"
+        elif band in VIIRS_VIS_BANDS:
+            return '%'
+        elif band in VIIRS_DNB_BANDS:
+            return 'W m-2 sr-1'
+
+        return None
+
+
+class ViirsGeolocationData(object)
+    def __init__(self, band_type, shape, filenames):
+        self.band_type = band_type
+        self.filenames = filenames
+        self.longitudes = np.ma.array(np.zeros(shape, dtype=np.float), fill_value=0)
+        self.latitudes = np.ma.array(np.zeros(shape, dtype=np.float), fill_value=0)
+
+    def read(self):
+        """ 
+        Read longitudes and latitudes from geo filenames and assemble
+        """
+
+        for filename in self.filenames:
+
+            lon , lat = get_lonlat(filename, self.band_type)
+            self.longitudes[index:index+granule_length,:]  = lon 
+            self.latitudes[index:index+granule_length,:]  = lat 
+            
+            
+
+
+        return self
+
+
+
 # ------------------------------------------------------------------------------
 
 class ViirsBandData(object):
@@ -62,97 +248,53 @@ class ViirsBandData(object):
         self.offset = 0.0   # intercept
         self.filenames = sorted(filenames)
         self.units = 'unknown'
-        self.geo_filename = None
+        self.geo_filenames = []
         self.calibrate = calibrate
 
         self.data = None
         self.latitude = None
         self.longitude = None
 
+        self.band_desc = None
+        self.metadata = []
+
     def read(self):
         self._read_metadata()
 
         LOG.debug("Shape of data: " + str(self.data.shape))
 
+        self._read_data()
+
+        return self
 
     def _read_metadata(self):
 
         no_date = datetime(1958, 1, 1)
         epsilon_time = timedelta(days=2)
 
-        def _get_a_good_begintime(name, obj):
-            if isinstance(obj, h5py.Dataset):
-                date_key, time_key = ('AggregateBeginningDate', 'AggregateBeginningTime')
-                if date_key in obj.attrs.keys():
-                    if not good_time_val_[0]:
-                        time_val = datetime.strptime(
-                            obj.attrs[date_key][0][0] + 
-                            obj.attrs[time_key][0][0],
-                            '%Y%m%d%H%M%S.%fZ')
-                        if abs(time_val - no_date) > epsilon_time:
-                            good_time_val_[0] = time_val
-
-        def _get_a_good_endtime(name, obj):
-            if isinstance(obj, h5py.Dataset):
-                date_key, time_key = ('AggregateEndingDate', 'AggregateEndingTime')
-                if date_key in obj.attrs.keys():
-                    if not good_time_val_[0]:
-                        time_val = datetime.strptime(
-                            obj.attrs[date_key][0][0] + 
-                            obj.attrs[time_key][0][0],
-                            '%Y%m%d%H%M%S.%fZ')
-                        if abs(time_val - no_date) > epsilon_time:
-                            good_time_val_[0] = time_val
-
-        def _get_shape(name, obj):
-            if isinstance(obj, h5py.Group):
-                radiance_key = "Radiance"
-                if radiance_key in obj.keys():
-                    shape = obj[radiance_key].shape
-                    shape_[0] = shape
-
-        shape = (0, 0)
         for fname in self.filenames:
-            h5f = h5py.File(fname, 'r')
+            md = NPPMetaData(fname).read()
+            self.metadata.append(md)
+            self.geo_filenames.append(md.get_geofilname())
 
-            if not self.begin_time:
-                good_time_val_ = [None]
-                h5f.visititems(_get_a_good_begintime)
-                self.begin_time = good_time_val_[0]
+        #
+        # initiate data arrays
+        swath_width, granule_length = self.metadata[0].get_shape()
+        shape = (swath_width , granule_length * len(self.metadata))
 
-            # Then get the band info (Data_Products attributes):
-            bname = h5f['Data_Products'].keys()[0]
-            for gran_aggr in h5f['Data_Products'][bname].keys():
-                attributes = h5f['Data_Products'][bname][gran_aggr].attrs
-                for key in attributes.keys():
-                    if key == 'Band_ID':
-                        bid = attributes[key][0, 0]
-                        if bname.find('DNB') > 0: # and bid == 'N/A':
-                            self.band_id = 'DNB'
-                        else:
-                            self.band_id = bid
-                    elif key == 'AggregateBeginningOrbitNumber':
-                        if not self.orbit_begin:
-                            self.orbit_begin = attributes[key][0, 0]
-                    elif key == 'AggregateEndingOrbitNumber':
-                        self.orbit_end = attributes[key][0, 0]
+        self.data = np.ma.array(np.zeros(shape, dtype=np.float), fill_value=0)
 
-            shape_ = [None]
-            h5f.visititems(_get_shape)
-            shape = (shape_[0][0] + shape[0], shape_[0][1])
+        self.orbit_begin = self.metadata[0].get_begin_orbit_number()
+        self.orbit_end = self.metadata[-1].get_end_orbit_number()
+        self.begin_time = self.metadata[0].get_begin_time()
+        self.end_time = self.metadata[-1].get_end_time()
 
+        self.unit = self.metadata[0].get_unit(self.calibrate)
+        self.band_desc = self.metadata[0].get_band_description()
 
-        good_time_val_ = [None]
-        h5f.visititems(_get_a_good_endtime)
-        self.end_time = good_time_val_[0]
-
-        self.data = np.zeros(shape, dtype=np.float) 
-        self.latitude = np.zeros(shape, dtype=np.float) 
-        self.longitude = np.zeros(shape, dtype=np.float) 
-        
-
+        self.band_id = self.metadata[0]['Band_ID']
    
-    def _read_data(self, filename):
+    def _read_data(self):
         """Read one VIIRS M- or I-band channel: Data and attributes (meta data)
 
         - *calibrate* set to 1 (default) returns reflectances for visual bands,
@@ -161,125 +303,48 @@ class ViirsBandData(object):
         - *calibrate* set to 2 returns radiances.
         """
 
-        h5f = h5py.File(self.filename, 'r')
+        swath_width, granule_length = self.metadata[0].get_shape()
 
-        # Get the global header info first:
-        for key in h5f.attrs.keys():
-            self.global_info[key] = h5f.attrs[key][0, 0]
-            if key == 'N_GEO_Ref':
-                self.geo_filename = h5f.attrs[key][0, 0]
-                
-        if 'Data_Products' not in h5f:
-            raise IOError("No group 'All_Data' in hdf5 file: " + 
-                          self.filename)
+        for index, md in enumerate(self.metadata):
+            h5f = h5py.File(md.filename, 'r')
 
-        keys = h5f['Data_Products'].keys()
-        idx = 0
-        for key in keys:
-            if key.find('SDR') >= 0:
-                break
-            idx = idx + 1
-
-        # Then get the band info (Data_Products attributes):
-        #bname = h5f['Data_Products'].keys()[0]
-        bname = h5f['Data_Products'].keys()[idx]
-        for gran_aggr in h5f['Data_Products'][bname].keys():
-            attributes = h5f['Data_Products'][bname][gran_aggr].attrs
-            for key in attributes.keys():
-                self.band_info[key] = attributes[key]
-                if key == 'Band_ID':
-                    bid = attributes[key][0, 0]
-                    if bname.find('DNB') > 0: # and bid == 'N/A':
-                        self.band_id = 'DNB'
-                    else:
-                        self.band_id = bid
-                if key == 'AggregateBeginningOrbitNumber':
-                    self.orbit_begin = attributes[key][0, 0]
-                if key == 'AggregateEndingOrbitNumber':
-                    self.orbit_end = attributes[key][0, 0]
-
-        # Orbit number is here defined as identical to the 
-        # orbit number at beggining of aggregation:
-        self.orbit = self.orbit_begin 
-
-
-        # Read the calibrated data
-
-        if 'All_Data' not in h5f:
-            raise IOError("No group 'All_Data' in hdf5 file:" + 
-                          " %s" % self.filename)
-        
-        keys = h5f['All_Data'].keys()
-        idx = 0
-        for key in keys:
-            if key.find('SDR') >= 0:
-                break
-            idx = idx + 1
-        bname = keys[idx]
-        keys = h5f['All_Data'][bname].keys()
-
-        if self.calibrate == 1:
-            # Get the M-band Tb or Reflectance:
-            # First check if we have reflectances or brightness temperatures:
-            tb_name = 'BrightnessTemperature'
-            refl_name = 'Reflectance'
-        elif self.calibrate == 2:
-            tb_name = 'Radiance'
-            refl_name = 'Radiance'
-            
-        rad_name = 'Radiance' # Day/Night band
-
-        if tb_name in keys:
-            band_data = h5f['All_Data'][bname][tb_name].value
-            factors_name = tb_name + 'Factors'
-            try:
-                scale_factors = h5f['All_Data'][bname][factors_name].value
-            except KeyError:
-                scale_factors = 1.0, 0.0
-            self.scale, self.offset = scale_factors[0:2]
+            # find appropiate band data to insert 
+            data_key = None
+            factors_key = None
             if self.calibrate == 1:
-                self.units = 'K'
+                data_key, factors_key = md.get_reflectance_keys()
+                if data_key is None:
+                    data_key, factors_key = md.get_brightness_temperature_keys()
             elif self.calibrate == 2:
-                self.units == 'W m-2 um-1 sr-1'
-        elif refl_name in keys:
-            band_data = h5f['All_Data'][bname][refl_name].value
-            factors_name = refl_name + 'Factors'
-            #self.scale, self.offset = h5f['All_Data'][bname][factors_name].value
-            # In the data from CLASS this tuple is repeated 4 times!???
-            # FIXME!
-            self.scale, self.offset = h5f['All_Data'][bname][factors_name].value[0:2]
-            if self.calibrate == 1:
-                self.units = '%'
-            elif self.calibrate == 2:
-                self.units == 'W m-2 um-1 sr-1'
-        elif refl_name not in keys and tb_name not in keys and rad_name in keys:
-            band_data = h5f['All_Data'][bname][rad_name].value
-            self.scale, self.offset = (10000., 0.) # The unit is W/sr cm-2 in the file!
-            self.units = 'W sr-1 m-2'
-        else:
-            raise IOError('Neither brightness temperatures nor ' + 
-                          'reflectances in the SDR file!')
+                data_key, factors_key = md.get_radiance_keys()
 
-        # Masking spurious data
-        # according to documentation, mask integers >= 65328, floats <= -999.3
-        if issubclass(band_data.dtype.type, np.integer):
-            band_array = np.ma.masked_greater(band_data, 65528)
-        if issubclass(band_data.dtype.type, np.floating):
-            band_array = np.ma.masked_less(band_data, -999.2)
+            #
+            # get granule data and scale and offset values
+            granule_factors_data = h5f[factors_key].value
+            granule_data = h5f[data_key].value
 
-        # Is it necessary to mask negatives?
-        # The VIIRS reflectances are between 0 and 1.
-        # mpop standard is '%'
-        if self.units == '%':
-            myscale = 100.0 # To get reflectances in percent!
-        else:
-            myscale = 1.0
-        self.data =  np.ma.masked_less(myscale * (band_array *
-                                                  self.scale +
-                                                  self.offset),
-                                       0)
-        h5f.close()
-        return self
+            scale, offset = granule_factors_data[0:2] 
+
+            # Masking spurious data
+            # according to documentation, mask integers >= 65328, floats <= -999.3
+            band_array = None
+            if issubclass(granule_data.dtype.type, np.integer):
+                band_array = np.ma.masked_greater(granule_data, 65528)
+            elif issubclass(granule_data.dtype.type, np.floating):
+                band_array = np.ma.masked_less(granule_data, -999.2)
+
+            # Is it necessary to mask negatives?
+            # The VIIRS reflectances are between 0 and 1.
+            # mpop standard is '%'
+            if self.units == '%':
+                myscale = 100.0 # To get reflectances in percent!
+            else:
+                myscale = 1.0
+
+            self.data[index:index+granule_length,:]  =  np.ma.masked_less(myscale * (band_array *
+                                                        scale +
+                                                        offset),0)
+
 
     def read_lonlat(self, geodir, **kwargs):
         """Read the lons and lats from the seperate geolocation file.
@@ -288,16 +353,16 @@ class ViirsBandData(object):
         """
         if 'filename' in kwargs:
             # Overwriting the geo-filename:
-            self.geo_filename = kwargs['filename']
+            self.geo_filenames = kwargs['filename']
 
-        if not self.geo_filename:
+        if not self.geo_filenames:
             LOG.warning("Trying to read geo-location without" +
                         "knowledge of which geolocation file to read it from!")
             LOG.warning("Do nothing...")
             return
         
         lon, lat = get_lonlat(os.path.join(geodir, 
-                                           self.geo_filename),
+                                           self.geo_filenames),
                               self.band_id)
 
         self.longitude = lon
@@ -505,15 +570,9 @@ def load_viirs_sdr(satscene, options, *args, **kwargs):
         band = ViirsBandData(filename_band, calibrate=calibrate).read()
         LOG.debug('Band id = ' + band.band_id)
 
-        band_desc = None # I-band or M-band or Day/Night band?
-        if band.band_id.find('I') == 0:
-            band_desc = "I"
-        elif band.band_id.find('M') == 0:
-            band_desc = "M"
-        elif band.band_id.find('D') == 0:
-            band_desc = "DNB"
+        import pdb; pdb.set_trace()
 
-        if not band_desc:
+        if not band.band_desc:
             LOG.warning('Band name = ' + band.band_id)
             raise AttributeError('Band description not supported!')
 
@@ -525,7 +584,7 @@ def load_viirs_sdr(satscene, options, *args, **kwargs):
         # We assume the same geolocation should apply to all M-bands!
         # ...and the same to all I-bands:
 
-        if band_desc == "M":
+        if band.band_desc == "M":
             if not m_lonlat_is_loaded:
                 mband_geos = [ s for s in geofile_list 
                              if os.path.basename(s).find('GMTCO') == 0 ]
@@ -541,7 +600,7 @@ def load_viirs_sdr(satscene, options, *args, **kwargs):
                 band.longitude = m_lons
                 band.latitude = m_lats
 
-        if band_desc == "I":
+        if band.band_desc == "I":
             if not i_lonlat_is_loaded:
                 iband_geos = [ s for s in geofile_list 
                              if os.path.basename(s).find('GITCO') == 0 ]
@@ -557,7 +616,7 @@ def load_viirs_sdr(satscene, options, *args, **kwargs):
                 band.longitude = i_lons
                 band.latitude = i_lats
 
-        if band_desc == "DNB":
+        if band.band_desc == "DNB":
             dnb_geos = [ s for s in geofile_list 
                          if os.path.basename(s).find('GDNBO') == 0 ]
             if len(dnb_geos) == 1 and os.path.exists(dnb_geos[0]):
