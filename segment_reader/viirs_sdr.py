@@ -8,9 +8,11 @@
 # Sweden
 
 # Author(s):
- 
+
+# 
 #   Adam Dybbroe <adam.dybbroe@smhi.se>
-#
+#   Kristian Rune Larsen <krl@dmi.dk>
+#   
 
 # This file is part of mpop.
 
@@ -54,7 +56,6 @@ VIIRS_IR_BANDS = ('M16', 'M15', 'M14', 'M13', 'M12', 'I5', 'I4')
 VIIRS_VIS_BANDS = ('M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'M9', 'M10', 'M11',
         'I1', 'I2', 'I3')
 VIIRS_DNB_BANDS = ('DNB', )
-
 
 class HDF5MetaData(object):
     """
@@ -111,7 +112,7 @@ class HDF5MetaData(object):
         return data_keys
 
 class NPPMetaData(HDF5MetaData):
-
+    
     def _parse_npp_datatime(self, datestr, timestr):
         time_val = datetime.strptime(datestr + timestr, '%Y%m%d%H%M%S.%fZ')
         if abs(time_val - NO_DATE) < EPSILON_TIME:
@@ -220,6 +221,9 @@ class GeolocationFlyweight(object):
         """
         return self._instances.setdefault(tuple(args[1]), self._cls(*args, **kargs))
 
+    def clear_cache(self):
+        del self._instances
+        
 
 @GeolocationFlyweight
 class ViirsGeolocationData(object):
@@ -237,8 +241,8 @@ class ViirsGeolocationData(object):
         if self.longitudes is not None:
             return self
         
-        self.longitudes = np.ma.array(np.zeros(self.shape, dtype=np.float), fill_value=0)
-        self.latitudes = np.ma.array(np.zeros(self.shape, dtype=np.float), fill_value=0)
+        self.longitudes = np.ma.array(np.zeros(self.shape, dtype=np.float32), fill_value=0)
+        self.latitudes = np.ma.array(np.zeros(self.shape, dtype=np.float32), fill_value=0)
 
         granule_length = self.shape[0]/len(self.filenames)
 
@@ -250,6 +254,7 @@ class ViirsGeolocationData(object):
             self.latitudes[swath_index:swath_index+granule_length,:] = lat 
             
 
+        LOG.debug("Geolocation read in for... " + str(self))
         return self
 
 
@@ -291,11 +296,7 @@ class ViirsBandData(object):
 
         return self
 
-    @profile
     def _read_metadata(self):
-
-        no_date = datetime(1958, 1, 1)
-        epsilon_time = timedelta(days=2)
 
         for fname in self.filenames:
             md = NPPMetaData(fname).read()
@@ -307,7 +308,7 @@ class ViirsBandData(object):
         granule_length, swath_width= self.metadata[0].get_shape()
         shape = (granule_length * len(self.metadata), swath_width )
 
-        self.data = np.ma.array(np.zeros(shape, dtype=np.float), fill_value=0)
+        self.data = np.ma.array(np.zeros(shape, dtype=np.float32), fill_value=0)
 
         self.orbit_begin = self.metadata[0].get_begin_orbit_number()
         self.orbit_end = self.metadata[-1].get_end_orbit_number()
@@ -321,7 +322,6 @@ class ViirsBandData(object):
         if self.band_id == "N/A":
             self.band_id = "DNB"
    
-    @profile
     def _read_data(self):
         """Read one VIIRS M- or I-band channel: Data and attributes (meta data)
 
@@ -364,31 +364,38 @@ class ViirsBandData(object):
                 
             granule_data = h5f[data_key].value
 
-
             scale, offset = granule_factors_data[0:2] 
 
-            # Masking spurious data
-            # according to documentation, mask integers >= 65328, floats <= -999.3
-            band_array = None
-            if issubclass(granule_data.dtype.type, np.integer):
-                band_array = np.ma.masked_greater(granule_data, 65528)
-            elif issubclass(granule_data.dtype.type, np.floating):
-                band_array = np.ma.masked_less(granule_data, -999.2)
-
-            # Is it necessary to mask negatives?
             # The VIIRS reflectances are between 0 and 1.
             # mpop standard is '%'
             if self.units == '%':
                 myscale = 100.0 # To get reflectances in percent!
             else:
                 myscale = 1.0
-           
-            LOG.debug("using index %s" % index)  
+
+            # Masking spurious data
+            # according to documentation, mask integers >= 65328, floats <= -999.3
+            if issubclass(granule_data.dtype.type, np.integer):
+                band_mask = granule_data >= 65528
+            if issubclass(granule_data.dtype.type, np.floating):
+                band_mask = granule_data <= -999.2
+
+            # Is it necessary to mask negatives?
+            granule_data = granule_data.astype(np.float32)
+            granule_data *= self.scale
+            granule_data += self.offset
+            granule_data *= myscale
+            LOG.debug("dtype(granule_data) = " + str(granule_data.dtype))
+            band_mask |= granule_data < 0
+
+            masked_data = np.ma.array(granule_data, mask=band_mask, copy=False)
+
             swath_index = index * granule_length
-            self.data[swath_index:swath_index+granule_length,:]  =  np.ma.masked_less(myscale * (band_array *
-                                                        scale +
-                                                        offset),0)
+            y0_ = swath_index
+            y1_ = swath_index+granule_length 
+            self.data[y0_:y1_, :] = masked_data
        
+
         self.band_uid = self.band_desc + hashlib.sha1(self.data.mask).hexdigest()
 
     def read_lonlat(self, geofilepaths=None, geodir=None):
@@ -399,6 +406,7 @@ class ViirsBandData(object):
             geofilepaths = [os.path.join(geodir, geofilepath) for geofilepath in self.geo_filenames]
 
         self.geolocation = ViirsGeolocationData(self.data.shape, geofilepaths).read()
+        
 
 
 # ------------------------------------------------------------------------------
@@ -470,7 +478,7 @@ def _get_swathsegment(filelist, time_start, time_end=None):
         if time_end is None:
             if time_start >= timetup[0] and time_start <= timetup[1]:
                 segment_files.append(filename)
-                break
+                continue
 
         # search for multiple granules 
         else:
@@ -502,7 +510,6 @@ def load_viirs_sdr(satscene, options, *args, **kwargs):
 """    
 
 
-@profile
 def load_viirs_sdr(satscene, options, *args, **kwargs):
     """Read viirs SDR reflectances and Tbs from file and load it into
     *satscene*.
@@ -555,6 +562,7 @@ def load_viirs_sdr(satscene, options, *args, **kwargs):
             LOG.debug("File before segmenting: " + os.path.basename(fname))
     file_list = _get_swathsegment(file_list, time_start, time_end)
     LOG.debug("Number of files after segment selection: " + str(len(file_list)))
+
     for fname in file_list:
         if os.path.basename(fname).startswith("SVM14"):
             LOG.debug("File after segmenting: " + os.path.basename(fname))
@@ -602,7 +610,6 @@ def load_viirs_sdr(satscene, options, *args, **kwargs):
 
         band.read_lonlat(geodir=directory)
 
-
         if not band.band_desc:
             LOG.warning('Band name = ' + band.band_id)
             raise AttributeError('Band description not supported!')
@@ -619,8 +626,10 @@ def load_viirs_sdr(satscene, options, *args, **kwargs):
         from pyresample import geometry
         
         satscene[chn].area = geometry.SwathDefinition(
-            lons=np.ma.array(band.geolocation.longitudes, mask=band.data.mask),
-            lats=np.ma.array(band.geolocation.latitudes, mask=band.data.mask))
+            lons=np.ma.array(band.geolocation.longitudes, mask=band.data.mask,
+                             copy=False),
+            lats=np.ma.array(band.geolocation.latitudes, mask=band.data.mask,
+                             copy=False))
 
         area_name = ("swath_" + satscene.fullname + "_" +
                      str(satscene.time_slot) + "_"
@@ -638,6 +647,9 @@ def load_viirs_sdr(satscene, options, *args, **kwargs):
         ##if 'mission_name' not in glob_info:
         ##    glob_info['mission_name'] = band.global_info['Mission_Name']
 
+
+    ViirsGeolocationData.clear_cache()
+    
     # Compulsory global attribudes
     satscene.info["title"] = (satscene.satname.capitalize() + 
                               " satellite, " +

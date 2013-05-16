@@ -28,16 +28,26 @@ from datetime import datetime
 from mpop.utils import debug_on
 debug_on()
 
-tslot = datetime(2013, 3, 12, 10, 45)
+# Test case:
+#tslot = datetime(2013, 3, 12, 10, 45)
+#tstart = datetime(2013, 3, 12, 10, 39)
+#tend = datetime(2013, 3, 12, 10, 45)
 
-tstart = datetime(2013, 3, 12, 10, 39)
-tend = datetime(2013, 3, 12, 10, 45)
+#g = PolarFactory.create_scene("npp", "", "viirs", tslot, orbit="07108")
 
-g = PolarFactory.create_scene("npp", "", "viirs", tslot, orbit="07108")
+# Adam's test case:
+tslot = datetime(2013, 4, 25, 11, 57)
+tstart = datetime(2013, 4, 25, 11, 55)
+tend = datetime(2013, 4, 25, 12, 1)
+
+g = PolarFactory.create_scene("npp", "", "viirs", tslot, orbit="07734")
     
 g.load(g.image.green_snow.prerequisites | g.image.hr_overview.prerequisites
        | g.image.dnb.prerequisites, time_interval=(tstart,tend))
+#g.load([8.6])
 
+
+"""
 l = g.project("worldeqc30km")
 
 l.image.green_snow().save("gs_world.png")
@@ -63,4 +73,4 @@ l.image.green_snow().save("gs_ssea250.png")
 l.image.hr_overview().save("ov_ssea250.png")
 l.image.dnb().save("dnb_ssea250.png")
 
-
+"""
