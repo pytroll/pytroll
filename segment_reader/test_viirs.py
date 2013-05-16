@@ -36,6 +36,31 @@ tend = datetime(2013, 3, 12, 10, 45)
 g = PolarFactory.create_scene("npp", "", "viirs", tslot, orbit="07108")
     
 g.load(g.image.green_snow.prerequisites | g.image.hr_overview.prerequisites
-       | g.image.dnb.prerequisites) # time_interval=(tstart,tend))
+       | g.image.dnb.prerequisites, time_interval=(tstart,tend))
+
+l = g.project("worldeqc30km")
+
+l.image.green_snow().save("gs_world.png")
+l.image.hr_overview().save("ov_world.png")
+l.image.dnb().save("dnb_world.png")
+
+
+l = g.project("euron1")
+
+l.image.green_snow().save("gs_euron1.png")
+l.image.hr_overview().save("ov_euron1.png")
+l.image.dnb().save("dnb_euron1.png")
+
+l = g.project("scan")
+
+l.image.green_snow().save("gs_scan.png")
+l.image.hr_overview().save("ov_scan.png")
+l.image.dnb().save("dnb_scan.png")
+
+l = g.project("ssea250")
+
+l.image.green_snow().save("gs_ssea250.png")
+l.image.hr_overview().save("ov_ssea250.png")
+l.image.dnb().save("dnb_ssea250.png")
 
 

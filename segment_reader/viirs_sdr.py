@@ -245,8 +245,9 @@ class ViirsGeolocationData(object):
         for index, filename in enumerate(self.filenames):
 
             lon, lat = get_lonlat(filename)
-            self.longitudes[index:index+granule_length,:] = lon 
-            self.latitudes[index:index+granule_length,:] = lat 
+            swath_index = index * granule_length
+            self.longitudes[swath_index:swath_index+granule_length,:] = lon 
+            self.latitudes[swath_index:swath_index+granule_length,:] = lat 
             
 
         return self
@@ -290,6 +291,7 @@ class ViirsBandData(object):
 
         return self
 
+    @profile
     def _read_metadata(self):
 
         no_date = datetime(1958, 1, 1)
@@ -302,8 +304,8 @@ class ViirsBandData(object):
 
         #
         # initiate data arrays
-        swath_width, granule_length = self.metadata[0].get_shape()
-        shape = (swath_width , granule_length * len(self.metadata))
+        granule_length, swath_width= self.metadata[0].get_shape()
+        shape = (granule_length * len(self.metadata), swath_width )
 
         self.data = np.ma.array(np.zeros(shape, dtype=np.float), fill_value=0)
 
@@ -319,6 +321,7 @@ class ViirsBandData(object):
         if self.band_id == "N/A":
             self.band_id = "DNB"
    
+    @profile
     def _read_data(self):
         """Read one VIIRS M- or I-band channel: Data and attributes (meta data)
 
@@ -328,7 +331,7 @@ class ViirsBandData(object):
         - *calibrate* set to 2 returns radiances.
         """
 
-        swath_width, granule_length = self.metadata[0].get_shape()
+        granule_length, swath_width= self.metadata[0].get_shape()
 
         for index, md in enumerate(self.metadata):
             h5f = h5py.File(md.filename, 'r')
@@ -379,11 +382,13 @@ class ViirsBandData(object):
                 myscale = 100.0 # To get reflectances in percent!
             else:
                 myscale = 1.0
-
-            self.data[index:index+granule_length,:]  =  np.ma.masked_less(myscale * (band_array *
+           
+            LOG.debug("using index %s" % index)  
+            swath_index = index * granule_length
+            self.data[swath_index:swath_index+granule_length,:]  =  np.ma.masked_less(myscale * (band_array *
                                                         scale +
                                                         offset),0)
-
+       
         self.band_uid = self.band_desc + hashlib.sha1(self.data.mask).hexdigest()
 
     def read_lonlat(self, geofilepaths=None, geodir=None):
@@ -453,15 +458,31 @@ def _get_times_from_npp(filename):
 def _get_swathsegment(filelist, time_start, time_end=None):
     """
     Return only the granule files for the time interval
+
+
     """
 
     segment_files = []
     for filename in filelist:
         timetup = _get_times_from_npp(filename)
-        if time_start >= timetup[0] and time_start <= timetup[1]:
-            segment_files.append(filename)
-        elif time_end and time_end >= timetup[0] and time_end <= timetup[1]:
-            segment_files.append(filename)
+
+        #Search for single granule using time start
+        if time_end is None:
+            if time_start >= timetup[0] and time_start <= timetup[1]:
+                segment_files.append(filename)
+                break
+
+        # search for multiple granules 
+        else:
+            # check that granule start time is inside interval
+            if timetup[0] >= time_start and timetup[0] <= time_end:
+                segment_files.append(filename)
+                continue
+
+            # check that granule end time is inside interval
+            if timetup[1] >= time_start and timetup[1] <= time_end:
+                segment_files.append(filename)
+                continue
 
     segment_files.sort()
     return segment_files
@@ -481,6 +502,7 @@ def load_viirs_sdr(satscene, options, *args, **kwargs):
 """    
 
 
+@profile
 def load_viirs_sdr(satscene, options, *args, **kwargs):
     """Read viirs SDR reflectances and Tbs from file and load it into
     *satscene*.
@@ -554,13 +576,6 @@ def load_viirs_sdr(satscene, options, *args, **kwargs):
     # Only take the files in the interval given:
     geofile_list = _get_swathsegment(geofile_list, time_start, time_end)
 
-    m_lats = None
-    m_lons = None
-    i_lats = None
-    i_lons = None
-
-    m_lonlat_is_loaded = False
-    i_lonlat_is_loaded = False
     glob_info = {}
 
     LOG.debug("Channels to load: " + str(satscene.channels_to_load))
@@ -601,19 +616,18 @@ def load_viirs_sdr(satscene, options, *args, **kwargs):
         # ...and the same to all I-bands:
 
         
-        if True:
-            from pyresample import geometry
+        from pyresample import geometry
         
-            satscene[chn].area = geometry.SwathDefinition(
-                lons=np.ma.array(band.geolocation.longitudes, mask=band.data.mask),
-                lats=np.ma.array(band.geolocation.latitudes, mask=band.data.mask))
+        satscene[chn].area = geometry.SwathDefinition(
+            lons=np.ma.array(band.geolocation.longitudes, mask=band.data.mask),
+            lats=np.ma.array(band.geolocation.latitudes, mask=band.data.mask))
 
-            area_name = ("swath_" + satscene.fullname + "_" +
-                         str(satscene.time_slot) + "_"
-                         + str(satscene[chn].data.shape) + "_" +
-                         band.band_uid)
-            satscene[chn].area.area_id = area_name
-            satscene[chn].area_id = area_name
+        area_name = ("swath_" + satscene.fullname + "_" +
+                     str(satscene.time_slot) + "_"
+                     + str(satscene[chn].data.shape) + "_" +
+                     band.band_uid)
+        satscene[chn].area.area_id = area_name
+        satscene[chn].area_id = area_name
         #except ImportError:
         #    satscene[chn].area = None
         #    satscene[chn].lat = np.ma.array(band.latitude, mask=band.data.mask)
