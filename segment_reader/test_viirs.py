@@ -35,8 +35,9 @@ debug_on()
 
 #g = PolarFactory.create_scene("npp", "", "viirs", tslot, orbit="07108")
 
+"""
 # Adam's test case:
-tslot = datetime(2013, 4, 25, 11, 57)
+tslot = datetime(2013, 4, 25, 11, 58)
 tstart = datetime(2013, 4, 25, 11, 55)
 tend = datetime(2013, 4, 25, 12, 1)
 
@@ -45,9 +46,10 @@ g = PolarFactory.create_scene("npp", "", "viirs", tslot, orbit="07734")
 g.load(g.image.green_snow.prerequisites | g.image.hr_overview.prerequisites
        | g.image.dnb.prerequisites, time_interval=(tstart,tend))
 #g.load([8.6])
-
-
+#g.load(g.image.green_snow.prerequisites | g.image.hr_overview.prerequisites
+#       | g.image.dnb.prerequisites)
 """
+
 tslots = [datetime(2013, 4, 25, 11, 53),
           datetime(2013, 4, 25, 11, 55),
           datetime(2013, 4, 25, 11, 56),
@@ -70,9 +72,8 @@ for t in tslots:
 import mpop.scene
 
 g = mpop.scene.assemble_segments(gs)
-"""
 
-#raw_input('Waiting - press any key')
+raw_input('Waiting - press any key')
 
 
 
