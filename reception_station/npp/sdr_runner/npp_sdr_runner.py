@@ -221,6 +221,144 @@ def update_lut_files():
 
     return
 
+class ViirsSdrProcessor(object):
+    """
+    Container for the VIIRS SDR processing based on CSPP
+
+    """
+
+    from multiprocessing.pool import ThreadPool
+
+    def __init__(self, ncpus):
+
+        self.pool = ThreadPool(ncpus)
+        self.ncpus = ncpus
+
+        self.fullswath = False
+        self.cspp_results = []
+        self.working_dirs = []
+        self.glist = []
+        self.pass_start_time = None
+        self.result_files = []
+        self.sdr_home = OPTIONS['level1_home']
+
+        self.sdr_files = None
+
+    def initialise(self):
+        """Initialise the processor"""
+        self.fullswath = False
+        self.cspp_results = []
+        self.working_dirs = []
+        self.glist = []
+        self.pass_start_time = None
+        self.result_files = []
+        
+
+    def pack_sdr_files(self, subd):
+        return pack_sdr_files(self.result_files, self.sdr_home, subd)
+
+
+    def run(self, msg):
+        """Start the VIIRS SDR processing using CSPP on one rdr granule"""
+
+        LOG.debug("Received message: " + str(msg))
+        if msg is None and self.glist:
+            # The swath is assumed to be finished now
+            del self.glist[0]
+            keeper = self.glist[1]
+            LOG.info("Start CSPP: RDR files = " + str(self.glist))
+            cspp_results.append(self.pool.apply_async(spawn_cspp, [keeper] + self.glist))
+            return False
+        if msg is None:
+            return True
+
+        LOG.debug("")
+        LOG.debug("\tMessage:")
+        LOG.debug(str(msg))
+        urlobj = urlparse(msg.data['uri'])
+        LOG.debug("Server = " + str(urlobj.netloc))
+        if urlobj.netloc != SERVERNAME:
+            continue
+        LOG.info("Ok... " + str(urlobj.netloc))
+        LOG.info("Sat and Instrument: " + str(msg.data['satellite']) 
+                 + " " + str(msg.data['instrument']))
+                    
+        if not (msg.data['satellite'] == "NPP" and 
+                msg.data['instrument'] == 'viirs'):
+            LOG.info("Not a Suomi NPP VIIRS scene. Continue...")
+            continue
+
+        start_time = msg.data['start_time']
+        end_time = msg.data['end_time']
+        try:
+            orbnum = int(msg.data['orbit_number'])            
+        except KeyError:
+            orbnum = None
+            rdr_filename = urlobj.path
+            path, fname =  os.path.split(rdr_filename)
+            if not fname.endswith('.h5'):
+                LOG.warning("Not an rdr file! Continue")
+
+        # Check if the file exists:
+        if not os.path.exists(rdr_filename):
+            raise IOError("File is reported to be dispatched " + 
+                          "but is not there! File = " + 
+                          rdr_filename)
+
+        # Do processing:
+        LOG.info("RDR to SDR processing on npp/viirs with CSPP start!" + 
+                 " Start time = " + str(start_time))
+        if orbnum:
+            LOG.info("Orb = %d" % orbnum)
+        LOG.info("File = %s" % str(rdr_filename))
+
+        # Fix orbit number in RDR file:
+        try:
+            rdr_filename = fix_rdrfile(rdr_filename)
+        except IOError:
+            LOG.error('Failed to fix orbit number in RDR file = ' + 
+                      str(urlobj.path))
+            import traceback
+            traceback.print_exc(file=sys.stderr)
+
+        self.glist.append(rdr_filename)
+
+        if len(self.glist) > 4:
+            raise RuntimeError("Invalid number of granules to "
+                                                   "process!!!")
+        if len(self.glist) == 4:
+            del self.glist[0]
+        if len(self.glist) == 3:
+            keeper = self.glist[1]
+        if len(self.glist) == 2:
+            keeper = self.glist[0]
+        if len(self.glist) == 1:
+            # Check start and end time and check if the RDR file
+            # contains several granules (a full local swath):
+            tdiff = end_time - start_time
+            if tdiff.seconds > 4*60:
+                LOG.info("RDR file contains 3 or more granules. " + 
+                         "We assume it is a full local swath!")
+                keeper = self.glist[0]
+                fullswath = True
+            else:
+                LOG.info("Only one granule. This is not enough for CSPP" + 
+                         " Continue")
+                continue
+
+        start_time = get_datetime_from_filename(keeper)
+        if pass_start_time is None:
+            pass_start_time = start_time
+
+        LOG.info("Before call to spawn_cspp. Argument list = " + 
+                 str([keeper] + self.glist))
+        cspp_results.append(pool.apply_async(spawn_cspp, [keeper] + self.glist))
+        if fullswath:
+            LOG.info("Full swath. Break granules loop")
+            break
+
+
+
 # ---------------------------------------------------------------------------
 def run_cspp(*viirs_rdr_files):
     """Run CSPP on VIIRS RDR files"""
@@ -458,8 +596,74 @@ def spawn_cspp(current_granule, *glist):
     
     return working_dir, result_files
 
+
+    sdr_home = OPTIONS['level1_home']
+    # Roll over log files at application start:
+    try:
+        LOG.handlers[0].doRollover()
+    except AttributeError:
+        LOG.warning("No log rotation supported for this handler...")
+    LOG.info("*** Start the Suomi NPP SDR runner:")
+    LOG.info("THR_LUT_FILES_AGE_DAYS = " + str(THR_LUT_FILES_AGE_DAYS))
+
+    fresh = check_lut_files(THR_LUT_FILES_AGE_DAYS)
+    if fresh:
+        LOG.info("Files in the LUT dir are fresh...")
+        LOG.info("...or download has been attempted recently! " + 
+                 "No url downloading....")
+    else:
+        LOG.warning("Files in the LUT dir are non existent or old. " +
+                    "Start url fetch...")
+        update_lut_files()
+
 # ---------------------------------------------------------------------------
 def npp_rolling_runner():
+    """The NPP/VIIRS runner. Listens and triggers processing on RDR granules."""
+    from multiprocessing import cpu_count
+
+    ncpus_available = cpu_count()
+    LOG.info("Number of CPUs available = " + str(ncpus_available))
+    ncpus = int(OPTIONS.get('ncpus', 1))
+    LOG.info("Will use %d CPUs when running CSPP instances" % ncpus)
+    viirs_proc = ViirsSdrProcessor(ncpus)
+
+    with posttroll.subscriber.Subscribe('RDR') as subscr:
+        with Publish('npp_dr_runner', 'SDR', 
+                     LEVEL1_PUBLISH_PORT) as publisher:
+            while True:
+                viirs_proc.initialise()
+                for msg in subscr.recv(timeout=90):
+                    status = viirs_proc.run(msg)
+                    if not status:
+                        break # end the loop and reinitialize !
+                        
+
+                LOG.info("Get the results from the multiptocessing pool-run")
+                for res in viirs_proc.cspp_results:
+                    working_dir, tmp_result_files = res.get()
+                    viirs_proc.working_dirs.append(working_dir)
+                    viirs_proc.result_files.extend(tmp_result_files)
+
+                tobj = viirs_proc.pass_start_time
+                LOG.info("Time used in sub-dir name: " + 
+                         str(tobj.strftime("%Y-%m-%d %H:%M")))
+                subd = create_subdirname(tobj)
+                LOG.info("Create sub-directory for sdr files: %s" % str(subd))
+                sdr_files = viirs_proc.pack_sdr_files(subd)
+                make_okay_files(viirs_proc.sdr_home, subd)
+
+                publish_sdr(publisher, sdr_files)
+                
+                for working_dir in viirs_proc.working_dirs:
+                    LOG.info("Cleaning up directory %s" % working_dir)
+                    cleanup_cspp_workdir(working_dir)
+
+
+    return
+
+
+# ---------------------------------------------------------------------------
+def OLDnpp_rolling_runner():
     """The NPP/VIIRS runner. Listens and triggers processing on RDR granules."""
     from multiprocessing.pool import ThreadPool
     from multiprocessing import cpu_count
@@ -605,50 +809,4 @@ def npp_rolling_runner():
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
 
-    #npp_runner()
     npp_rolling_runner()
-
-    """
-    from glob import glob
-    #files = glob('/san1/NPP/lvl0/RNSCA-RVIRS_npp_*')
-    files = glob("/san1/NPP/rdr/RNSCA-RVIRS_npp_d20130425_t1*_b07734*")
-    #files = glob('/data/proj6/safutv/rt_stps/data/RNSCA-RVIRS_npp_*')
-    #rdr_filename = "/san1/polar_in/direct_readout/npp/RNSCA-RVIRS_npp_d20121111_t0825276_e0837086_b05391_c20121111084036199000_nfts_drl.h5"
-    files.sort()
-    #fileset = files[0:3]
-    #fileset = files[1:4]
-    #fileset = files[2:5]
-    #fileset = files[3:6]
-    #fileset = files[4:7]
-    #LOG.info("Start CSPP: RDR file = " + str(fileset))
-    #working_dir = run_cspp(*fileset)
-
-    for rdr_filename in files:
-       LOG.info("Start CSPP: RDR file = " + str(rdr_filename))
-       working_dir = run_cspp(rdr_filename)
-       LOG.info("CSPP SDR processing finished...")
-    """
-
-    """
-    # Testing:
-    rdr_home_dir = OPTIONS['level0_home']
-    sdr_home_dir = OPTIONS['level1_home']
-
-    from glob import glob
-    rdrlist = glob('%s/RNSCA-RVIRS_*' % rdr_home_dir)
-    #rdr_filename = rdrlist[0]
-    for rdr_filename in rdrlist:
-        try:
-            rdr_filename = fix_rdrfile(rdr_filename)
-        except IOError:
-            import traceback
-            traceback.print_exc()
-
-        wrkdir = run_cspp(rdr_filename)
-        result_files = get_sdr_files(wrkdir)
-        tobj = get_datetime_from_filename(rdr_filename)
-        subd = create_subdirname(tobj)
-        pack_sdr_files(result_files, sdr_home_dir, subd)
-        make_okay_files(sdr_home_dir, subd)
-        cleanup_cspp_workdir(wrkdir)
-    """
