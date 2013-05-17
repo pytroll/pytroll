@@ -48,6 +48,36 @@ g.load(g.image.green_snow.prerequisites | g.image.hr_overview.prerequisites
 
 
 """
+tslots = [datetime(2013, 4, 25, 11, 53),
+          datetime(2013, 4, 25, 11, 55),
+          datetime(2013, 4, 25, 11, 56),
+          datetime(2013, 4, 25, 11, 58),
+          datetime(2013, 4, 25, 11, 59),
+          datetime(2013, 4, 25, 12, 0)
+          ]
+
+
+gs = []
+
+for t in tslots:
+
+    g = PolarFactory.create_scene("npp", "", "viirs", t, orbit="07734")
+    
+    g.load(g.image.green_snow.prerequisites | g.image.hr_overview.prerequisites | g.image.dnb.prerequisites)
+
+    gs.append(g)
+
+import mpop.scene
+
+g = mpop.scene.assemble_segments(gs)
+"""
+
+#raw_input('Waiting - press any key')
+
+
+
+
+"""
 l = g.project("worldeqc30km")
 
 l.image.green_snow().save("gs_world.png")
@@ -72,5 +102,5 @@ l = g.project("ssea250")
 l.image.green_snow().save("gs_ssea250.png")
 l.image.hr_overview().save("ov_ssea250.png")
 l.image.dnb().save("dnb_ssea250.png")
-
 """
+
