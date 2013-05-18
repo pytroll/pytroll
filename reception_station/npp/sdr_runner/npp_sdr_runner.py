@@ -497,7 +497,6 @@ def npp_rolling_runner():
                     if not status:
                         break # end the loop and reinitialize !
                         
-
                 LOG.info("Get the results from the multiptocessing pool-run")
                 for res in viirs_proc.cspp_results:
                     working_dir, tmp_result_files = res.get()
@@ -517,6 +516,19 @@ def npp_rolling_runner():
                 for working_dir in viirs_proc.working_dirs:
                     LOG.info("Cleaning up directory %s" % working_dir)
                     cleanup_cspp_workdir(working_dir)
+
+                LOG.info("Now that SDR processing has completed, " + 
+                         "check for new LUT files...")
+                fresh = check_lut_files(THR_LUT_FILES_AGE_DAYS)
+                if fresh:
+                    LOG.info("Files in the LUT dir are fresh...")
+                    LOG.info("...or download has been attempted recently! " + 
+                             "No url downloading....")
+                else:
+                    LOG.warning("Files in the LUT dir are " + 
+                                "non existent or old. " +
+                                "Start url fetch...")
+                    update_lut_files()
 
     return
 
