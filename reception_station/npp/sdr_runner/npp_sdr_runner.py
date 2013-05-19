@@ -1,7 +1,29 @@
-"""Level-1 processing for VIIRS NPP Direct Readout data.  Using the CSPP
-level-1 processor from the SSEC, Wisconsin based on the ADL from the NASA DRL.
-Listen for pytroll messages from nimbus (NPP file dispatch) and trigger
-processing on direct readout data
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Copyright (c) 2013 Adam.Dybbroe
+
+# Author(s):
+
+#   Adam.Dybbroe <a000680@c14526.ad.smhi.se>
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""Level-1 processing for VIIRS Suomi NPP Direct Readout data. Using the CSPP
+level-1 processor from the SSEC, Wisconsin, based on the ADL from the NASA DRL.
+Listen for pytroll messages from Nimbus (NPP file dispatch) and trigger
+processing on direct readout RDR data (granules or full swaths)
 """
 
 
@@ -87,23 +109,6 @@ handler.setLevel(logging.DEBUG)
 LOG.setLevel(logging.DEBUG)
 LOG.addHandler(handler)
 
-
-CSPP_ENVS = {"CSPP_SDR_HOME": CSPP_SDR_HOME,
-             "CSPP_REV": "20120215",
-             "CSPP_ANC_CACHE_DIR " : os.path.join(CSPP_SDR_HOME,'cache'),
-             "CSPP_ANC_HOME" : os.path.join(CSPP_SDR_HOME,'static'),
-             "CSPP_ANC_TILE_PATH" : "%s/static/ADL/data/tiles/Terrain-Eco-ANC-Tile/withMetadata" % (CSPP_SDR_HOME),
-             "PATH" : '%s/atms/sdr:%s/atms/sdr:%s/viirs/edr:%s/viirs/sdr' % (CSPP_SDR_HOME, 
-                                                                             CSPP_SDR_HOME,
-                                                                             CSPP_SDR_HOME,
-                                                                             CSPP_SDR_HOME),
-             "ADL_HOME" : "%s/ADL" % (CSPP_SDR_HOME),
-             "NPP_GRANULE_ID_BASETIME" : "1698019234000000",
-             "DSTATICDATA" : '%s/ADL/CMN/Utilities/INF/util/time/src' % CSPP_SDR_HOME,
-             "DPE_SITE_ID" : "cspp",
-             "DPE_DOMAIN" : "dev",
-             "INFTK_DM_ROOT" : "JUST_NEED_TO_HAVE_AN_ENV_VARIABLE"
-             }
 
 # ---------------------------------------------------------------------------
 def check_lut_files(thr_days=14):
