@@ -228,10 +228,8 @@ class ViirsSdrProcessor(object):
 
     """
 
-    from multiprocessing.pool import ThreadPool
-
     def __init__(self, ncpus):
-
+        from multiprocessing.pool import ThreadPool
         self.pool = ThreadPool(ncpus)
         self.ncpus = ncpus
 
@@ -296,10 +294,11 @@ class ViirsSdrProcessor(object):
             orbnum = int(msg.data['orbit_number'])            
         except KeyError:
             orbnum = None
-            rdr_filename = urlobj.path
-            path, fname =  os.path.split(rdr_filename)
-            if not fname.endswith('.h5'):
-                LOG.warning("Not an rdr file! Continue")
+        rdr_filename = urlobj.path
+        path, fname =  os.path.split(rdr_filename)
+        if not fname.endswith('.h5'):
+            LOG.warning("Not an rdr file! Continue")
+            return True
 
         # Check if the file exists:
         if not os.path.exists(rdr_filename):
@@ -359,7 +358,6 @@ class ViirsSdrProcessor(object):
         if self.fullswath:
             LOG.info("Full swath. Break granules loop")
             return False
-
 
 
 # ---------------------------------------------------------------------------
