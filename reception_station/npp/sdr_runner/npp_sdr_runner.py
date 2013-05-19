@@ -278,7 +278,9 @@ class ViirsSdrProcessor(object):
         urlobj = urlparse(msg.data['uri'])
         LOG.debug("Server = " + str(urlobj.netloc))
         if urlobj.netloc != SERVERNAME:
-            continue
+            LOG.warning("Server %s not the current one: %s" %(str(urlobj.netloc), 
+                                                              SERVERNAME))
+            return True
         LOG.info("Ok... " + str(urlobj.netloc))
         LOG.info("Sat and Instrument: " + str(msg.data['satellite']) 
                  + " " + str(msg.data['instrument']))
