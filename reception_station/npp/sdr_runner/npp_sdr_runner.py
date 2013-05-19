@@ -222,6 +222,109 @@ def update_lut_files():
 
     return
 
+# ---------------------------------------------------------------------------
+def run_cspp(*viirs_rdr_files):
+    """Run CSPP on VIIRS RDR files"""
+    from subprocess import Popen, PIPE, STDOUT
+    import time
+    import tempfile
+
+    viirs_sdr_call = OPTIONS['viirs_sdr_call']
+
+    try:
+        working_dir = tempfile.mkdtemp(dir=CSPP_WORKDIR)
+    except OSError:
+        working_dir = tempfile.mkdtemp()
+
+    # Run the command:
+    cmdlist = [viirs_sdr_call]
+    cmdlist.extend(viirs_rdr_files)
+    t0_clock = time.clock()
+    t0_wall = time.time()
+    LOG.info("Popen call arguments: " + str(cmdlist))
+    viirs_sdr_proc = Popen(cmdlist,
+                           cwd=working_dir,
+                           stderr=PIPE, stdout=PIPE)
+    while True:
+        line = viirs_sdr_proc.stdout.readline()
+        if not line:
+            break
+        LOG.info(line)
+
+    while True:
+        errline = viirs_sdr_proc.stderr.readline()
+        if not errline:
+            break
+        LOG.info(errline)
+    LOG.info("Seconds process time: " + str(time.clock() - t0_clock))
+    LOG.info("Seconds wall clock time: " + str(time.time() - t0_wall))
+
+    viirs_sdr_proc.poll()
+
+    return working_dir
+
+
+def get_sdr_times(filename):
+    from datetime import datetime, timedelta
+
+    bname = os.path.basename(filename)
+    sll = bname.split('_')
+    start_time = datetime.strptime(sll[2] + sll[3][:-1], 
+                                   "d%Y%m%dt%H%M%S")
+    end_time = datetime.strptime(sll[2] + sll[4][:-1], 
+                                 "d%Y%m%de%H%M%S")
+    if end_time < start_time:
+        end_time += timedelta(days=1)
+    return start_time, end_time
+
+def publish_sdr(publisher, result_files):
+    # Now publish:
+    for result_file in result_files:
+        filename = os.path.split(result_file)[1]
+        to_send = {}
+        to_send['uri'] = ('ssh://%s/%s' % (SERVERNAME, result_file))
+        to_send['filename'] = filename
+        to_send['instrument'] = 'viirs'
+        to_send['satellite'] = 'NPP'
+        to_send['format'] = 'HDF5'
+        to_send['type'] = 'SDR'
+        
+        to_send['start_time'], to_send['end_time'] = get_sdr_times(filename)
+        msg = Message('/oper/polar/direct_readout/norrkoping',
+                      "file", to_send).encode()
+        LOG.debug("sending: " + str(msg))
+        publisher.send(msg)
+
+
+def spawn_cspp(current_granule, *glist):
+    """Spawn a CSPP run on the set of RDR files given"""
+
+    LOG.info("Start CSPP: RDR files = " + str(glist))
+    working_dir = run_cspp(*glist)
+    LOG.info("CSPP SDR processing finished...")
+    # Assume everything has gone well!
+    new_result_files = get_sdr_files(working_dir)
+    if len(new_result_files) == 0:
+        LOG.warning("No SDR files available. CSPP probably failed!")
+        return working_dir, []
+
+    LOG.info("current_granule = " + str(current_granule))
+    LOG.info("glist = " + str(glist))
+    if current_granule in glist and len(glist) == 1:
+        LOG.info("Current granule is identical to the 'list of granules'" + 
+                 " No sdr result files will be skipped")
+        return working_dir, new_result_files
+        
+    # Only bother about the "current granule" - skip the rest
+    start_time = get_datetime_from_filename(current_granule)
+    start_str = start_time.strftime("d%Y%m%d_t%H%M%S")
+    result_files = [new_file
+                    for new_file in new_result_files
+                    if start_str in new_file]
+    
+    return working_dir, result_files
+
+
 class ViirsSdrProcessor(object):
     """
     Container for the VIIRS SDR processing based on CSPP
@@ -314,13 +417,15 @@ class ViirsSdrProcessor(object):
         LOG.info("File = %s" % str(rdr_filename))
 
         # Fix orbit number in RDR file:
-        try:
-            rdr_filename = fix_rdrfile(rdr_filename)
-        except IOError:
-            LOG.error('Failed to fix orbit number in RDR file = ' + 
-                      str(urlobj.path))
-            import traceback
-            traceback.print_exc(file=sys.stderr)
+        if orbnum == 1:
+            LOG.info("Orbit number is one! Try get the corret one...")
+            try:
+                rdr_filename = fix_rdrfile(rdr_filename)
+            except IOError:
+                LOG.error('Failed to fix orbit number in RDR file = ' + 
+                          str(urlobj.path))
+                import traceback
+                traceback.print_exc(file=sys.stderr)
 
         self.glist.append(rdr_filename)
 
@@ -359,108 +464,7 @@ class ViirsSdrProcessor(object):
             LOG.info("Full swath. Break granules loop")
             return False
 
-
-# ---------------------------------------------------------------------------
-def run_cspp(*viirs_rdr_files):
-    """Run CSPP on VIIRS RDR files"""
-    from subprocess import Popen, PIPE, STDOUT
-    import time
-    import tempfile
-
-    viirs_sdr_call = OPTIONS['viirs_sdr_call']
-
-    try:
-        working_dir = tempfile.mkdtemp(dir=CSPP_WORKDIR)
-    except OSError:
-        working_dir = tempfile.mkdtemp()
-
-    # Run the command:
-    cmdlist = [viirs_sdr_call]
-    cmdlist.extend(viirs_rdr_files)
-    t0_clock = time.clock()
-    t0_wall = time.time()
-    LOG.info("Popen call arguments: " + str(cmdlist))
-    viirs_sdr_proc = Popen(cmdlist,
-                           cwd=working_dir,
-                           stderr=PIPE, stdout=PIPE)
-    while True:
-        line = viirs_sdr_proc.stdout.readline()
-        if not line:
-            break
-        LOG.info(line)
-
-    while True:
-        errline = viirs_sdr_proc.stderr.readline()
-        if not errline:
-            break
-        LOG.info(errline)
-    LOG.info("Seconds process time: " + str(time.clock() - t0_clock))
-    LOG.info("Seconds wall clock time: " + str(time.time() - t0_wall))
-
-    viirs_sdr_proc.poll()
-
-    return working_dir
-
-
-def get_sdr_times(filename):
-    from datetime import datetime, timedelta
-
-    bname = os.path.basename(filename)
-    sll = bname.split('_')
-    start_time = datetime.strptime(sll[2] + sll[3][:-1], 
-                                   "d%Y%m%dt%H%M%S")
-    end_time = datetime.strptime(sll[2] + sll[4][:-1], 
-                                 "d%Y%m%de%H%M%S")
-    if end_time < start_time:
-        end_time += timedelta(days=1)
-    return start_time, end_time
-
-def publish_sdr(publisher, result_files):
-    # Now publish:
-    for result_file in result_files:
-        filename = os.path.split(result_file)[1]
-        to_send = {}
-        to_send['uri'] = ('ssh://%/' % SERVERNAME + result_file)
-        to_send['filename'] = filename
-        to_send['instrument'] = 'viirs'
-        to_send['satellite'] = 'NPP'
-        to_send['format'] = 'HDF5'
-        to_send['type'] = 'SDR'
-        
-        to_send['start_time'], to_send['end_time'] = get_sdr_times(filename)
-        msg = Message('/oper/polar/direct_readout/norrkoping',
-                      "file", to_send).encode()
-        LOG.debug("sending: " + str(msg))
-        publisher.send(msg)
-
-
-def spawn_cspp(current_granule, *glist):
-    """Spawn a CSPP run on the set of RDR files given"""
-
-    LOG.info("Start CSPP: RDR files = " + str(glist))
-    working_dir = run_cspp(*glist)
-    LOG.info("CSPP SDR processing finished...")
-    # Assume everything has gone well!
-    new_result_files = get_sdr_files(working_dir)
-    if len(new_result_files) == 0:
-        LOG.warning("No SDR files available. CSPP probably failed!")
-        return working_dir, []
-
-    LOG.info("current_granule = " + str(current_granule))
-    LOG.info("glist = " + str(glist))
-    if current_granule in glist and len(glist) == 1:
-        LOG.info("Current granule is identical to the 'list of granules'" + 
-                 " No sdr result files will be skipped")
-        return working_dir, new_result_files
-        
-    # Only bother about the "current granule" - skip the rest
-    start_time = get_datetime_from_filename(current_granule)
-    start_str = start_time.strftime("d%Y%m%d_t%H%M%S")
-    result_files = [new_file
-                    for new_file in new_result_files
-                    if start_str in new_file]
-    
-    return working_dir, result_files
+        return True
 
 # ---------------------------------------------------------------------------
 def npp_rolling_runner():
