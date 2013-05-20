@@ -134,7 +134,7 @@ def check_lut_files(thr_days=14):
 
     now = datetime.utcnow()
 
-    tdelta = timedelta(seconds=URL_DOWNLOAD_TRIAL_FREQUENCY_HOURS*3600.)
+    tdelta = timedelta(seconds=float(URL_DOWNLOAD_TRIAL_FREQUENCY_HOURS)*3600.)
     # Get the time of the last update trial:
     files = glob(LUT_UPDATE_STAMPFILE_RPEFIX + '*')
     # Can we count on glob sorting the most recent file first. In case we can,
