@@ -187,7 +187,6 @@ def update_lut_files():
     from subprocess import Popen, PIPE, STDOUT
 
     LOG.info("Start downloading....")
-
     # lftp -c "mirror --verbose --only-newer --parallel=2 $JPSS_REMOTE_ANC_DIR $CSPP_RT_SDR_LUTS"
     cmdstr = ('lftp -c "mirror --verbose --only-newer --parallel=2 ' + 
               URL_JPSS_REMOTE_ANC_DIR + ' ' + LUT_DIR + '"')
@@ -420,15 +419,14 @@ class ViirsSdrProcessor(object):
         LOG.info("File = %s" % str(rdr_filename))
 
         # Fix orbit number in RDR file:
-        if orbnum == 1:
-            LOG.info("Orbit number is one! Try get the corret one...")
-            try:
-                rdr_filename = fix_rdrfile(rdr_filename)
-            except IOError:
-                LOG.error('Failed to fix orbit number in RDR file = ' + 
-                          str(urlobj.path))
-                import traceback
-                traceback.print_exc(file=sys.stderr)
+        LOG.info("Fix orbit number in rdr file...")
+        try:
+            rdr_filename = fix_rdrfile(rdr_filename)
+        except IOError:
+            LOG.error('Failed to fix orbit number in RDR file = ' + 
+                      str(urlobj.path))
+            import traceback
+            traceback.print_exc(file=sys.stderr)
 
         self.glist.append(rdr_filename)
 
