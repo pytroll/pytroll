@@ -68,12 +68,14 @@ def pack_sdr_files(sdrfiles, base_dir, subdir):
         os.mkdir(path)
 
     LOG.info("Number of SDR files: " + str(len(sdrfiles)))
+    retvl = []
     for sdrfile in sdrfiles:
         newfilename = os.path.join(path, os.path.basename(sdrfile))
         LOG.info("Copy sdrfile to destination: " + newfilename)
         shutil.copy(sdrfile, newfilename)
+        retvl.append(newfilename)
 
-    return
+    return retvl
 
 # --------------------------------
 if __name__ == "__main__":    
