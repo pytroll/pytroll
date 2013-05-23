@@ -393,11 +393,16 @@ class ViirsSdrProcessor(object):
             return True
 
         start_time = msg.data['start_time']
-        end_time = msg.data['end_time']
 
+        try:
+            end_time = msg.data['end_time']
+        except KeyError:
+            LOG.warning("No end_time in message! Using start_time...")
+            end_time = msg.data['start_time']
         try:
             orbnum = int(msg.data['orbit_number'])            
         except KeyError:
+            LOG.warning("No orbit_number on message! Set to none...")
             orbnum = None
         rdr_filename = urlobj.path
         path, fname =  os.path.split(rdr_filename)
