@@ -251,18 +251,17 @@ def run_cspp(*viirs_rdr_files):
         line = viirs_sdr_proc.stdout.readline()
         if not line:
             break
-        LOG.info(line)
+        LOG.info(line.strip('\n'))
 
     while True:
         errline = viirs_sdr_proc.stderr.readline()
         if not errline:
             break
-        LOG.info(errline)
+        LOG.info(errline.strip('\n'))
     LOG.info("Seconds process time: " + str(time.clock() - t0_clock))
     LOG.info("Seconds wall clock time: " + str(time.time() - t0_wall))
 
     viirs_sdr_proc.poll()
-
     return working_dir
 
 def get_sdr_times(filename):
@@ -363,7 +362,7 @@ class ViirsSdrProcessor(object):
         """Start the VIIRS SDR processing using CSPP on one rdr granule"""
 
         LOG.debug("Received message: " + str(msg))
-        if msg is None and self.glist:
+        if msg is None and self.glist and len(self.glist) > 2:
             # The swath is assumed to be finished now
             del self.glist[0]
             keeper = self.glist[1]
