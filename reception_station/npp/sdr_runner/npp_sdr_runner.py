@@ -32,7 +32,7 @@ from glob import glob
 from datetime import datetime, timedelta
 
 import sdr_runner
-import sdr_runner.orbitno.NoTleFile as NoTleFile
+import sdr_runner.orbitno
 _PACKAGEDIR = sdr_runner.__path__[0]
 _CONFIG_PATH = os.path.join(os.path.dirname(_PACKAGEDIR), 'etc')
 
@@ -433,7 +433,7 @@ class ViirsSdrProcessor(object):
                       str(urlobj.path))
             import traceback
             traceback.print_exc(file=sys.stderr)
-        except NoTleFile:
+        except sdr_runner.orbitno.NoTleFile:
             LOG.error('Failed to fix orbit number in RDR file = ' + 
                       str(urlobj.path))
             LOG.error('No TLE file...')
