@@ -28,6 +28,8 @@ processing on direct readout RDR data (granules or full swaths)
 
 
 import os
+from glob import glob
+from datetime import datetime, timedelta
 
 import sdr_runner
 _PACKAGEDIR = sdr_runner.__path__[0]
@@ -126,11 +128,7 @@ def check_lut_files(thr_days=14):
     how old the latest file is, and hope that is sufficient.
 
     """
-
-    from glob import glob
-    from datetime import datetime, timedelta
     import stat
-    import os.path
 
     now = datetime.utcnow()
 
@@ -265,8 +263,8 @@ def run_cspp(*viirs_rdr_files):
     return working_dir
 
 def get_sdr_times(filename):
-    from datetime import datetime, timedelta
-
+    """Get the start and end times from the SDR file name
+    """
     bname = os.path.basename(filename)
     sll = bname.split('_')
     start_time = datetime.strptime(sll[2] + sll[3][:-1], 
@@ -275,9 +273,12 @@ def get_sdr_times(filename):
                                  "d%Y%m%de%H%M%S")
     if end_time < start_time:
         end_time += timedelta(days=1)
+    
     return start_time, end_time
 
 def publish_sdr(publisher, result_files):
+    """Publish the messages that SDR files are ready
+    """
     # Now publish:
     for result_file in result_files:
         filename = os.path.split(result_file)[1]
@@ -294,7 +295,6 @@ def publish_sdr(publisher, result_files):
                       "file", to_send).encode()
         LOG.debug("sending: " + str(msg))
         publisher.send(msg)
-
 
 def spawn_cspp(current_granule, *glist):
     """Spawn a CSPP run on the set of RDR files given"""
@@ -360,8 +360,11 @@ class ViirsSdrProcessor(object):
 
     def run(self, msg):
         """Start the VIIRS SDR processing using CSPP on one rdr granule"""
-
+        
         LOG.debug("Received message: " + str(msg))
+        if self.glist and len(self.glist) > 0:
+            LOG.debug("glist: " + str(self.glist))
+
         if msg is None and self.glist and len(self.glist) > 2:
             # The swath is assumed to be finished now
             del self.glist[0]
@@ -370,7 +373,11 @@ class ViirsSdrProcessor(object):
             self.cspp_results.append(self.pool.apply_async(spawn_cspp, 
                                                            [keeper] + self.glist))
             return False
-        if msg is None:
+        elif msg and not (msg.data['satellite'] == "NPP" and 
+                          msg.data['instrument'] == 'viirs'):
+            LOG.info("Not a Suomi NPP VIIRS scene. Continue...")
+            return True
+        elif msg is None:
             return True
 
         LOG.debug("")
@@ -386,18 +393,12 @@ class ViirsSdrProcessor(object):
         LOG.info("Sat and Instrument: " + str(msg.data['satellite']) 
                  + " " + str(msg.data['instrument']))
                     
-        if not (msg.data['satellite'] == "NPP" and 
-                msg.data['instrument'] == 'viirs'):
-            LOG.info("Not a Suomi NPP VIIRS scene. Continue...")
-            return True
-
         start_time = msg.data['start_time']
-
         try:
             end_time = msg.data['end_time']
         except KeyError:
-            LOG.warning("No end_time in message! Using start_time...")
-            end_time = msg.data['start_time']
+            LOG.warning("No end_time in message! Guessing start_time + 10 minutes...")
+            end_time = msg.data['start_time'] + timedelta(seconds=600)
         try:
             orbnum = int(msg.data['orbit_number'])            
         except KeyError:
