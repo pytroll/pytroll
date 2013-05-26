@@ -35,15 +35,24 @@ def get_sdr_files(sdr_dir):
 
     return sorted(mband_files) + sorted(iband_files) + sorted(dnb_files)
 
-def create_subdirname(obstime, with_seconds=False):
+def create_subdirname(obstime, with_seconds=False, **kwargs):
     """Generate the pps subdirectory name from the start observation time, ex.:
     'npp_20120405_0037_02270'"""
-    from pyorbital.orbital import Orbital
-    from sdr_runner import orbitno
-
-    tle = orbitno.get_tle('npp', obstime)
-    orbital_ = Orbital(tle.platform, line1=tle.line1, line2=tle.line2)
-    orbnum = orbital_.get_orbit_number(obstime, tbus_style=TBUS_STYLE)
+    if "orbit" in kwargs:
+        orbnum = int(kwargs['orbit'])
+    else:
+        from pyorbital.orbital import Orbital
+        from sdr_runner import orbitno
+        
+        try:
+            tle = orbitno.get_tle('npp', obstime)
+            orbital_ = Orbital(tle.platform, line1=tle.line1, line2=tle.line2)
+            orbnum = orbital_.get_orbit_number(obstime, tbus_style=TBUS_STYLE)
+        except orbitno.NoTleFile:
+            LOG.error('Not able to determine orbit number!')
+            import traceback
+            traceback.print_exc(file=sys.stderr)
+            orbnum = 1
 
     if with_seconds:
         return obstime.strftime('npp_%Y%m%d_%H%M%S_') + '%.5d' % orbnum

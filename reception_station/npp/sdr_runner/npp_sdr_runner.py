@@ -337,6 +337,7 @@ class ViirsSdrProcessor(object):
         self.pool = ThreadPool(ncpus)
         self.ncpus = ncpus
 
+        self.orbit = 1 # Initialised orbit number
         self.fullswath = False
         self.cspp_results = []
         self.working_dirs = []
@@ -353,7 +354,6 @@ class ViirsSdrProcessor(object):
         self.glist = []
         self.pass_start_time = None
         self.result_files = []
-        
 
     def pack_sdr_files(self, subd):
         return pack_sdr_files(self.result_files, self.sdr_home, subd)
@@ -401,10 +401,11 @@ class ViirsSdrProcessor(object):
             LOG.warning("No end_time in message! Guessing start_time + 10 minutes...")
             end_time = msg.data['start_time'] + timedelta(seconds=600)
         try:
-            orbnum = int(msg.data['orbit_number'])            
+            orbnum = int(msg.data['orbit_number'])
         except KeyError:
             LOG.warning("No orbit_number on message! Set to none...")
             orbnum = None
+
         rdr_filename = urlobj.path
         path, fname =  os.path.split(rdr_filename)
         if not fname.endswith('.h5'):
@@ -422,6 +423,8 @@ class ViirsSdrProcessor(object):
                  " Start time = " + str(start_time))
         if orbnum:
             LOG.info("Orb = %d" % orbnum)
+            self.orbit = orbnum
+
         LOG.info("File = %s" % str(rdr_filename))
 
         # Fix orbit number in RDR file:
@@ -528,7 +531,7 @@ def npp_rolling_runner():
                 tobj = viirs_proc.pass_start_time
                 LOG.info("Time used in sub-dir name: " + 
                          str(tobj.strftime("%Y-%m-%d %H:%M")))
-                subd = create_subdirname(tobj)
+                subd = create_subdirname(tobj, orbit=viirs_proc.orbit)
                 LOG.info("Create sub-directory for sdr files: %s" % str(subd))
                 sdr_files = viirs_proc.pack_sdr_files(subd)
                 make_okay_files(viirs_proc.sdr_home, subd)
