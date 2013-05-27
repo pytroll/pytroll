@@ -108,7 +108,7 @@ class PassRecorder(dict):
         utctime, satellite = key
         for (rectime, recsat), val in self.iteritems():
             if(recsat == satellite and
-               (abs(rectime - utctime)).seconds < 5 and
+               (abs(rectime - utctime)).seconds < 30 * 60 and
                (abs(rectime - utctime)).days == 0):
                 return val
         return default
@@ -180,6 +180,7 @@ class MessageReceiver(object):
                 swath["format"] = "CHRPT"
             else:
                 swath["format"] = "HRPT"
+                swath["instrument"] = ("avhrr/3", "mhs", "amsu")
             swath["level"] = "0"
             
 
@@ -227,6 +228,7 @@ class MessageReceiver(object):
             swath["level"] = "0"
             swath["number"] = int(pds["ufn"])
 
+        # NPP RDRs
         elif filename.startswith("R") and filename.endswith(".h5"):
             mda = {}
             mda["format"] = filename[0]
@@ -245,11 +247,44 @@ class MessageReceiver(object):
             swath = self._received_passes.get(pname, {"satellite": satellite,
                                                       "start_time": risetime})
 
+            # FIXME: swath start and end time is granule dependent.
             swath["instrument"] = mda["instrument"]
             swath["format"] = "RDR"
             swath["type"] = "HDF5"
             swath["level"] = "0"
 
+        # metop
+        elif filename[4:12] == "_HRP_00_":
+            instruments = {"AVHR": "avhrr",
+                           "ASCA": "ascat",
+                           "AMSA": "amsu-a",
+                           "ASCA": "ascat",
+                           "ATOV": "atovs",
+                           "AVHR": "avhrr/3",
+                           "GOME": "gome",
+                           "GRAS": "gras",
+                           "HIRS": "hirs/4",
+                           "IASI": "iasi",
+                           "MHSx": "mhs",
+                           "SEMx": "sem",
+                           "ADCS": "adcs",
+                           "SBUV": "sbuv",
+                           "HKTM": "vcdu34"}
+
+            satellites = {"M02": "METOP-A",
+                          "M01": "METOP-B"}
+
+            satellite = satellites[filename[12:15]]
+            risetime = datetime.strptime(filename[16:31], "%Y%m%d%H%M%SZ")
+            #falltime = datetime.strptime(filename[16:47], "%Y%m%d%H%M%SZ")
+
+            pname = pass_name(risetime, satellite)
+            swath = self._received_passes.get(pname, {"satellite": satellite,
+                                                      "start_time": risetime})
+            swath["instrument"] = instruments[filename[:4]]
+            swath["format"] = "EPS"
+            swath["type"] = "binary"
+            swath["level"] = "0"
         else:
             return
 
@@ -350,26 +385,29 @@ def receive_from_zmq(host, port, days=1):
     with Publish("receiver", "HRPT 0", 9000) as hrpt_pub:
         with Publish("receiver", "PDS", 9001) as pds_pub:
             with Publish("receiver", "RDR", 9002) as npp_pub:
-                for rawmsg in sock.recv():
-                    # TODO:
-                    # - Watch for idle time in order to detect a hangout
-                    logger.debug("receive from 2met! " + str(rawmsg))
-                    string = TwoMetMessage(rawmsg)
-                    to_send = msg_rec.receive(string)
-                    if to_send is None:
-                        continue
-                    msg = Message('/oper/polar/direct_readout/norrköping',
-                                  "file",
-                                  to_send).encode()
-                    logger.debug("publishing " + str(msg))
-                    if to_send["format"] == "HRPT":
-                        hrpt_pub.send(msg)
-                    if to_send["format"] == "PDS":
-                        pds_pub.send(msg)
-                    if to_send["format"] == "RDR":
-                        npp_pub.send(msg)
-                    if days:
-                        msg_rec.clean_passes(days)
+                with Publish("receiver", "EPS 0", 9003) as metop_pub:
+                    for rawmsg in sock.recv():
+                        # TODO:
+                        # - Watch for idle time in order to detect a hangout
+                        logger.debug("receive from 2met! " + str(rawmsg))
+                        string = TwoMetMessage(rawmsg)
+                        to_send = msg_rec.receive(string)
+                        if to_send is None:
+                            continue
+                        msg = Message('/oper/polar/direct_readout/norrköping',
+                                      "file",
+                                      to_send).encode()
+                        logger.debug("publishing " + str(msg))
+                        if to_send["format"] == "HRPT":
+                            hrpt_pub.send(msg)
+                        if to_send["format"] == "PDS":
+                            pds_pub.send(msg)
+                        if to_send["format"] == "RDR":
+                            npp_pub.send(msg)
+                        if to_send["format"] == "EPS":
+                            metop_pub.send(msg)
+                        if days:
+                            msg_rec.clean_passes(days)
 
 if __name__ == '__main__':
 
@@ -470,3 +508,5 @@ if __name__ == '__main__':
             sys.exit(angel.do_action())
         except ImportError:
             print "Cannot run as a daemon, you need python-daemon installed."
+
+
