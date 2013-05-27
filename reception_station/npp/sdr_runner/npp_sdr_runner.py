@@ -447,7 +447,7 @@ class ViirsSdrProcessor(object):
 
         if len(self.glist) > 4:
             raise RuntimeError("Invalid number of granules to "
-                                                   "process!!!")
+                               "process!!!")
         if len(self.glist) == 4:
             del self.glist[0]
         if len(self.glist) == 3:
