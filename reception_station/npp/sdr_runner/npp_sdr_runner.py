@@ -398,8 +398,8 @@ class ViirsSdrProcessor(object):
         try:
             end_time = msg.data['end_time']
         except KeyError:
-            LOG.warning("No end_time in message! Guessing start_time + 10 minutes...")
-            end_time = msg.data['start_time'] + timedelta(seconds=600)
+            LOG.warning("No end_time in message! Guessing start_time + 86 seconds...")
+            end_time = msg.data['start_time'] + timedelta(seconds=86)
         try:
             orbnum = int(msg.data['orbit_number'])
         except KeyError:
