@@ -230,7 +230,11 @@ class MessageReceiver(object):
 
         # NPP RDRs
         elif filename.startswith("R") and filename.endswith(".h5"):
+            # Occassionaly RT-STPS produce files with a nonstandard file
+            # naming, lacking the 'RNSCA' field. We will try to deal with this
+            # below (Adam - 2013-06-04):
             mda = {}
+            idx_start = 0
             mda["format"] = filename[0]
             if filename.startswith("RATMS-RNSCA"):
                 mda["instrument"] = "atms"
@@ -238,16 +242,33 @@ class MessageReceiver(object):
                 mda["instrument"] = "cris"
             elif filename.startswith("RNSCA-RVIRS"):
                 mda["instrument"] = "viirs"
-            mda["time"] = datetime.strptime(filename[16:33], "d%Y%m%d_t%H%M%S")
-            mda["orbit"] = filename[45:50]
+            else:
+                if filename.startswith("RATMS_npp"):
+                    mda["instrument"] = "atms"
+                elif filename.startswith("RCRIS_npp"):
+                    mda["instrument"] = "cris"
+                else:
+                    logger.warning("Seems to be a NPP/JPSS RDR " + 
+                                   "file but name is not standard!")
+                    logger.warning("filename = " + filename)
+                    return None
+                idx_start = -6
+
+            mda["start_time"] = datetime.strptime(filename[idx_start+16:idx_start+33], 
+                                                  "d%Y%m%d_t%H%M%S")
+            end_time = datetime.strptime(filename[idx_start+16:idx_start+25] + 
+                                         " " + filename[idx_start+35:idx_start+42] + 
+                                         "d%Y%m%d e%H%M%S")
+            mda["orbit"] = filename[idx_start+45:idx_start+50]
+            # FIXME: swath start and end time is granule dependent.
+            # Get the end time as well! - Adam 2013-06-03:            
             satellite = "NPP"
-            risetime = mda["time"]
-            pname = pass_name(risetime, satellite)
+            start_time = mda["start_time"]
+            pname = pass_name(start_time, satellite)
 
             swath = self._received_passes.get(pname, {"satellite": satellite,
-                                                      "start_time": risetime})
-
-            # FIXME: swath start and end time is granule dependent.
+                                                      "start_time": start_time})
+            swath['end_time'] = end_time
             swath["instrument"] = mda["instrument"]
             swath["format"] = "RDR"
             swath["type"] = "HDF5"
@@ -286,7 +307,7 @@ class MessageReceiver(object):
             swath["type"] = "binary"
             swath["level"] = "0"
         else:
-            return
+            return None
 
         if pathname2.endswith(filename):
             uri = pathname2
