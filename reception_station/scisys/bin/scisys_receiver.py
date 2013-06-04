@@ -257,7 +257,8 @@ class MessageReceiver(object):
             mda["start_time"] = datetime.strptime(filename[idx_start+16:idx_start+33], 
                                                   "d%Y%m%d_t%H%M%S")
             end_time = datetime.strptime(filename[idx_start+16:idx_start+25] + 
-                                         " " + filename[idx_start+35:idx_start+42] + 
+                                         " " + 
+                                         filename[idx_start+35:idx_start+42],
                                          "d%Y%m%d e%H%M%S")
             mda["orbit"] = filename[idx_start+45:idx_start+50]
             # FIXME: swath start and end time is granule dependent.
@@ -471,7 +472,8 @@ if __name__ == '__main__':
 
     else: # Running as a daemon
         import sys
-        pidfile = '/tmp/pytroll.receiver.pid'
+        #pidfile = '/tmp/pytroll.receiver.pid'
+        pidfile = '/var/run/satellit/pytroll.receiver.pid'
         
         if opts.daemon == "status":
             if os.path.exists(pidfile):
