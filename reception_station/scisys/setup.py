@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2012 Martin Raspaud
+# Copyright (c) 2012, 2013 Martin Raspaud
 
 # Author(s):
 
 #   Martin Raspaud <martin.raspaud@smhi.se>
-
+#   
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -24,10 +24,11 @@
 """
 
 
+
 from setuptools import setup
 
 setup(name="SMHI-SAF-scisys_receiver",
-      version="0.2.1",
+      version="0.2.2",
       description="Scisys message interface to pytroll",
       author='The pytroll team',
       author_email='martin.raspaud@smhi.se',
