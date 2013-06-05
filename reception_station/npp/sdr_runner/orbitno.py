@@ -113,7 +113,7 @@ def replace_orbitno(filename):
     fname, n = _re_replace_orbitno.subn('_b%05d' % orbit, fname)
     if n != 1:
         raise IOError("Failed replacing orbit number in filename '%s'" % fname)
-    return os.path.join(dname, fname)
+    return os.path.join(dname, fname), orbit
 
 if __name__ == '__main__':
     import sys

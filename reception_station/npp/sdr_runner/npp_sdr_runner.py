@@ -421,16 +421,11 @@ class ViirsSdrProcessor(object):
         # Do processing:
         LOG.info("RDR to SDR processing on npp/viirs with CSPP start!" + 
                  " Start time = " + str(start_time))
-        if orbnum:
-            LOG.info("Orb = %d" % orbnum)
-            self.orbit = orbnum
-
         LOG.info("File = %s" % str(rdr_filename))
-
         # Fix orbit number in RDR file:
         LOG.info("Fix orbit number in rdr file...")
         try:
-            rdr_filename = fix_rdrfile(rdr_filename)
+            rdr_filename, orbnum = fix_rdrfile(rdr_filename)
         except IOError:
             LOG.error('Failed to fix orbit number in RDR file = ' + 
                       str(urlobj.path))
@@ -442,6 +437,10 @@ class ViirsSdrProcessor(object):
             LOG.error('No TLE file...')
             import traceback
             traceback.print_exc(file=sys.stderr)
+
+        if orbnum:
+            self.orbit = orbnum
+        LOG.info("Orbit number = " + str(self.orbit))
 
         self.glist.append(rdr_filename)
 

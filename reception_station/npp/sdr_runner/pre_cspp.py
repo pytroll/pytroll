@@ -17,10 +17,10 @@ def fix_rdrfile(filename):
     import os
     from sdr_runner.orbitno import replace_orbitno
     
-    newname = replace_orbitno(filename)
+    newname, orbnum = replace_orbitno(filename)
     os.rename(filename, newname)
 
-    return newname
+    return newname, orbnum
 
 
 # ---------------------------------------------------------------------------
