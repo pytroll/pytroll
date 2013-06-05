@@ -403,7 +403,7 @@ class ViirsSdrProcessor(object):
         try:
             orbnum = int(msg.data['orbit_number'])
         except KeyError:
-            LOG.warning("No orbit_number on message! Set to none...")
+            LOG.warning("No orbit_number in message! Set to none...")
             orbnum = None
 
         rdr_filename = urlobj.path

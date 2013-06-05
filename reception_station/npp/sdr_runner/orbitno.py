@@ -9,7 +9,8 @@ from sdr_runner import TLE_DIRS, TLE_FILE_FORMAT
 from sdr_runner import get_npp_stamp
 
 import logging
-LOG = logging.getLogger(__name__)
+#LOG = logging.getLogger(__name__)
+LOG = logging.getLogger('npp_sdr_runner')
 
 class NoTleFile(Exception):
     pass
@@ -21,7 +22,7 @@ TLE_BUFFER = {}
 
 
 def _get_tle_file(timestamp):
-    # Find a not to old TLE file
+    # Find a not too old TLE file
     for path in TLE_DIRS:
         if os.path.isdir(path):
             for i in range(-2, 5):
@@ -34,7 +35,7 @@ def _get_tle_file(timestamp):
                     str(timestamp.strftime(TLE_FILE_FORMAT)))
 
 def get_tle(platform, timestamp=None):
-    stamp = platform + timestamp.strftime('-%Y%m%d')
+    stamp = platform + timestamp.strftime('-%Y%m%d%H')
     try:
         tle = TLE_BUFFER[stamp]
     except KeyError:
@@ -86,7 +87,7 @@ def replace_orbitno(filename):
                         time_val = good_time_val_[0]
 
                     orbit_val = orbital_.get_orbit_number(time_val,
-                                                         tbus_style=TBUS_STYLE)
+                                                          tbus_style=TBUS_STYLE)
                     obj.attrs.modify(orbit_key, [[orbit_val]])
                     counter_[0] += 1
 
