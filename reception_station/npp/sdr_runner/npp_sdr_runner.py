@@ -463,11 +463,6 @@ def npp_rolling_runner():
     """The NPP/VIIRS runner. Listens and triggers processing on RDR granules."""
     from multiprocessing import cpu_count
 
-    # Roll over log files at application start:
-    try:
-        LOG.handlers[0].doRollover()
-    except AttributeError:
-        LOG.warning("No log rotation supported for this handler...")
     LOG.info("*** Start the Suomi NPP SDR runner:")
     LOG.info("THR_LUT_FILES_AGE_DAYS = " + str(THR_LUT_FILES_AGE_DAYS))
 
@@ -549,6 +544,8 @@ if __name__ == "__main__":
                                                     encoding=None, 
                                                     delay=False, 
                                                     utc=True)
+        
+        handler.doRollover()
     else:
         handler = logging.StreamHandler(sys.stderr)
 
