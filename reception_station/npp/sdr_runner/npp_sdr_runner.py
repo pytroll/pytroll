@@ -431,10 +431,13 @@ class ViirsSdrProcessor(object):
             raise RuntimeError("Invalid number of granules to "
                                "process!!!")
         if len(self.glist) == 4:
+            LOG.info("4 granules. Skip the first from the list...")
             del self.glist[0]
         if len(self.glist) == 3:
+            LOG.info("3 granules. Keep the middle one...")
             keeper = self.glist[1]
         if len(self.glist) == 2:
+            LOG.info("2 granules. Keep the first one...")
             keeper = self.glist[0]
         if len(self.glist) == 1:
             # Check start and end time and check if the RDR file
