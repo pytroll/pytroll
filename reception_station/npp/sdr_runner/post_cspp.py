@@ -12,7 +12,8 @@ def cleanup_cspp_workdir(workdir):
 
     filelist = glob('%s/*' % workdir)
     this = [ os.remove(s) for s in filelist if os.path.isfile(s) ]
-    LOG.info("Number of files left after cleaning working dir = " + str(len(this)))
+    filelist = glob('%s/*' % workdir)
+    LOG.info("Number of items left after cleaning working dir = " + str(len(filelist)))
     shutil.rmtree(workdir)
     #os.mkdir(workdir)
     return

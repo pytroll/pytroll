@@ -208,6 +208,11 @@ def run_cspp(*viirs_rdr_files):
     import tempfile
 
     viirs_sdr_call = OPTIONS['viirs_sdr_call']
+    viirs_sdr_options = eval(CONF.get(MODE, 'viirs_sdr_options'))
+    LOG.info("viirs_sdr_options = " + str(viirs_sdr_options))
+    if not isinstance(viirs_sdr_options, list):
+        LOG.warning("No options will be passed to CSPP")
+        viirs_sdr_options = []
 
     try:
         working_dir = tempfile.mkdtemp(dir=CSPP_WORKDIR)
@@ -216,6 +221,7 @@ def run_cspp(*viirs_rdr_files):
 
     # Run the command:
     cmdlist = [viirs_sdr_call]
+    cmdlist.extend(viirs_sdr_options)
     cmdlist.extend(viirs_rdr_files)
     t0_clock = time.clock()
     t0_wall = time.time()
