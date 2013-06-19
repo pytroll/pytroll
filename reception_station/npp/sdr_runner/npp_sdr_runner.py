@@ -86,32 +86,8 @@ _DEFAULT_LOG_FORMAT = '[%(levelname)s: %(asctime)s : %(name)s] %(message)s'
 import os, sys
 _NPP_SDRPROC_LOG_FILE = os.environ.get('NPP_SDRPROC_LOG_FILE', None)
 import logging
-from logging import handlers
 
-from sdr_runner import LOG
-#LOG = logging.getLogger('npp_sdr_runner')
-
-if _NPP_SDRPROC_LOG_FILE:
-    #handler = logging.FileHandler(_NPP_SDRPROC_LOG_FILE)
-    ndays = int(OPTIONS["log_rotation_days"])
-    ncount = int(OPTIONS["log_rotation_backup"])
-    handler = handlers.TimedRotatingFileHandler(_NPP_SDRPROC_LOG_FILE,
-                                                when='midnight', 
-                                                interval=ndays, 
-                                                backupCount=ncount, 
-                                                encoding=None, 
-                                                delay=False, 
-                                                utc=True)
-else:
-    handler = logging.StreamHandler(sys.stderr)
-
-formatter = logging.Formatter(fmt=_DEFAULT_LOG_FORMAT,
-                              datefmt=_DEFAULT_TIME_FORMAT)
-handler.setFormatter(formatter)
-
-handler.setLevel(logging.DEBUG)
-LOG.setLevel(logging.DEBUG)
-LOG.addHandler(handler)
+LOG = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -559,5 +535,30 @@ def npp_rolling_runner():
 
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
+
+    from logging import handlers
+
+    if _NPP_SDRPROC_LOG_FILE:
+        # handler = logging.FileHandler(_NPP_SDRPROC_LOG_FILE)
+        ndays = int(OPTIONS["log_rotation_days"])
+        ncount = int(OPTIONS["log_rotation_backup"])
+        handler = handlers.TimedRotatingFileHandler(_NPP_SDRPROC_LOG_FILE,
+                                                    when='midnight', 
+                                                    interval=ndays, 
+                                                    backupCount=ncount, 
+                                                    encoding=None, 
+                                                    delay=False, 
+                                                    utc=True)
+    else:
+        handler = logging.StreamHandler(sys.stderr)
+
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(fmt=_DEFAULT_LOG_FORMAT,
+                                  datefmt=_DEFAULT_TIME_FORMAT)
+    handler.setFormatter(formatter)
+    logging.getLogger('').addHandler(handler)
+    logging.getLogger('').setLevel(logging.DEBUG)
+
+    LOG = logging.getLogger('npp_sdr_runner')
 
     npp_rolling_runner()

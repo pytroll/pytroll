@@ -7,9 +7,8 @@ from datetime import datetime, timedelta
 import numpy as np
 import pyorbital.orbital as orb
 
-#import logging
-#LOG = logging.getLogger(__name__)
-from sdr_runner import LOG
+import logging
+LOG = logging.getLogger(__name__)
 
 TLEDIR = "/data/24/saf/polar_in/tle2"
 
