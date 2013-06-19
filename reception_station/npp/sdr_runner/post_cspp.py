@@ -4,9 +4,7 @@ and move the SDR granules to a destination directory"""
 import os, shutil
 from glob import glob
 from sdr_runner.orbitno import TBUS_STYLE
-
-import logging
-LOG = logging.getLogger(__name__)
+from sdr_runner import LOG
 
 def cleanup_cspp_workdir(workdir):
     """Clean up the CSPP working dir after processing"""

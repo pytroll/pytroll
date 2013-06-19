@@ -88,7 +88,8 @@ _NPP_SDRPROC_LOG_FILE = os.environ.get('NPP_SDRPROC_LOG_FILE', None)
 import logging
 from logging import handlers
 
-LOG = logging.getLogger('npp_sdr_runner')
+from sdr_runner import LOG
+#LOG = logging.getLogger('npp_sdr_runner')
 
 if _NPP_SDRPROC_LOG_FILE:
     #handler = logging.FileHandler(_NPP_SDRPROC_LOG_FILE)

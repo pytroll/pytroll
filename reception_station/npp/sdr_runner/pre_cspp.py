@@ -9,6 +9,7 @@ import pyorbital.orbital as orb
 
 #import logging
 #LOG = logging.getLogger(__name__)
+from sdr_runner import LOG
 
 TLEDIR = "/data/24/saf/polar_in/tle2"
 

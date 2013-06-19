@@ -8,9 +8,10 @@ from pyorbital.tlefile import Tle
 from sdr_runner import TLE_DIRS, TLE_FILE_FORMAT
 from sdr_runner import get_npp_stamp
 
-import logging
+#import logging
 #LOG = logging.getLogger(__name__)
-LOG = logging.getLogger('npp_sdr_runner')
+#LOG = logging.getLogger('npp_sdr_runner')
+from sdr_runner import LOG
 
 class NoTleFile(Exception):
     pass

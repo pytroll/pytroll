@@ -4,7 +4,8 @@ import re
 import ConfigParser
 
 import logging
-LOG = logging.getLogger(__name__)
+#LOG = logging.getLogger(__name__)
+LOG = logging.getLogger('npp_sdr_runner')
 
 _RE_NPP_STAMP = re.compile('.*?(([A-Za-z0-9]+)_d(\d+)_t(\d+)_e(\d+)_b(\d+)).*')
 
