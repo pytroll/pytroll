@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2012 Martin Raspaud
+# Copyright (c) 2012, 2013 Martin Raspaud
 
 # Author(s):
 
@@ -27,7 +27,7 @@
 from setuptools import setup
 
 setup(name="SMHI-SAF-scisys_receiver",
-      version="0.2.1",
+      version="0.2.2",
       description="Scisys message interface to pytroll",
       author='The pytroll team',
       author_email='martin.raspaud@smhi.se',
