@@ -334,8 +334,12 @@ class ViirsSdrProcessor(object):
         if self.granule:
             LOG.debug("Granule: " + str(self.granule))
 
-        if msg and not (msg.data['satellite'] == "NPP" and 
-                        msg.data['instrument'] == 'viirs'):
+        if msg is None and self.granule:
+            # The swath is assumed to be finished now
+            self.granule = None
+            return False
+        elif msg and not (msg.data['satellite'] == "NPP" and 
+                          msg.data['instrument'] == 'viirs'):
             LOG.info("Not a Suomi NPP VIIRS scene. Continue...")
             return True
         elif msg is None:
