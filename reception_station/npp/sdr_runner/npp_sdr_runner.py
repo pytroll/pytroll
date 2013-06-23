@@ -348,8 +348,8 @@ class ViirsSdrProcessor(object):
         if self.granule:
             LOG.debug("Granule: " + str(self.granule))
 
-        elif msg and not (msg.data['satellite'] == "NPP" and 
-                          msg.data['instrument'] == 'viirs'):
+        if msg and not (msg.data['satellite'] == "NPP" and 
+                        msg.data['instrument'] == 'viirs'):
             LOG.info("Not a Suomi NPP VIIRS scene. Continue...")
             return True
         elif msg is None:
@@ -431,9 +431,9 @@ class ViirsSdrProcessor(object):
         LOG.info("Before call to spawn_cspp. Argument list = " + 
                  str([self.granule]))
         self.cspp_results.append(self.pool.apply_async(spawn_cspp, 
-                                                       self.granule,
-                                                       self.working_dir,
-                                                       [self.granule]))
+                                                       args=(self.granule,
+                                                             self.working_dir,
+                                                             [self.granule])))
                                                        
         if self.fullswath:
             LOG.info("Full swath. Break granules loop")
