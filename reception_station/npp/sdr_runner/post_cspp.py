@@ -19,19 +19,20 @@ def cleanup_cspp_workdir(workdir):
     return
 
 
-def get_sdr_files(sdr_dir):
+def get_sdr_files(sdr_dir, start_t):
     """Get the sdr filenames (all M- and I-bands plus geolocation for the
-    direct readout swath"""
+    direct readout swath or granule. Identified by the start time"""
 
+    timestr = start_t.strftime('d%Y%m%d_t%H%M%S')
     # VIIRS M-bands + geolocation:
-    mband_files = (glob(os.path.join(sdr_dir, 'SVM??_npp_*.h5')) + 
-                   glob(os.path.join(sdr_dir, 'GM??O_npp_*.h5')))
+    mband_files = (glob(os.path.join(sdr_dir, 'SVM??_npp_%s*.h5' % timestr)) + 
+                   glob(os.path.join(sdr_dir, 'GM??O_npp_%s*.h5' % timestr)))
     # VIIRS I-bands + geolocation:
-    iband_files = (glob(os.path.join(sdr_dir, 'SVI??_npp_*.h5')) + 
-                   glob(os.path.join(sdr_dir, 'GI??O_npp_*.h5')))
+    iband_files = (glob(os.path.join(sdr_dir, 'SVI??_npp_%s*.h5' % timestr)) + 
+                   glob(os.path.join(sdr_dir, 'GI??O_npp_%s*.h5' % timestr)))
     # VIIRS DNB band + geolocation:
-    dnb_files = (glob(os.path.join(sdr_dir, 'SVDNB_npp_*.h5')) + 
-                 glob(os.path.join(sdr_dir, 'GDNBO_npp_*.h5')))
+    dnb_files = (glob(os.path.join(sdr_dir, 'SVDNB_npp_%s*.h5' % timestr)) + 
+                 glob(os.path.join(sdr_dir, 'GDNBO_npp_%s*.h5' % timestr)))
 
     return sorted(mband_files) + sorted(iband_files) + sorted(dnb_files)
 
@@ -85,22 +86,3 @@ def pack_sdr_files(sdrfiles, base_dir, subdir):
         retvl.append(newfilename)
 
     return retvl
-
-# --------------------------------
-if __name__ == "__main__":    
-    import sys
-    if len(sys.argv) < 2:
-        print "Usage %s <cspp work dir>" % sys.argv[0]
-        sys.exit()
-    else:
-        # SDR DIR:
-        CSPP_WRKDIR = sys.argv[1]
-
-    rootdir = "/san1/pps/import/PPS_data/source"
-    from sdr_runner import get_datetime_from_filename
-    FILES = get_sdr_files(CSPP_WRKDIR)
-    start_time = get_datetime_from_filename(FILES[0])
-
-    subd = create_subdirname(start_time)
-    pack_sdr_files(FILES, rootdir, subd)
-    make_okay_files(rootdir, subd)

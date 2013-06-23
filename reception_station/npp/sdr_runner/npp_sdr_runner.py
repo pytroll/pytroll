@@ -274,33 +274,19 @@ def publish_sdr(publisher, result_files):
         LOG.debug("sending: " + str(msg))
         publisher.send(msg)
 
-def spawn_cspp(current_granule, workdir, *glist):
-    """Spawn a CSPP run on the set of RDR files given"""
+def spawn_cspp(granule, starttime, workdir):
+    """Spawn a CSPP run on the one RDR file given"""
 
-    LOG.info("Start CSPP: RDR files = " + str(glist))
-    run_cspp(workdir, *glist)
+    LOG.info("Start CSPP: RDR file = " + granule)
+    run_cspp(workdir, granule)
     LOG.info("CSPP SDR processing finished...")
     # Assume everything has gone well!
-    new_result_files = get_sdr_files(workdir)
+    new_result_files = get_sdr_files(workdir, starttime)
     if len(new_result_files) == 0:
         LOG.warning("No SDR files available. CSPP probably failed!")
         return []
 
-    LOG.info("current_granule = " + str(current_granule))
-    LOG.info("glist = " + str(glist))
-    if current_granule in glist and len(glist) == 1:
-        LOG.info("Current granule is identical to the 'list of granules'" + 
-                 " No sdr result files will be skipped")
-        return new_result_files
-        
-    # Only bother about the "current granule" - skip the rest
-    start_time = get_datetime_from_filename(current_granule)
-    start_str = start_time.strftime("d%Y%m%d_t%H%M%S")
-    result_files = [new_file
-                    for new_file in new_result_files
-                    if start_str in new_file]
-    
-    return result_files
+    return new_result_files
 
 
 class ViirsSdrProcessor(object):
@@ -432,8 +418,8 @@ class ViirsSdrProcessor(object):
                  str([self.granule]))
         self.cspp_results.append(self.pool.apply_async(spawn_cspp, 
                                                        args=(self.granule,
-                                                             self.working_dir,
-                                                             [self.granule])))
+                                                             start_time,
+                                                             self.working_dir)))
                                                        
         if self.fullswath:
             LOG.info("Full swath. Break granules loop")
