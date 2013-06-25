@@ -76,6 +76,7 @@ from sdr_runner.post_cspp import (get_sdr_files,
                                   pack_sdr_files, make_okay_files,
                                   cleanup_cspp_workdir)
 from sdr_runner.pre_cspp import fix_rdrfile
+import tempfile
 
 #: Default time format
 _DEFAULT_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
@@ -308,24 +309,20 @@ class ViirsSdrProcessor(object):
         self.pass_start_time = None
         self.result_files = []
         self.sdr_home = OPTIONS['level1_home']
+        self._current_granule_time = None
 
     def initialise(self):
         """Initialise the processor"""
         self.fullswath = False
         self.cspp_results = []
-        import tempfile
-        try:
-            self.working_dir = tempfile.mkdtemp(dir=CSPP_WORKDIR)
-        except OSError:
-            self.working_dir = tempfile.mkdtemp()
-
+        self.working_dir = None
         self.granule = None
         self.pass_start_time = None
         self.result_files = []
+        self._current_granule_time = None
 
     def pack_sdr_files(self, subd):
         return pack_sdr_files(self.result_files, self.sdr_home, subd)
-
 
     def run(self, msg):
         """Start the VIIRS SDR processing using CSPP on one rdr granule"""
@@ -334,9 +331,9 @@ class ViirsSdrProcessor(object):
         if self.granule:
             LOG.debug("Granule: " + str(self.granule))
 
-        if msg is None and self.granule:
+        if msg is None and self.pass_start_time:
             # The swath is assumed to be finished now
-            self.granule = None
+            LOG.info("The pass is assumed to be finished now...")
             return False
         elif msg and not (msg.data['satellite'] == "NPP" and 
                           msg.data['instrument'] == 'viirs'):
@@ -357,13 +354,16 @@ class ViirsSdrProcessor(object):
         LOG.info("Ok... " + str(urlobj.netloc))
         LOG.info("Sat and Instrument: " + str(msg.data['satellite']) 
                  + " " + str(msg.data['instrument']))
-                    
-        start_time = msg.data['start_time']
+         
+        # The start time of the granule, NOT the pass!
+        start_time = get_datetime_from_filename(self.granule)
+        self._current_granule_time = start_time
+
         try:
             end_time = msg.data['end_time']
         except KeyError:
             LOG.warning("No end_time in message! Guessing start_time + 86 seconds...")
-            end_time = msg.data['start_time'] + timedelta(seconds=86)
+            end_time = start_time + timedelta(seconds=86)
         try:
             orbnum = int(msg.data['orbit_number'])
         except KeyError:
@@ -382,6 +382,16 @@ class ViirsSdrProcessor(object):
                           "but is not there! File = " + 
                           rdr_filename)
 
+        if not self.working_dir:
+            try:
+                self.working_dir = tempfile.mkdtemp(dir=CSPP_WORKDIR)
+            except OSError:
+                self.working_dir = tempfile.mkdtemp()
+            finally:
+                LOG.info("Create new working dir...")
+
+        LOG.info("Working dir = " + str(self.working_dir))
+
         # Do processing:
         LOG.info("RDR to SDR processing on npp/viirs with CSPP start!" + 
                  " Start time = " + str(start_time))
@@ -392,7 +402,7 @@ class ViirsSdrProcessor(object):
             rdr_filename, orbnum = fix_rdrfile(rdr_filename)
         except IOError:
             LOG.exception('Failed to fix orbit number in RDR file = ' + 
-                      str(urlobj.path))
+                          str(urlobj.path))
         except sdr_runner.orbitno.NoTleFile:
             LOG.error('Failed to fix orbit number in RDR file = ' + 
                       str(urlobj.path))
@@ -414,7 +424,9 @@ class ViirsSdrProcessor(object):
         else:
             LOG.info("One granule: Run CSPP on it...")
 
-        start_time = get_datetime_from_filename(self.granule)
+        #start_time = msg.data['start_time']
+        # The start time of the pass should be equal to the start time of the
+        # first granule:
         if self.pass_start_time is None:
             self.pass_start_time = start_time
 
@@ -461,7 +473,6 @@ def npp_rolling_runner():
                      LEVEL1_PUBLISH_PORT) as publisher:
             while True:
                 viirs_proc.initialise()
-                LOG.info("Working dir = " + str(viirs_proc.working_dir))
                 for msg in subscr.recv(timeout=90):
                     status = viirs_proc.run(msg)
                     if not status:
