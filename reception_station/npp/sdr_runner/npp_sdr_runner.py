@@ -354,16 +354,7 @@ class ViirsSdrProcessor(object):
         LOG.info("Ok... " + str(urlobj.netloc))
         LOG.info("Sat and Instrument: " + str(msg.data['satellite']) 
                  + " " + str(msg.data['instrument']))
-         
-        # The start time of the granule, NOT the pass!
-        start_time = get_datetime_from_filename(self.granule)
-        self._current_granule_time = start_time
 
-        try:
-            end_time = msg.data['end_time']
-        except KeyError:
-            LOG.warning("No end_time in message! Guessing start_time + 86 seconds...")
-            end_time = start_time + timedelta(seconds=86)
         try:
             orbnum = int(msg.data['orbit_number'])
         except KeyError:
@@ -376,25 +367,6 @@ class ViirsSdrProcessor(object):
             LOG.warning("Not an rdr file! Continue")
             return True
 
-        # Check if the file exists:
-        if not os.path.exists(rdr_filename):
-            raise IOError("File is reported to be dispatched " + 
-                          "but is not there! File = " + 
-                          rdr_filename)
-
-        if not self.working_dir:
-            try:
-                self.working_dir = tempfile.mkdtemp(dir=CSPP_WORKDIR)
-            except OSError:
-                self.working_dir = tempfile.mkdtemp()
-            finally:
-                LOG.info("Create new working dir...")
-
-        LOG.info("Working dir = " + str(self.working_dir))
-
-        # Do processing:
-        LOG.info("RDR to SDR processing on npp/viirs with CSPP start!" + 
-                 " Start time = " + str(start_time))
         LOG.info("File = %s" % str(rdr_filename))
         # Fix orbit number in RDR file:
         LOG.info("Fix orbit number in rdr file...")
@@ -412,7 +384,37 @@ class ViirsSdrProcessor(object):
             self.orbit = orbnum
         LOG.info("Orbit number = " + str(self.orbit))
 
+        # Check if the file exists:
+        if not os.path.exists(rdr_filename):
+            raise IOError("File is reported to be dispatched " + 
+                          "but is not there! File = " + 
+                          rdr_filename)
+
         self.granule = rdr_filename
+         
+        # The start time of the granule, NOT the pass!
+        start_time = get_datetime_from_filename(self.granule)
+        self._current_granule_time = start_time
+
+        try:
+            end_time = msg.data['end_time']
+        except KeyError:
+            LOG.warning("No end_time in message! Guessing start_time + 86 seconds...")
+            end_time = start_time + timedelta(seconds=86)
+
+        if not self.working_dir:
+            try:
+                self.working_dir = tempfile.mkdtemp(dir=CSPP_WORKDIR)
+            except OSError:
+                self.working_dir = tempfile.mkdtemp()
+            finally:
+                LOG.info("Create new working dir...")
+
+        LOG.info("Working dir = " + str(self.working_dir))
+
+        # Do processing:
+        LOG.info("RDR to SDR processing on npp/viirs with CSPP start!" + 
+                 " Start time = " + str(start_time))
 
         # Check start and end time and check if the RDR file
         # contains several granules (a full local swath):
