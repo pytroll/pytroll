@@ -24,10 +24,12 @@ If you want to contact us, you can use the following mailing list:
 https://groups.google.com/group/pytroll
 
 .. note::
-   mpop_ version 0.13.0 with a new avhrr aapp level1b reader in pure python is out!
+   A two day Pytroll workshop will be held in Norrköping, Sweden end of
+   November (25-26). Please send a message on the pytroll mailing list
+   (pytroll@googlegroups.com) if you are interested.
 
 
-The available python packages at the moment are:
+The available pytroll python packages at the moment are:
 
 * pyresample_ for resampling satellite data
 * mipp_ for reading weather satellite data
