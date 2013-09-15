@@ -44,10 +44,8 @@ Loading
 =======
 
     >>> from mpop.satellites import PolarFactory
-    >>> import mpop.imageo.palettes
-    >>> from mpop.imageo import geo_image
     >>> from datetime import datetime
-    >>> orbit = None
+    >>> orbit = ''
     >>> time_slot = datetime(2012, 12, 10, 11, 3)
     >>> glbd = PolarFactory.create_scene('noaa', '19', "avhrr", time_slot, orbit, variant='regional')
     >>> glbd.load(['CloudType'])
@@ -71,11 +69,13 @@ interpolating and extrapolating the longitudes and latitudes on the tie point
 grid. This is accomplished using the python-geotiepoints_ tool, but this is
 transparent to the user:
 
-    >>> print glbd['CloudType'].area.lats.data.shape
+    >>> print glbd['CloudType'].area.lats.shape
     (351, 2048)
 
 Now lets visualise the cloudtype data using the Nowcasting SAF palette:
 
+    >>> import mpop.imageo.palettes
+    >>> from mpop.imageo import geo_image
     >>> palette = mpop.imageo.palettes.cms_modified()
     >>> img = geo_image.GeoImage(glbd['CloudType'].cloudtype.data, None, time_slot, 
                                  fill_value = (0), mode = "P", palette = palette)
@@ -85,7 +85,7 @@ Now lets visualise the cloudtype data using the Nowcasting SAF palette:
 
 And for Metop-A:
 
-   >>> orbit = None
+   >>> orbit = ''
    >>> time_slot = datetime(2012, 12, 12, 8, 57)
    >>> glbd = PolarFactory.create_scene('metop', 'a', "avhrr", 
                                          time_slot, orbit, variant='regional')
@@ -138,7 +138,7 @@ swath:
     >>> from mpop.imageo import geo_image
     >>> from datetime import datetime, timedelta
 
-    >>> orbit = None
+    >>> orbit = ''
     >>> starttime = datetime(2012, 12, 10, 11, 0)
     >>> endtime = datetime(2012, 12, 10, 11, 15)
 
