@@ -49,6 +49,12 @@ tslots = [#datetime(2013, 3, 12, 10, 34),
 
 # gs = []
 
+for t in tslots:
+
+    g = PolarFactory.create_scene("npp", "", "viirs", t, orbit="07108")
+    
+    g.load(g.image.green_snow.prerequisites | g.image.hr_overview.prerequisites
+           | g.image.dnb.prerequisites)
 
 # for t in tslots[5:6]:
 
@@ -59,7 +65,8 @@ tslots = [#datetime(2013, 3, 12, 10, 34),
 
 #     gs.append(g)
 
-# import mpop.scene
+"""
+l = g.project("worldeqc30km")
 
 # g = mpop.scene.assemble_segments(gs)
 
@@ -69,6 +76,10 @@ tslots = [#datetime(2013, 3, 12, 10, 34),
 # l.image.hr_overview().save("/tmp/ov_world.png")
 # l.image.dnb().save("/tmp/dnb_world.png")
 
+l.image.green_snow().save("/tmp/gs_euron1.png")
+l.image.hr_overview().save("/tmp/ov_euron1.png")
+l.image.dnb().save("/tmp/dnb_euron1.png")
+"""
 
 # l = g.project("euron1")
 
@@ -76,11 +87,13 @@ tslots = [#datetime(2013, 3, 12, 10, 34),
 # l.image.hr_overview().save("/tmp/ov_euron1.png")
 # l.image.dnb().save("/tmp/dnb_euron1.png")
 
-# l = g.project("scan")
+"""
+l = g.project("ssea250")
 
-# l.image.green_snow().save("/tmp/gs_scan.png")
-# l.image.hr_overview().save("/tmp/ov_scan.png")
-# l.image.dnb().save("/tmp/dnb_scan.png")
+l.image.green_snow().save("/tmp/gs_ssea250.png")
+l.image.hr_overview().save("/tmp/ov_ssea250.png")
+l.image.dnb().save("/tmp/dnb_ssea250.png")
+"""
 
 # l = g.project("ssea250")
 
@@ -225,5 +238,5 @@ raw_input("end")
 # };
 
 
-# """
+raw_input('stop')
 
