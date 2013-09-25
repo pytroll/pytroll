@@ -61,7 +61,7 @@ to have a look and give us a hand):
 Satellites supported (imager instruments) at the moment by the reader/processor
 modules include: 
 
- - Meteosat series (tested with 7, 8, 9)
+ - Meteosat series (tested with 7, 8, 9, 10)
  - GOES series, in HRIT/LRIT format (tested with 11, 12, 13, 15)
  - MTSAT series, in HRIT/LRIT format (tested with 1R, 2)
  - Electro L, in HRIT/LRIT format (tested with N1)
