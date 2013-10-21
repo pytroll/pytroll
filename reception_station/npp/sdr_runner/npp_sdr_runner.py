@@ -495,8 +495,8 @@ def npp_rolling_runner():
 
                 publish_sdr(publisher, sdr_files)
                 
-                LOG.info("Cleaning up directory %s" % viirs_proc.working_dir)
-                cleanup_cspp_workdir(viirs_proc.working_dir)
+                #LOG.info("Cleaning up directory %s" % viirs_proc.working_dir)
+                #cleanup_cspp_workdir(viirs_proc.working_dir)
                 viirs_proc.working_dir = None
 
                 LOG.info("Now that SDR processing has completed, " + 
