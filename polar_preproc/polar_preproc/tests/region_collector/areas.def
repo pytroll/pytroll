@@ -1,0 +1,410 @@
+VERSION: 1.1
+
+#-------------------------------------------------------------------------------
+#
+# MSG
+#
+#-------------------------------------------------------------------------------
+
+REGION: MSGF {
+        NAME:          Full globe MSG image 0 degrees
+        PCS_ID:        geos0
+        PCS_DEF:       proj=geos, lon_0=0.0, a=6378144.0, b=6356759.0, h=35785831.0, rf=295.49
+        XSIZE:         3712
+        YSIZE:         3712
+        AREA_EXTENT:   (-5568742.4, -5568742.4, 5568742.4, 5568742.4)
+#        AREA_EXTENT:   (-5567242.2, -5568742.4, 5568742.4, 5567242.2)
+};
+
+REGION: MSGNH {
+        NAME:          Northern half globe MSG image 0 degrees
+        PCS_ID:        geos0
+        PCS_DEF:       proj=geos, lon_0=0.0, a=6378144.0, b=6356759.0, h=35785831.0, rf=295.49
+        XSIZE:         3712
+        YSIZE:         1856
+        AREA_EXTENT:   (-5568742.4, 0.00, 5568742.4, 5568742.4)
+};
+
+REGION: MSGNQ {
+        NAME:          Northern quarter globe MSG image 0 degrees
+        PCS_ID:        geos0
+        PCS_DEF:       proj=geos, lon_0=0.0, a=6378144.0, b=6356759.0, h=35785831.0, rf=295.49
+        XSIZE:         3712
+        YSIZE:         928
+        AREA_EXTENT:   (-5568742.4, 2919389.2, 5568742.4, 5703760.4)
+};
+
+REGION: MSGNH_S {
+        NAME:          A shunk of the northern half globe MSG image 0 degrees (covering areaS)
+        PCS_ID:        geos0
+        PCS_DEF:       proj=geos, lon_0=0.0, a=6378144.0, b=6356759.0, h=35785831.0, rf=295.49
+        XSIZE:         3712
+        YSIZE:         1128
+        AREA_EXTENT:   (-5568742.4, 2184291.2, 5568742.4, 5568742.4)
+};
+
+REGION: MSGHRVN {
+        NAME:          High resolution northern quarter globe MSG image 0 degrees
+        PCS_ID:        geos0
+        PCS_DEF:       proj=geos, lon_0=0.0, a=6378144.0, b=6356759.0, h=35785831.0, rf=295.49
+        XSIZE:         11136
+        YSIZE:         2784
+        AREA_EXTENT:   (-5568742.4, 2655354.0, 5568742.4, 5439725.2)
+};
+
+REGION: nwc_area_S {
+        NAME:          Region on NWCSAF corresponding to area S
+        PCS_ID:        nwc_area_S
+        PCS_DEF:       proj=geos, a=6378169.0, b=6356584.0, h=35785831.0, lon_0=0
+        XSIZE:         1900
+        YSIZE:         1100
+        AREA_EXTENT:   (-2526373.46, 2109141.39, 3174386.54, 5409581.39)
+};
+
+REGION: nwc_area_A {
+        NAME:          Region on NWCSAF corresponding to area A
+        PCS_ID:        nwc_area_A
+        PCS_DEF:       proj=geos, a=6378169.0, b=6356584.0, h=35785831.0, lon_0=0
+        XSIZE:         2100
+        YSIZE:         1300
+        AREA_EXTENT:   (-3122408.54, 1432898.42, 3178431.46, 5333418.17)
+};
+
+REGION: web_earth {
+        NAME:          Small full globe MSG image 0 degrees
+        PCS_ID:        web_earth
+        PCS_DEF:       proj=geos, lon_0=0.0, a=6378144.0, b=6356759.0, h=35785831.0, rf=295.49
+        XSIZE:         640
+        YSIZE:         640
+        AREA_EXTENT:   (-5568742.4, -5568742.4, 5568742.4, 5568742.4)
+};
+
+REGION: msg_pc {
+        NAME:          Plate Caree map, 0 degrees
+        PCS_ID:        msg_pc
+        PCS_DEF:       proj=eqc, lon_0=0.0, lat_0=0.0
+        XSIZE:         6666
+        YSIZE:         6666
+        AREA_EXTENT:   (-10007255.76, -10007255.76, 10007255.76, 10007255.76 )
+};
+
+REGION: msg_pc_north {
+        NAME:          Plate Caree map, 0 degrees
+        PCS_ID:        msg_pc_dr
+        PCS_DEF:       proj=eqc, lon_0=0.0, lat_0=0.0
+        XSIZE:         4000
+        YSIZE:         2000
+        AREA_EXTENT:   (-7792364.36, 0.00, 7792364.36, 7792364.36)
+};
+
+REGION: msg_areaS {
+        NAME:          Europe 5km/pixel
+        PCS_ID:        msg_areaS
+        PCS_DEF:       proj=stere,lon_0=8.00,lat_0=50.00,lat_ts=50.00,ellps=WGS84
+        XSIZE:         1170
+        YSIZE:         1000
+        AREA_EXTENT:   (-3211966.34,-2783728.10,2638033.66,2216271.90)
+};
+        
+REGION: msg_areaD {
+        NAME:          Europe 3km/pixel
+        PCS_ID:        msg_areaD
+        PCS_DEF:       proj=stere,lon_0=8.00,lat_0=50.00,lat_ts=50.00,ellps=WGS84
+        XSIZE:         800
+        YSIZE:         870
+        AREA_EXTENT:   (-1370912.16,-909970.17,1029087.84,1700029.83)
+};
+        
+REGION: msg_areaC {
+        NAME:          Europe 6km/pixel
+        PCS_ID:        msg_areaC
+        PCS_DEF:       proj=stere,lon_0=8.00,lat_0=50.00,lat_ts=50.00,ellps=WGS84
+        XSIZE:         640
+        YSIZE:         480
+        AREA_EXTENT:   (-2236222.66,-1691516.29,1603777.34,1188483.71)
+};
+        
+REGION: msg_areaE {
+        NAME:          Europe 3km/pixel
+        PCS_ID:        msg_areaD
+        PCS_DEF:       proj=stere,lon_0=8.00,lat_0=50.00,lat_ts=50.00,ellps=WGS84
+        XSIZE:         640
+        YSIZE:         480
+        AREA_EXTENT:   (-928319.22,-107274.19,991680.78,1332725.81)
+};
+
+REGION: msg_faeoC {
+        NAME:          Faroe Islands 6km/pixel
+        PCS_ID:        msg_faeoC
+        PCS_DEF:       proj=stere,lon_0=-7.00,lat_0=60.00,lat_ts=60.00,ellps=WGS84
+        XSIZE:         444
+        YSIZE:         444
+        AREA_EXTENT:   (-1332000.00,-1332000.00,1332000.00,1332000.00)
+};
+
+REGION: msg_faeoE {
+        NAME:          Faroe Islands 3km/pixel
+        PCS_ID:        msg_faeoE
+        PCS_DEF:       proj=stere,lon_0=-7.00,lat_0=60.00,lat_ts=60.00,ellps=WGS84
+        XSIZE:         444
+        YSIZE:         444
+        AREA_EXTENT:   (-666000.00,-666000.00,666000.00,666000.00)
+};
+
+REGION: msg_misc_billund {
+        NAME:           Area for billund
+        PCS_ID:         msg_misc_billund
+        PCS_DEF:        proj=stere,lon_0=10.00,lat_ts=50.00,lat_0=40.00,ellps=WGS84
+        XSIZE:          940
+        YSIZE:          718
+        AREA_EXTENT:    (-2955250.19,-1331658.37,2684749.81,2976341.63)
+};
+
+REGION: msg_misc_bmovie {
+        NAME:           Area for bmovie
+        PCS_ID:         msg_misc_bmovie
+        PCS_DEF:        proj=stere,lon_0=7.0,lat_0=51.0,lat_ts=50.0,ellps=WGS84
+        XSIZE:          800
+        YSIZE:          800
+        AREA_EXTENT:    (-2000000.00,-2000000.00,2000000.00,2000000.00)
+};
+
+REGION: msg_misc_bweb3 {
+        NAME:           Area for bweb3
+        PCS_ID:         msg_misc_bweb3
+        PCS_DEF:        proj=lcc,lon_0=0.0,lat_1=15.0,lat_2=60.0,ellps=WGS84
+        XSIZE:          500
+        YSIZE:          375
+        AREA_EXTENT:    (-2055000.14,3771266.03,3044999.86,7596266.03)
+};
+
+REGION: msg_misc_beffo {
+        NAME:           Area for beffo
+        PCS_ID:         msg_misc_beffo
+        PCS_DEF:        proj=stere,lon_0=0.0,lat_ts=60.0,lat_0=90.0,ellps=WGS84
+        XSIZE:          768
+        YSIZE:          576
+        AREA_EXTENT:    (-2044119.37,-6486985.94,3331880.63,-2454985.94)
+};
+
+REGION: msg_opmet_dk {
+        NAME:           Area for opmet
+        PCS_ID:         opmet_dk
+        PCS_DEF:        proj=stere,lon_0=10.00,lat_0=60.00,lat_ts=60.00,ellps=WGS84
+        XSIZE:          800
+        YSIZE:          600
+        AREA_EXTENT:    (-1761411.84,-1305228.71,1838588.16,1394771.29)  
+};
+
+REGION: msg_opmet_scoresby {
+        NAME:           Northwest Atlantic area for opmet
+        PCS_ID:         opmet_scoresby
+        PCS_DEF:        proj=stere,lon_0=-24.,lat_ts=90.,lat_0=90.,ellps=WGS84
+        XSIZE:          800
+        YSIZE:          600
+        AREA_EXTENT:    (-2313215.77,-4285175.11,2486784.23,-685175.11)
+};
+
+REGION: msg_euro_north {
+        NAME:           Europe 3km/pixel
+        PCS_ID:         euro_north
+        PCS_DEF:        proj=stere,lon_0=8.00,lat_0=50.00,lat_ts=50.00,ellps=WGS84
+        XSIZE:          800
+        YSIZE:          870
+        AREA_EXTENT:    (-1370912.16,-909970.17,1029087.84,1700029.83)
+};
+
+REGION: euro_dk_hr {
+        NAME:           Norhtern Europe 2km/pixel
+        PCS_ID:         euro_dk_hr
+        PCS_DEF:        proj=stere,lon_0=12.00,lat_0=55.00,lat_ts=55.00,ellps=WGS84
+        XSIZE:          640
+        YSIZE:          480
+        AREA_EXTENT:    (-840000, -380000, 440000, 580000)
+};
+
+#-------------------------------------------------------------------------------
+#
+# NPP
+#
+#-------------------------------------------------------------------------------
+
+# VIIRS test areas:
+REGION: npp_sample_m {
+        NAME:           North America - NPP sample data - M-bands
+        PCS_ID:         laeaw12060
+        PCS_DEF:        proj=laea,a=6370997.0,lat_0=60.0,lon_0=-120.0
+        XSIZE:          1500
+        YSIZE:          1500
+        AREA_EXTENT:    (-1700000, -1400000, 1100000, 1400000)
+};
+
+REGION: npp_sample_i {
+        NAME:           North America - NPP sample data - I-bands
+        PCS_ID:         laeaw12060
+        PCS_DEF:        proj=laea,a=6370997.0,lat_0=60.0,lon_0=-120.0
+        XSIZE:          1200
+        YSIZE:          800
+        AREA_EXTENT:    (-200000, 100000, 400000, 500000)
+};
+
+REGION: krim {
+        NAME:           Krim
+        PCS_ID:         krim
+        PCS_DEF:        proj=stere,lon_0=35.00,lat_0=45.00,lat_ts=45.00,ellps=WGS84
+        XSIZE:          800
+        YSIZE:          800
+        AREA_EXTENT:    (-320000.00,-320000.00,320000.00,320000.00)
+};
+
+REGION: krim_hr {
+        NAME:           Krim HR
+        PCS_ID:         krim_hr
+        PCS_DEF:        proj=stere,lon_0=35.00,lat_0=45.00,lat_ts=45.00,ellps=WGS84
+        XSIZE:          1600
+        YSIZE:          800
+        AREA_EXTENT:    (-320000.00,-160000.00,320000.00,160000.00)
+};
+
+#-------------------------------------------------------------------------------
+#
+# MERIS/MODIS ocean color
+#
+#-------------------------------------------------------------------------------
+
+REGION: marcoast {
+        NAME:           Denmark, big
+        PCS_ID:         marcoast
+        PCS_DEF:        proj=laea,ellps=WGS84,lat_0=56.4,lon_0=14.5
+        XSIZE:          1112
+        YSIZE:          746
+        AREA_EXTENT:    (-584000.00,-338000.00,528000.00,408000.00)
+};
+
+REGION: mcmodel {
+        NAME:           North Sea and the Baltic Sea
+        PCS_ID:         mcmodel
+        PCS_DEF:        proj=laea,ellps=WGS84,lat_0=56.4,lon_0=14.5
+        XSIZE:          2340
+        YSIZE:          1896
+        AREA_EXTENT:    (-1438128.95,-794445.94,901871.05,1101554.06)
+};
+
+REGION: walge {
+        NAME:           Denmark
+        PCS_ID:         walge
+        PCS_DEF:        proj=laea,ellps=WGS84,lat_0=56,lon_0=11
+        XSIZE:          712
+        YSIZE:          646
+        AREA_EXTENT:    (-384000.00,-288000.00,328000.00,358000.00)
+};
+
+REGION: gl_nuuk {
+        NAME:           Greenland, nuuk
+        PCS_ID:         gl_nuuk
+        PCS_DEF:        proj=stere,ellps=WGS84,lon_0=-45,lat_ts=90,lat_0=90
+        XSIZE:          500
+        YSIZE:          500
+        AREA_EXTENT:    (-580293.88,-3148952.21,-80293.88,-2648952.21)
+};
+
+REGION: gl_disco {
+        NAME:           Greenland, disco
+        PCS_ID:         gl_disco
+        PCS_DEF:        proj=stere,ellps=WGS84,lon_0=-45,lat_ts=90,lat_0=90
+        XSIZE:          500
+        YSIZE:          500
+        AREA_EXTENT:    (-622335.07,-2474986.66,-122335.07,-1974986.66)
+};
+
+REGION: gl_daneborg {
+        NAME:           Greenland, daneborg
+        PCS_ID:         gl_daneborg
+        PCS_DEF:        proj=stere,ellps=WGS84,lon_0=-45,lat_ts=90,lat_0=90
+        XSIZE:          250
+        YSIZE:          500
+        AREA_EXTENT:    (555445.03,-1853028.03,805445.03,-1353028.03)
+};
+
+REGION: mar_nordjylland {
+        NAME:           Nordjylland for Marcoast
+        PCS_ID:         mar_nordjylland
+        PCS_DEF:        proj=laea,ellps=WGS84,lat_0=56.0,lon_0=11.0
+        XSIZE:          668
+        YSIZE:          434
+        AREA_EXTENT:    (-183965.1857,76368.3607,16434.8143,206568.3607)
+};
+
+REGION: mar_vestjylland {
+        NAME:           Vestjylland for Marcoast
+        PCS_ID:         mar_vestjylland
+        PCS_DEF:        proj=laea,ellps=WGS84,lat_0=56.0,lon_0=11.0
+        XSIZE:          200
+        YSIZE:          326
+        AREA_EXTENT:    (-213024.4765,-14813.5877,-153024.4765,82986.4123)
+};
+
+REGION: mar_oestjylland {
+        NAME:           Oestjylland for Marcoast
+        PCS_ID:         mar_oestjylland
+        PCS_DEF:        proj=laea,ellps=WGS84,lat_0=56.0,lon_0=11.0
+        XSIZE:          340
+        YSIZE:          388
+        AREA_EXTENT:    (-94545.1419,-43512.8178,7454.8581,72887.1822)
+};
+
+REGION: mar_sydjylland {
+        NAME:           Sydjylland for Marcoast
+        PCS_ID:         mar_sydjylland
+        PCS_DEF:        proj=laea,ellps=WGS84,lat_0=56.0,lon_0=11.0
+        XSIZE:          504
+        YSIZE:          478
+        AREA_EXTENT:    (-194306.6534,-162799.0090,-43106.6534,-19399.0090)
+};
+
+REGION: mar_fyn {
+        NAME:           Fyn for Marcoast
+        PCS_ID:         mar_fyn
+        PCS_DEF:        proj=laea,ellps=WGS84,lat_0=56.0,lon_0=11.0
+        XSIZE:          300
+        YSIZE:          400
+        AREA_EXTENT:    (-83913.2993,-149508.5582,6086.7007,-29508.5582)
+};
+
+REGION: mar_sjaelland {
+        NAME:           Sjaelland for Marcoast
+        PCS_ID:         mar_sjaelland
+        PCS_DEF:        proj=laea,ellps=WGS84,lat_0=56.0,lon_0=11.0
+        XSIZE:          480
+        YSIZE:          460
+        AREA_EXTENT:    (-17873.9536,-100164.1765,126126.0464,37835.8235)
+};
+
+REGION: mar_smaaland {
+        NAME:           Smaalandsfarvandet for Marcoast
+        PCS_ID:         mar_smaaland
+        PCS_DEF:        proj=laea,ellps=WGS84,lat_0=56.0,lon_0=11.0
+        XSIZE:          364
+        YSIZE:          276
+        AREA_EXTENT:    (-6479.1456,-166985.0034,102720.8544,-84185.0034)
+};
+
+REGION: mar_limfjorden {
+        NAME:           Limfjorden for Marcoast
+        PCS_ID:         mar_limfjorden
+        PCS_DEF:        proj=laea,ellps=WGS84,lat_0=56.0,lon_0=11.0
+        XSIZE:          274
+        YSIZE:          252
+        AREA_EXTENT:    (-179009.5276,48291.1799,-96809.5276,123891.1799)
+};
+
+REGION: mar_denmark {
+        NAME:           Denmark, for full resolution
+        PCS_ID:         marcoast
+        PCS_DEF:        proj=laea,ellps=WGS84,lat_0=56.0,lon_0=11.0
+        XSIZE:          3708
+        YSIZE:          2488
+        AREA_EXTENT:    (-584200.00,-338200.00,528200.00,408200.00)
+};
+
+#-------------------------------------------------------------------------------

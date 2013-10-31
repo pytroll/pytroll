@@ -1,0 +1,139 @@
+#!/usr/bin/python
+#
+import os
+import sys
+import re
+import shutil
+from subprocess import call
+import glob
+import getopt
+from datetime import datetime
+
+import loggers.simple as loggers
+LOG = loggers.get('npp-lib')
+
+from polar_preproc import get_npp_stamp, LOG
+
+DATA_DIR = os.path.realpath(os.environ.get('NPP_DATA_DIR', '.'))
+WRK_DIR = os.path.realpath(os.environ.get('NPP_WRK_DIR', '.'))
+LV0_DIR = os.path.realpath(os.environ.get('NPP_LV0_DIR', '.'))
+LV1_DIR = os.path.realpath(os.environ.get('NPP_LV1_DIR', '.'))
+LV2_DIR = os.path.realpath(os.environ.get('NPP_LV2_DIR', '.'))
+
+WRK_DIR = WRK_DIR + "/preproc.%d" % os.getpid()
+remove_wrk_dir = False
+
+def usage():
+    print >> sys.stderr, """usage: npp_preproc [-s] -c <cadu-file>
+       npp_preproc [-s] -r <rdr-file>
+   -s: generate a signal file"""
+    sys.exit(2)
+
+do_signal = False
+cadu_file, lv0_file = '', ''
+opts, argv = getopt.getopt(sys.argv[1:], 'crs')
+try:
+    filename = os.path.realpath(argv[0])
+except IndexError:
+    usage()
+for k, v in opts:
+    if k == '-c':
+        cadu_file = filename
+    elif k == '-r':
+        lv0_file = filename
+    elif k == '-s':
+        do_signal = True
+
+if (not cadu_file and not lv0_file) or (cadu_file and lv0_file):
+    usage()
+
+parent_dir = os.getcwd()
+os.mkdir(WRK_DIR)
+os.chdir(WRK_DIR)
+
+#-------------------------------------------------------------------------------
+#
+# RT-STPS
+#
+#-------------------------------------------------------------------------------
+if cadu_file:
+    LOG.info("++++ RT-STPS")
+    import rt_stps_prod
+
+    logfile = './RT-STPS.out'
+    lv0_files = []
+    try:
+        lv0_files = rt_stps_prod.do_prod(cadu_file, outdir=LV0_DIR, logfile=logfile)
+    finally:
+        if os.path.isfile(logfile):
+            if lv0_files:
+                stamp = get_npp_stamp(lv0_files[-1])
+            else:            
+                stamp = os.path.splitext(os.path.basename(cadu_file))[0]
+            os.rename(logfile, os.path.join(LV0_DIR, 'RT-STPS_' + str(stamp) + '.log'))
+
+    LOG.info("---- RT-STPS")
+else:
+    lv0_files = (lv0_file,)
+
+#-------------------------------------------------------------------------------
+#
+# CSPP
+#
+#-------------------------------------------------------------------------------
+LOG.info("++++ CSPP")
+import cspp_prod
+
+try:
+    viirs_file = [f for f in lv0_files 
+                  if os.path.basename(f).startswith('RNSCA-RVIRS')][0]
+except IndexError:
+    raise IOError("Found no level-0 RNSCA-RVIRS file")
+
+stamp = get_npp_stamp(viirs_file)
+outdir = os.path.join(LV1_DIR,
+                      '%s_%05d'%(stamp.platform, stamp.orbit_number))
+logfile = './CSPP.out'
+start_file = os.path.join(outdir, '.started')
+stop_file = os.path.join(outdir, '.stopped')
+
+if not os.path.isdir(outdir):
+    os.mkdir(outdir)
+if os.path.isfile(stop_file):
+    os.remove(stop_file)
+
+with open(start_file, 'w') as fp:
+    print >> fp, datetime.now().utcnow(), '\n', cadu_file
+
+try:
+    cspp_prod.do_prod(viirs_file, logfile=logfile)
+finally:
+    if os.path.isfile(logfile):
+        os.rename(logfile, os.path.join(LV1_DIR, 
+                                        'CSPP_' + str(stamp) + '.log'))
+    if os.path.isdir('./log'):
+        import tarfile
+        fp = tarfile.open(os.path.join(LV1_DIR, 'CSPP_' + str(stamp) + 
+                                       '_log.tar'), 'w')
+        try:
+            fp.add('./log', recursive=True)
+        finally:
+            fp.close()
+
+if do_signal:
+    with open(outdir + '.signal', 'w') as fp:
+        print >>fp, outdir
+if cadu_file.endswith('_last'):
+    with open(stop_file, 'w') as fp:
+        print >> fp, datetime.now().utcnow(), '\n', cadu_file
+
+LOG.info("---- CSPP")
+
+#-------------------------------------------------------------------------------
+#
+# Cleanup
+#
+#-------------------------------------------------------------------------------
+os.chdir(parent_dir)
+if remove_wrk_dir:
+    shutil.rmtree(WRK_DIR, ignore_errors=True)

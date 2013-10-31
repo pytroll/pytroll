@@ -21,10 +21,9 @@ case $SMHI_MODE in
 
 utv)
 
-CSPP_HOME="/local_disk/opt/CSPP/1_1"
-CSPP_WORKDIR="/san1/cspp_work"
+SPA_HOME="/local_disk/opt/MODISL1DB_SPA/current"
 APPL_HOME="${HOME}/usr"
-POLAR_PREPROC_CONFIG_DIR="${HOME}/dev/npp_pytroll/pytroll/polar_preproc/etc"
+MODIS_LVL1PROC_LOG_FILE="/var/tmp/satsa_log/modis_lvl1proc.log"
 
         ;;
 
@@ -33,12 +32,22 @@ POLAR_PREPROC_CONFIG_DIR="${HOME}/dev/npp_pytroll/pytroll/polar_preproc/etc"
 
 test)
 
+SPA_HOME="/local_disk/opt/MODISL1DB_SPA/current"
+APPL_HOME="/usr/local"
+MODIS_LVL1PROC_LOG_FILE="/var/log/satellit/modis_lvl1proc.log"
+MODIS_LVL1PROC_CONFIG_DIR="/usr/local/etc"
+
         ;;
 
 ################################################################################
 # PRODUCTION
 
 prod)
+
+SPA_HOME="/local_disk/opt/MODISL1DB_SPA/current"
+APPL_HOME="/usr/local"
+MODIS_LVL1PROC_LOG_FILE="/var/log/satellit/modis_lvl1proc.log"
+MODIS_LVL1PROC_CONFIG_DIR="/usr/local/etc"
 
         ;;
 
@@ -48,9 +57,8 @@ prod)
 
 offline)
 
-CSPP_HOME="/local_disk/opt/CSPP/1_1"
+SPA_HOME="/local_disk/opt/SPA"
 APPL_HOME="${HOME}/usr"
-CSPP_WORKDIR="/san1/cspp_work"
 
         ;;
 
@@ -66,15 +74,10 @@ echo "No SMHI_MODE set..."
 esac
 
 
+export SPA_HOME
+export MODIS_LVL1PROC_LOG_FILE
+export MODIS_LVL1PROC_CONFIG_DIR
 
-
-export CSPP_HOME
-NPP_LVL1PROC=${APPL_HOME}
-export NPP_LVL1PROC
-export CSPP_WORKDIR
-export POLAR_PREPROC_CONFIG_DIR
-
-source ${CSPP_HOME}/cspp_env.sh
-
-python ${APPL_HOME}/bin/npp_dr_runner.py
-
+MODIS_LVL1PROC=${APPL_HOME}
+export MODIS_LVL1PROC
+python ${APPL_HOME}/bin/modis_dr_runner.py
