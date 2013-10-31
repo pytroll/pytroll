@@ -44,6 +44,7 @@ to have a look and give us a hand):
 * python-geotiepoints_ for interpolating (and extrapolation) geographic tiepoints
 * posttroll_ for a higher-level messaging library for pytroll
 * pykdtree_ for really fast nearest neighbour search
+* trollcast_ for realtime sharing of weather satellite data
 
 .. _DMI: http://www.dmi.dk
 .. _SMHI: http://www.smhi.se
@@ -56,12 +57,12 @@ to have a look and give us a hand):
 .. _python-geotiepoints: http://www.github.com/adybbroe/python-geotiepoints
 .. _posttroll: http://github.com/mraspaud/posttroll
 .. _pykdtree: https://github.com/storpipfugl/pykdtree
-
+.. _trollcast: http://github.com/mraspaud/trollcast
 
 Satellites supported (imager instruments) at the moment by the reader/processor
 modules include: 
 
- - Meteosat series (tested with 7, 8, 9)
+ - Meteosat series (tested with 7, 8, 9, 10)
  - GOES series, in HRIT/LRIT format (tested with 11, 12, 13, 15)
  - MTSAT series, in HRIT/LRIT format (tested with 1R, 2)
  - Electro L, in HRIT/LRIT format (tested with N1)
