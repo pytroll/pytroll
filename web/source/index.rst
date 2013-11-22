@@ -45,6 +45,8 @@ to have a look and give us a hand):
 * posttroll_ for a higher-level messaging library for pytroll
 * pykdtree_ for really fast nearest neighbour search
 * trollcast_ for realtime sharing of weather satellite data
+* pyspectral_ to read and manipulate satellite sensor spectral responses and solar irradiance spectra
+
 
 .. _DMI: http://www.dmi.dk
 .. _SMHI: http://www.smhi.se
@@ -58,6 +60,8 @@ to have a look and give us a hand):
 .. _posttroll: http://github.com/mraspaud/posttroll
 .. _pykdtree: https://github.com/storpipfugl/pykdtree
 .. _trollcast: http://github.com/mraspaud/trollcast
+.. _pyspectral: https://github.com/adybbroe/pyspectral
+
 
 Satellites supported (imager instruments) at the moment by the reader/processor
 modules include: 

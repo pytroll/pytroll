@@ -34,6 +34,7 @@ Presentations at the workshop
 * Geotiepoints_
 * Posttroll_
 * Trollcast_
+* Pyspectral_
 * `Other pytroll projects`_
 * Tools_
 
@@ -48,5 +49,6 @@ Presentations at the workshop
 .. _Geotiepoints: https://docs.google.com/presentation/d/1AhdZhgOLlbHHNAAEQv1JflFTmPTV3ziOQLhBF2jQWr8/edit
 .. _Posttroll: https://docs.google.com/presentation/d/18emgrIlTxdz-r-c5UrG6M5Y2QQyJ70g34wKbhWFFsjM/edit
 .. _Trollcast: https://docs.google.com/presentation/d/1I7q6kgm4K2pEL8QP0SJkGsHDH5f3UHnDYe5GCA9NB_g/edit
+.. _Pyspectral: https://docs.google.com/presentation/d/1Re076BDSrzodiPS9fvLZOZdWWejJ7jqo3BqGl_xicp4/edit
 .. _`Other pytroll projects`: https://docs.google.com/presentation/d/1RL9nr2pvo9vG-WaNtckhRJWdO4bLBSPC53nYc3g3mjQ/edit
 .. _Tools: https://docs.google.com/presentation/d/1AMZt0jBMYem8g7tbNOvz9MEWRm-DbwNCBv9KJPA32cE/edit
