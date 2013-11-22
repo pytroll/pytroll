@@ -85,6 +85,7 @@ Contents:
    quickstart_earsnwc
    recipes
    workshop2012
+   workshop2013
 
 Contact us: https://groups.google.com/group/pytroll
 
