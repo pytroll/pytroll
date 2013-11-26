@@ -55,8 +55,9 @@ plugin: here, mipp needs also the filename for prologue and epilogue files.
 
 Note that the section starts with the name of the instrument. This is important
 in the case where several instruments are available for the same satellite.
-Note also that the filename can contain wildcards (`*` and `?`). It is up to the input plugin
-to handle these constructs if needed.
+Note also that the filename can contain wildcards (`*` and `?`). It is up to
+the input plugin to handle these constructs if needed.
+
 
 Some words on NPP VIIRS configuration
 -------------------------------------
@@ -91,8 +92,8 @@ band-type (I- and M-bands and the DNB) has its own geolocation it is common to
 have the geolocation data in separate files, separate from the band-data. Thus,
 the configuration file allows you to specify the naming of these files.
 
-If the parameter `geo_filenames` is not set the geolocation file pointed to by the value of 
-`N_GEO_Ref` given in the SDR file will be used.
+If the parameter `geo_filenames` is not set the geolocation file pointed to by
+the value of `N_GEO_Ref` given in the SDR file will be used.
  
 You can of course keep your archive of NPP VIIRS SDR scenes in separate
 sub-directories, so that each scene or pass has its own directory. This might

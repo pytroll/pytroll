@@ -90,6 +90,7 @@ Contents:
    recipes
    workshop2012
    workshop2013
+   manifest
 
 Contact us: https://groups.google.com/group/pytroll
 
