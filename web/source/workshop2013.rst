@@ -5,6 +5,8 @@ Workshop 2013
 Presentations at the workshop
 =============================
 
+Watch all the presentations on youtube_ !
+
 * `Rationale and motives`_
 * Pyresample_
 * Mpop_
@@ -19,6 +21,7 @@ Presentations at the workshop
 * Tools_
 
 
+.. _youtube: http://www.youtube.com/watch?v=WEk95gxO8sE
 .. _`Rationale and motives`: https://docs.google.com/presentation/d/1dLv5m56ETmr21HsjPTI_N5Ix-2zguUN2-5wKPZ0Z6Fk/edit
 .. _Pyresample: https://docs.google.com/presentation/d/1rkM-5HNqn0Wj5BlIQVFvyzCMYfS_DfnG-zw4OuzrRzU/edit
 .. _Mpop: https://docs.google.com/presentation/d/1drrlj97iNlETq-WNeUJF_01FWDuERyvWRJVTmg1_dd0/edit 
