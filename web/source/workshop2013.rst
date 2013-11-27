@@ -7,6 +7,7 @@ Presentations at the workshop
 
 Watch all the presentations on youtube_ !
 
+* `Pytroll history`_
 * `Rationale and motives`_
 * Pyresample_
 * Mpop_
@@ -17,11 +18,13 @@ Watch all the presentations on youtube_ !
 * Geotiepoints_
 * Posttroll_
 * Trollcast_
+* Pyspectral_
 * `Other pytroll projects`_
 * Tools_
 
 
 .. _youtube: http://www.youtube.com/watch?v=WEk95gxO8sE
+.. _`Pytroll history`: https://docs.google.com/presentation/d/1vrtn0kNEWPQE02sZmQwqSfk1Ax3NO9BW5sRZ8mN-x6w/edit
 .. _`Rationale and motives`: https://docs.google.com/presentation/d/1dLv5m56ETmr21HsjPTI_N5Ix-2zguUN2-5wKPZ0Z6Fk/edit
 .. _Pyresample: https://docs.google.com/presentation/d/1rkM-5HNqn0Wj5BlIQVFvyzCMYfS_DfnG-zw4OuzrRzU/edit
 .. _Mpop: https://docs.google.com/presentation/d/1drrlj97iNlETq-WNeUJF_01FWDuERyvWRJVTmg1_dd0/edit 
@@ -32,5 +35,6 @@ Watch all the presentations on youtube_ !
 .. _Geotiepoints: https://docs.google.com/presentation/d/1AhdZhgOLlbHHNAAEQv1JflFTmPTV3ziOQLhBF2jQWr8/edit
 .. _Posttroll: https://docs.google.com/presentation/d/18emgrIlTxdz-r-c5UrG6M5Y2QQyJ70g34wKbhWFFsjM/edit
 .. _Trollcast: https://docs.google.com/presentation/d/1I7q6kgm4K2pEL8QP0SJkGsHDH5f3UHnDYe5GCA9NB_g/edit
+.. _Pyspectral: https://docs.google.com/presentation/d/1Re076BDSrzodiPS9fvLZOZdWWejJ7jqo3BqGl_xicp4/edit
 .. _`Other pytroll projects`: https://docs.google.com/presentation/d/1RL9nr2pvo9vG-WaNtckhRJWdO4bLBSPC53nYc3g3mjQ/edit
 .. _Tools: https://docs.google.com/presentation/d/1AMZt0jBMYem8g7tbNOvz9MEWRm-DbwNCBv9KJPA32cE/edit
