@@ -55,14 +55,14 @@ Produce what users wants (needs!)
  * Interface for internally developed software
 
     - A typically seen approach is for researchers to develop a full processing
-      chain when they create a new product. As researchers are not trained
+      chain when creating a new product. As researchers are not trained
       software developers this typically leads to poor handling of the
       processing outside the scientific core of the processing chain as well as
       not integrating with existing production environments. A major rewrite of
       the software is normally needed in order to start production.
 
     - This process does not add any value to the end user of the product. With
-      the existence of a well defined interface for a scientific cores the
+      the existence of a well defined interface for a scientific core the
       researchers can focus on creating modules adhering to this interface and
       the development efforts to bring such a module into production will be
       very limited.
@@ -72,15 +72,23 @@ Rapid development response
 
  * Short article-to-production time
 
-    * The shortest possible time from product definition to maximizes the value
-      for end users as development response time decreases and more products
-      can be put into production within a given time frame.
+    * The shortest possible time from product requirements definition to a
+      final product in operations maximizes the value for end users as
+      development response time decreases and more products can be put into
+      production within a given time frame.
 
-    * A framework is needed for developing satellite data processing will limit
+    * A framework is needed for developing satellite data processing that will limit
       the amount of development resources spent on repetitive development.
 
     * An easily configurable production environment will limit the amount of
       resources spent on configuration and maintenance.
+
+    * The programming language Python has been chosen since it
+      - accomodates rapid development
+      - is widely used for scientific applications
+      - has good numerical performance
+      - is easy to use and understand for beginners
+      - is very flexible for experienced software programmers
 
  * Crisis handling
 
@@ -102,8 +110,8 @@ Production system resilience
 
     * Backup of locally received data and derived products
 
-    * Full coverage of these kind of products from EumetCast will not happen in
-      a foreseeable future.
+    * Full coverage of these kind of centrally produced products is unlikely to
+      happen in a foreseeable future.
 
 
 Efficient resource usage
@@ -122,11 +130,18 @@ Efficient resource usage
    resource usage on configuration and maintenance
 
     * Not co-producing processing intense products (typically products derived
-      from local reception not accessible from EumetCast) at institutes saves
-      processing resources and thereby energy.
+      from local reception not accessible from a central processing facility)
+      at institutes saves processing resources and thereby energy.
 
     * Saving resources not configuring and maintaining all processing systems
       frees up resources for development.
+
+ * The choice of free and open source is deliberately taken to support
+   efficient sharing of development resources and make the software easily
+   accessible to users. Open source code projects stimulates collaboration, and
+   more easily generates positive spin offs. Also, exposing the code to the
+   open source community results in software of higher quality (high demands on
+   stability, easy installation, good documentation, etc).
 
 
 Pytroll successes
@@ -137,15 +152,14 @@ Pytroll successes
  * VIIRS (S-NPP) ready before launch. Very limited effort to add level1 and
    upstream processing to the framework.
 
- * mpop replacing MEOS MSG. Removing comercial ill-fitting system adding
-   flexibility, consistency and saving cost and processing resources.
+ * mpop replacing comercial ill-fitting systems, adding flexibility,
+   consistency and saving cost and processing resources.
 
- * Trollcasting: Efficient, secure and flexible data exchange. Interests from
-   Canada and EUMETSAT (EARS team) among others.
+ * Trollcasting: Efficient, secure and flexible data exchange. Being set up
+   among the National Met Services. Interests from Canada and EUMETSAT (EARS
+   team) among others.
 
  * Open Source approach extending usage and possible collaboration. Operational
    at Iceland, besides Denmark and Sweden. Being put in operation at FMI,
    Finland. The user base is global (Asia, USA, Canada, South America,
-   Europe). Also several non-Nordic Met Services have shown interest using
-   Pytroll in their operatinal chain (e.g. DWD, Météo-France, Romanian Met
-   Institute).
+   Europe).
