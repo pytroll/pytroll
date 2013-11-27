@@ -9,16 +9,18 @@ Pytroll adding value for satellite users
 Produce what users wants (needs!)
 ---------------------------------
 
- * Unexpected needs
+Unexpected needs
+~~~~~~~~~~~~~~~~
 
-    - User requests are unpredictable and development time potentially long. A
+    * User requests are unpredictable and development time potentially long. A
       flexible development and production system is needed in order to honor
       user requests in reasonable time when they are made.
 
-    - Own software development is needed in order to be able to create highly
+    * Own software development is needed in order to be able to create highly
       specialized products.
 
- * Users unaware of possibilities
+Users unaware of possibilities
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     - A gap exists between the domain users knowledge and the satellite
       developers knowledge of sensors technical capabilities. This leads to
@@ -32,7 +34,8 @@ Produce what users wants (needs!)
       as users have limited capability to foresee the usage of future satellite
       data types.
 
- * Enable users to discover existing data
+Enable users to discover existing data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     - Inability for users to efficiently discover data means resources are
       wasted when users use time retrieving data elsewhere
@@ -43,7 +46,8 @@ Produce what users wants (needs!)
     - External systems creating meta-data based on actual file contents is
       processing intense leading to higher energy consumption
 
- * Integrate externally developed software gracefully
+Integrate externally developed software gracefully
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     - Satellite data processing is dependent on third party software
       packages. These needs to be integrated in a consistent way in order to
@@ -52,7 +56,8 @@ Produce what users wants (needs!)
     - A consistent integration approach allows for sharing of package
       integrators between institutes saving duplicate development effort.
 
- * Interface for internally developed software
+Interface for internally developed software
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     - A typically seen approach is for researchers to develop a full processing
       chain when creating a new product. As researchers are not trained
@@ -70,7 +75,8 @@ Produce what users wants (needs!)
 Rapid development response
 --------------------------
 
- * Short article-to-production time
+Short article-to-production time
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     * The shortest possible time from product requirements definition to a
       final product in operations maximizes the value for end users as
@@ -83,30 +89,42 @@ Rapid development response
     * An easily configurable production environment will limit the amount of
       resources spent on configuration and maintenance.
 
-    * The programming language Python has been chosen since it
-      - accomodates rapid development
-      - is widely used for scientific applications
-      - has good numerical performance
-      - is easy to use and understand for beginners
-      - is very flexible for experienced software programmers
+Why Python?
+~~~~~~~~~~~
 
- * Crisis handling
+The programming language Python has been chosen since it
+
+    * accomodates rapid development
+
+    * is widely used for scientific applications
+
+    * has good numerical performance
+
+    * is easy to use and understand for beginners
+
+    * is very flexible for experienced software programmers
+
+Crisis handling
+~~~~~~~~~~~~~~~
 
     * Rapid prototyping and production integration allows for usage of
       satellite products in case of crisis (volcano eruptions and similar
       single upset events).
 
+
 Production system resilience
 ----------------------------
 
- * High reliability and timeliness
+High reliability and timeliness
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     * Software development of high quality is needed due to requirements on
       data reliability and timeliness.
 
     * Levering existing knowledge of developing suitable software
 
- * Inter institution backup of key data sources
+Inter institution backup of key data sources
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     * Backup of locally received data and derived products
 
