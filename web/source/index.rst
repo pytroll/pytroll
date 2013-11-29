@@ -5,14 +5,18 @@
 
 .. meta::
    :description: Weather satellite data reading and processing with python
-   :keywords: Meteosat, SEVIRI, AVHRR, Metop, NOAA, MODIS, Terra, Aqua, VIIRS, NPP, SDR, AAPP, HRPT, read, reading, reader, process, processing, python, pytroll, weather, satellite, data
+   :keywords: Meteosat, SEVIRI, AVHRR, Metop, NOAA, MODIS, Terra, Aqua, VIIRS,
+   NPP, SDR, AAPP, HRPT, TerraSAR-X, COSMO-SkyMed, Radarsat-2, read, reading,
+   reader, process, processing, python, pytroll, weather, satellite, data
 
 
 Welcome to pytroll!
 ===================
 
-This is the home of the pytroll project.  The pytroll project is a
-collaboration on weather satellite data processing between DMI_ and SMHI_.
+This is the home of the pytroll project. The pytroll project started out in
+2009 as a collaboration on weather satellite data processing between DMI_ and
+SMHI_. Pytroll now has a growing international user base and is used
+operationally at several National Met Services.
 
 Its objective is provide different free and open source python modules for the
 reading, interpretation, and writing of weather satellite data.
@@ -24,9 +28,9 @@ If you want to contact us, you can use the following mailing list:
 https://groups.google.com/group/pytroll
 
 .. note::
-   A two day Pytroll workshop will be held in Norrköping, Sweden end of
-   November (25-26). Please send a message on the pytroll mailing list
-   (pytroll@googlegroups.com) if you are interested.
+   The two day open Pytroll workshop held in Norrköping, Sweden November 25-26,
+   2013 is now over. Please check the :doc:`workshop2013` page for
+   presentations and more.
 
 
 The available pytroll python packages at the moment are:
@@ -46,6 +50,8 @@ to have a look and give us a hand):
 * pykdtree_ for really fast nearest neighbour search
 * trollcast_ for realtime sharing of weather satellite data
 * pyspectral_ to read and manipulate satellite sensor spectral responses and solar irradiance spectra
+* pydecorate_ to simplify the drawing of logos, text labels, color scales and legends onto images
+* trollimage_ the new image packagse for pytroll (replaces and enhances the image.py module in mpop)
 
 
 .. _DMI: http://www.dmi.dk
@@ -61,7 +67,8 @@ to have a look and give us a hand):
 .. _pykdtree: https://github.com/storpipfugl/pykdtree
 .. _trollcast: http://github.com/mraspaud/trollcast
 .. _pyspectral: https://github.com/adybbroe/pyspectral
-
+.. _pydecorate: http://code.google.com/p/pydecorate
+.. _trollimage: https://github.com/mraspaud/trollimage
 
 Satellites supported (imager instruments) at the moment by the reader/processor
 modules include: 
@@ -74,6 +81,9 @@ modules include:
  - Metop-A/B, in EPS 1a and 1b format
  - Aqua and Terra, in hdf-eos format
  - Suomi NPP, in SDR hdf5 format
+ - TerraSAR-X
+ - Radarsat-2 SAR
+ - COSMO-SkyMed SAR
 
 Contents:
 
