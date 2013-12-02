@@ -17,7 +17,7 @@ Workshop 2013
 
 .. |figuretext| replace:: 
    Some hard working individuals stayed till the end of the week. Below is a
-   list of the achievemnts. Next time we will try to do more pair
+   list of the achievements. Next time we will try to do more pair
    programming. If you would like to contribute actively with the pytroll
    development, please let us know at the mailing list
    (pytroll@googlegroups.com). We will probably have at least one 3-4 day
