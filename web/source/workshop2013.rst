@@ -2,6 +2,77 @@
 Workshop 2013
 =============
 
+
+  +---------+------------+
+  | |pict1| |    |pict2| |
+  +---------+------------+
+  |   |figuretext|       |
+  +----------------------+
+
+.. |pict1| image:: _static/kuva_tiny.jpg
+    :height: 157px
+
+.. |pict2| image:: _static/img_2022_tiny.jpg
+    :height: 157px
+
+.. |figuretext| replace:: 
+   Some hard working individuals stayed till the end of the week. Below is a
+   list of the achievemnts. Next time we will try to do more pair
+   programming. If you would like to contribute actively with the pytroll
+   development, please let us know at the mailing list
+   (pytroll@googlegroups.com). We will probably have at least one 3-4 day
+   pytroll week next year, likely with a more specific topic compared to this
+   time. Maybe in Copenhagen, but nothing decided yet.
+
+
+Summary achievements
+====================
+
+ * Several new users have become more familiar with Pytroll and started contributing.
+
+ * A number of bugs and user inconveniences were identified, and some have been
+   solved already
+ 
+ * Enhancements to Pyresample:
+
+   * Now Pyresample allows to attach a weight to the gaussian reprojection
+     method. This is convenient when e.g. gridding several swath products into
+     a level 2.5/3 product (Climate applications).
+
+ * MIPP allows XRIT decompression on the fly, and MIPP documentation slightly
+   enhanced.
+
+ * Three new projects initiated:
+
+   * Pydecorate to add logos, text, color bars and stuff to images
+   * Trollimage - an enhancement of the image.py module in mpop including some
+     color enhancements. Will deprecate image.py in mpop
+   * Trollduction - A modular batch production framework for Pytroll
+
+ * netCDF reader for SSM/I
+
+ * Trollcast testing, for data exchange between SMHI and FMI - resolution is
+   pending (time outs)
+
+ * Designing and developing the FMI Pytroll based polar production
+   system. Probably resulting in a general concept that can be useful to
+   other users
+
+ * Looking at how to enable web based batch production with Pytroll. Could
+   e.g. be used for an easy and quick access to Pytroll products for in-house
+   R&D
+
+ * Initiated an overhaul and check of the EUMETSAT recipe RGBs in Pytroll and
+   how they compare and deviate with the official ones. Done in collaboration
+   with the Romanian Met Service.
+
+ * Colorizing Pytroll images (using the new trollimage component) -
+   ''sandwich'' product. Color enhanced imagery is commonly used in forecast
+   offices, e.g. IR imagery with cold temperatures enhanced using a color
+   palette.
+
+
+
 Presentations at the workshop
 =============================
 
