@@ -16,22 +16,23 @@ Workshop 2013
     :height: 157px
 
 .. |figuretext| replace:: 
-   Some hard working individuals stayed till the end of the week. Below is a
-   list of the achievements. Next time we will try to do more pair
-   programming. If you would like to contribute actively with the pytroll
-   development, please let us know at the mailing list
-   (pytroll@googlegroups.com). We will probably have at least one 3-4 day
-   pytroll week next year, likely with a more specific topic compared to this
-   time. Maybe in Copenhagen, but nothing decided yet.
+   After a two day open workshop we were 7 pytrollers from Finland, Iceland and
+   Sweden staying till the end of week working together on some pressing
+   issues. See below for a summary of achievements.  If you would like to
+   contribute actively with the pytroll development, please let us know at the
+   mailing list (pytroll@googlegroups.com). We plan to have one or two pytroll
+   weeks (usually 3-4 days of dedicated programming) next year. Usually we will
+   identifiy a few specific topics that we think needs special attention.
 
 
 Summary achievements
 ====================
 
- * Several new users have become more familiar with Pytroll and started contributing.
+ * Extending the user community: Several new users have become more familiar
+   with Pytroll and started contributing.
 
- * A number of bugs and user inconveniences were identified, and some have been
-   solved already
+ * Testing: A number of bugs and user inconveniences were identified, and some
+   have been solved already.
  
  * Enhancements to Pyresample:
 
@@ -39,8 +40,8 @@ Summary achievements
      method. This is convenient when e.g. gridding several swath products into
      a level 2.5/3 product (Climate applications).
 
- * MIPP allows XRIT decompression on the fly, and MIPP documentation slightly
-   enhanced.
+ * MIPP enhancements and user documentation: MIPP allows XRIT decompression on
+   the fly, and MIPP documentation slightly improved.
 
  * Three new projects initiated:
 
@@ -58,9 +59,9 @@ Summary achievements
    system. Probably resulting in a general concept that can be useful to
    other users
 
- * Looking at how to enable web based batch production with Pytroll. Could
-   e.g. be used for an easy and quick access to Pytroll products for in-house
-   R&D
+ * Looking at how to enable web based batch production monitoring with
+   Pytroll. Could e.g. be used for an easy and quick access to Pytroll products
+   for in-house R&D
 
  * Initiated an overhaul and check of the EUMETSAT recipe RGBs in Pytroll and
    how they compare and deviate with the official ones. Done in collaboration
@@ -70,7 +71,6 @@ Summary achievements
    ''sandwich'' product. Color enhanced imagery is commonly used in forecast
    offices, e.g. IR imagery with cold temperatures enhanced using a color
    palette.
-
 
 
 Presentations at the workshop
