@@ -60,7 +60,7 @@ LEVEL1_PUBLISH_PORT = 9020
 SERVERNAME = OPTIONS['servername']
 
 THR_LUT_FILES_AGE_DAYS = OPTIONS.get('threshold_lut_files_age_days', 14)
-URL_JPSS_REMOTE_ANC_DIR = OPTIONS['url_jpss_remote_anc_dir']
+URL_JPSS_REMOTE_ANC_DIR = OPTIONS['url_jpss_remote_lut_dir']
 LUT_DIR = OPTIONS.get('lut_dir', CSPP_RT_SDR_LUTS)
 LUT_UPDATE_STAMPFILE_RPEFIX = OPTIONS['lut_update_stampfile_prefix']
 URL_DOWNLOAD_TRIAL_FREQUENCY_HOURS = OPTIONS['url_download_trial_frequency_hours']
@@ -102,8 +102,8 @@ def check_lut_files(thr_days=14):
 
     We do not yet know if these files are always having the same name or if the
     number of files are expected to always be the same!?  Thus searching and
-    checking is a bit difficult. We check if there any files at all, and then
-    how old the latest file is, and hope that is sufficient.
+    checking is a bit difficult. We check if there are any files at all, and then
+    how old the latest file is, and hope that this is sufficient.
 
     """
     import stat
@@ -162,13 +162,17 @@ def update_lut_files():
     from datetime import datetime
     from subprocess import Popen, PIPE, STDOUT
 
+    my_env = os.environ.copy()
+    my_env['URL_JPSS_REMOTE_ANC_DIR'] = URL_JPSS_REMOTE_ANC_DIR
+
     LOG.info("Start downloading....")
     # lftp -c "mirror --verbose --only-newer --parallel=2 $JPSS_REMOTE_ANC_DIR $CSPP_RT_SDR_LUTS"
-    cmdstr = ('lftp -c "mirror --verbose --only-newer --parallel=2 ' + 
-              URL_JPSS_REMOTE_ANC_DIR + ' ' + LUT_DIR + '"')
+    # cmdstr = ('lftp -c "mirror --verbose --only-newer --parallel=2 ' + 
+    #           URL_JPSS_REMOTE_ANC_DIR + ' ' + LUT_DIR + '"')
+    cmdstr = OPTIONS['mirror_jpss_luts']
     LOG.info("Download command: " + cmdstr)
 
-    lftp_proc = Popen(cmdstr, shell=True, 
+    lftp_proc = Popen(cmdstr, shell=True, env=my_env,
                       stderr=PIPE, stdout=PIPE)
     
     while True:
