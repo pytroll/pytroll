@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 Adam.Dybbroe
+# Copyright (c) 2013, 2014 Adam.Dybbroe
 
 # Author(s):
 
@@ -166,6 +166,7 @@ def update_lut_files():
     # lftp -c "mirror --verbose --only-newer --parallel=2 $JPSS_REMOTE_ANC_DIR $CSPP_RT_SDR_LUTS"
     cmdstr = ('lftp -c "mirror --verbose --only-newer --parallel=2 ' + 
               URL_JPSS_REMOTE_ANC_DIR + ' ' + LUT_DIR + '"')
+    LOG.info("Download command: " + cmdstr)
 
     lftp_proc = Popen(cmdstr, shell=True, 
                       stderr=PIPE, stdout=PIPE)
