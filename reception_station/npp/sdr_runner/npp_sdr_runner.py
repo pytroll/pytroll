@@ -60,9 +60,11 @@ LEVEL1_PUBLISH_PORT = 9020
 SERVERNAME = OPTIONS['servername']
 
 THR_LUT_FILES_AGE_DAYS = OPTIONS.get('threshold_lut_files_age_days', 14)
-URL_JPSS_REMOTE_ANC_DIR = OPTIONS['url_jpss_remote_lut_dir']
+URL_JPSS_REMOTE_LUT_DIR = OPTIONS['url_jpss_remote_lut_dir']
+URL_JPSS_REMOTE_ANC_DIR = OPTIONS['url_jpss_remote_anc_dir']
 LUT_DIR = OPTIONS.get('lut_dir', CSPP_RT_SDR_LUTS)
 LUT_UPDATE_STAMPFILE_RPEFIX = OPTIONS['lut_update_stampfile_prefix']
+ANC_UPDATE_STAMPFILE_RPEFIX = OPTIONS['anc_update_stampfile_prefix']
 URL_DOWNLOAD_TRIAL_FREQUENCY_HOURS = OPTIONS['url_download_trial_frequency_hours']
 
 from urlparse import urlparse
@@ -163,7 +165,7 @@ def update_lut_files():
     from subprocess import Popen, PIPE, STDOUT
 
     my_env = os.environ.copy()
-    my_env['URL_JPSS_REMOTE_ANC_DIR'] = URL_JPSS_REMOTE_ANC_DIR
+    my_env['JPSS_REMOTE_ANC_DIR'] = URL_JPSS_REMOTE_LUT_DIR
 
     LOG.info("Start downloading....")
     # lftp -c "mirror --verbose --only-newer --parallel=2 $JPSS_REMOTE_ANC_DIR $CSPP_RT_SDR_LUTS"
@@ -202,6 +204,65 @@ def update_lut_files():
         fpt.close()
 
     LOG.info("LUTs downloaded. LUT-update timestamp file = " + filename)
+
+    return
+
+def update_ancillary_files():
+    """
+    Function to update the dynamic ancillary data.
+
+    These data files encompass Two Line Element (TLE) and Polar Wander (PW)
+    files, and should preferably be updated daily. This is done automatically
+    in CSPP if the viirs_sdr script is run without the '-l' option. However, to
+    slightly speed up the processing and avoid hangups depending on internet
+    connectivity this script can omit the automatic download (using the '-l'
+    option) and thus the files need to be updated outside the script.
+
+    """
+    import os, sys
+    from datetime import datetime
+    from subprocess import Popen, PIPE, STDOUT
+
+    my_env = os.environ.copy()
+    my_env['JPSS_REMOTE_ANC_DIR'] = URL_JPSS_REMOTE_ANC_DIR
+
+    LOG.info("Start downloading dynamic ancillary data " + 
+             "(TLE and Polar Wander files)....")
+
+    cmdstr = OPTIONS['mirror_jpss_ancillary']
+    LOG.info("Download command: " + cmdstr)
+
+    mirror_proc = Popen(cmdstr, shell=True, env=my_env,
+                      stderr=PIPE, stdout=PIPE)
+    
+    while True:
+        line = mirror_proc.stdout.readline()
+        if not line:
+            break
+        LOG.info(line)
+
+    while True:
+        errline = mirror_proc.stderr.readline()
+        if not errline:
+            break
+        LOG.info(errline)
+
+    mirror_proc.poll()
+
+    now = datetime.utcnow()
+    timestamp = now.strftime('%Y%m%d%H%M')
+    filename = ANC_UPDATE_STAMPFILE_RPEFIX + '.' + timestamp
+    try:
+        fpt = open(filename, "w")
+        fpt.write(timestamp)
+    except OSError:
+        LOG.warning('Failed to write ANC-update time-stamp file')
+        return
+    else:
+        fpt.close()
+
+    LOG.info("Ancillary data downloaded")
+    LOG.info("Time stamp file = " + filename)
 
     return
 
@@ -490,6 +551,10 @@ def npp_rolling_runner():
                     "Start url fetch...")
         update_lut_files()
 
+    LOG.info("Dynamic ancillary data will be updated. " +
+             "Start url fetch...")
+    update_ancillary_files()
+
 
     ncpus_available = cpu_count()
     LOG.info("Number of CPUs available = " + str(ncpus_available))
@@ -539,6 +604,10 @@ def npp_rolling_runner():
                                 "non existent or old. " +
                                 "Start url fetch...")
                     update_lut_files()
+
+                LOG.info("Dynamic ancillary data will be updated. " +
+                         "Start url fetch...")
+                update_ancillary_files()
 
     return
 
