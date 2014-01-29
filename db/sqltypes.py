@@ -3,12 +3,14 @@ import sqlalchemy
 from shapely import geometry, wkb
 
 
+DEFAULT_SRID = 4326
+
 class Geography(sqlalchemy.types.TypeEngine):
     """PostGIS Geometry Type."""
 
-    def __init__(self, type_, dimension):
+    def __init__(self, type_, dimension, srid=DEFAULT_SRID):
         super(Geography, self).__init__()
-        self.SRID = 4326
+        self.SRID = srid
         self.type = type_.upper()
         self.dimension = dimension
         
@@ -38,24 +40,24 @@ class Geography(sqlalchemy.types.TypeEngine):
 
     
 class POINT(Geography):
-    def __init__(self):
-        super(POINT, self).__init__('POINT', 2)
+    def __init__(self, srid=DEFAULT_SRID):
+        Geography.__init__(self, 'POINT', 2, srid)
 
 
 class LINESTRING(Geography):
-    def __init__(self):
-        super(LINESTRING, self).__init__('LINESTRING', 2)
+    def __init__(self, srid=DEFAULT_SRID):
+        Geography.__init__(self, 'LINESTRING', 2, srid)
 
 
 class MULTILINESTRING(Geography):
-    def __init__(self):
-        super(MULTILINESTRING, self).__init__('MULTILINESTRING', 2)
+    def __init__(self, srid=DEFAULT_SRID):
+        Geography.__init__(self, 'MULTILINESTRING', 2, srid)
 
 
 class MULTIPOLYGON(Geography):
-    def __init__(self):
-        super(MULTIPOLYGON, self).__init__('MULTIPOLYGON', 2)
+    def __init__(self, srid=DEFAULT_SRID):
+        Geography.__init__(self, 'MULTIPOLYGON', 2, srid)
 
 class POLYGON(Geography):
-    def __init__(self):
-        super(POLYGON, self).__init__('POLYGON', 2)
+    def __init__(self, srid=DEFAULT_SRID):
+        Geography.__init__(self, 'POLYGON', 2, srid)

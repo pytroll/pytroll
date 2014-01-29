@@ -27,13 +27,14 @@ import datetime
 #from sqlalchemy import Column, Integer, String, Boolean, DateTime,\
 #                       create_engine, ForeignKey, Table
 from sqlalchemy import Integer, String, Boolean, DateTime,\
-                       create_engine, ForeignKey
+                       create_engine, ForeignKey, Column, Table
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relation, backref, sessionmaker
 
 #from geoalchemy.postgis import PGComparator
-from geoalchemy import *
+#from geoalchemy2 import *
+#from geoalchemy2 import Table
 #from geoalchemy import (GeometryColumn, Point, Polygon, LineString,
 #        GeometryDDL, WKTSpatialElement, DBSpatialElement, GeometryExtensionColumn,
 #        WKBSpatialElement)
@@ -255,24 +256,39 @@ ParameterType.parameters = relation(Parameter, backref='parameter_type')
 
 #Parameter
 Parameter.parameter_values = relation(ParameterValue, backref='parameter')
-Parameter.parameter_linestrings = relation(ParameterLinestring, backref='parameter')
+Parameter.parameter_linestrings = relation(ParameterLinestring,
+                                           backref='parameter')
 
 #FileFormat
 FileFormat.file_uris = relation(FileAccessURI, backref='file_format')
 FileFormat.file_objs = relation(File, backref='file_format')
 
 #FileType
-FileType.parameters = relation(Parameter, secondary=file_type_parameter, backref='file_types')
+FileType.parameters = relation(Parameter,
+                               secondary=file_type_parameter,
+                               backref='file_types')
 FileType.file_uris = relation(FileAccessURI, backref='file_type')
 FileType.file_objs = relation(File, backref='file_type')
-FileType.file_type_tags = relation(Tag, secondary=file_type_tag, backref='file_types')
+FileType.file_type_tags = relation(Tag,
+                                   secondary=file_type_tag,
+                                   backref='file_types')
 
 
 #File
-File.parameter_values = relation(ParameterValue, backref='file_obj', cascade="all, delete, delete-orphan")
-File.parameter_linestrings = relation(ParameterLinestring, backref='file_obj', cascade="all, delete, delete-orphan")
-File.file_tags = relation(Tag, secondary=file_tag, backref='file_objs', cascade="all, delete")
-File.boundary = relation(Boundary, secondary=data_boundary, backref='file_objs', cascade="all, delete")
+File.parameter_values = relation(ParameterValue,
+                                 backref='file_obj',
+                                 cascade="all, delete, delete-orphan")
+File.parameter_linestrings = relation(ParameterLinestring,
+                                      backref='file_obj',
+                                      cascade="all, delete, delete-orphan")
+File.file_tags = relation(Tag,
+                          secondary=file_tag,
+                          backref='file_objs',
+                          cascade="all, delete")
+File.boundary = relation(Boundary,
+                         secondary=data_boundary,
+                         backref='file_objs',
+                         cascade="all, delete")
 
 #FileURI
 FileURI.file_obj = relation(File, backref='uris')

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2012, 2013 Martin Raspaud
+# Copyright (c) 2012, 2013, 2014 Martin Raspaud
 
 # Author(s):
 
@@ -31,14 +31,14 @@ from db.pytroll_db import DCManager
 from db.hl_file import File
 from pyorbital.orbital import Orbital
 from datetime import datetime, timedelta
-
+from pyresample.utils import get_area_def
 from sqlalchemy.orm.exc import NoResultFound
 import np.nameclient as nc
 from threading import Thread
 from ConfigParser import ConfigParser
 
 import logging
-LOG = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 sat_lookup = {"NPP": "SUOMI NPP",
               }
@@ -63,56 +63,69 @@ class DBRecorder(object):
         self.loop = True
         self._config_file = config_file
         
-    def start(self):
-        """Starts the logging.
-        """
+    def init_db(self):
         config = ConfigParser()
         config.read(self._config_file)
         mode = config.get("default", "mode")
         self.dbm = DCManager(config.get(mode, "uri"))
+
+    def start(self):
+        """Starts the logging.
+        """
+        self.init_db()
         self.listener_thread.start()
         self.db_thread.start()
         
     def listen(self):
         """Listen to incomming messages.
         """
-        for addr in nc.get_address(""):
-            LOG.info("Listening to " + str(addr["URI"]) +
-                         " (" + str(addr["type"]) + ")")
-            self.subscriber.add(addr["URI"], addr["type"])
-        
-        for msg in self.listener.recv(1):
-            if msg:
-                LOG.info("Now listening to " + str(msg.data["URI"]) +
-                             " (" + str(msg.data["type"]) + ")")
-                # add new address to subscriber
-                self.subscriber.add(msg.data["URI"], msg.data["type"])
-            if not self.loop:
-                break
-        LOG.info("Stop listening")
+        try:
+            for addr in nc.get_address(""):
+                logger.info("Listening to " + str(addr["URI"]) +
+                             " (" + str(addr["type"]) + ")")
+                self.subscriber.add(addr["URI"], addr["type"])
+
+            for msg in self.listener.recv(1):
+                if msg:
+                    logger.info("Now listening to " + str(msg.data["URI"]) +
+                                 " (" + str(msg.data["type"]) + ")")
+                    # add new address to subscriber
+                    self.subscriber.add(msg.data["URI"], msg.data["type"])
+                if not self.loop:
+                    break
+        except:
+            logger.exception("Something wrong happened in listener")
+            raise
+        logger.info("Stop listening")
 
     def insert_line(self, msg):
         """Insert the line corresponding to *msg* in the database.
         """
         if msg.type == "file":
-            required_fields = ["start_time", "end_time"]
 
-            for field in required_fields:
-                if field not in msg.data.keys():
-                    LOG.warning("Missing required " + field
-                                + ", not creating record from "
-                                + str(msg))
-                    return
+            if (("start_time" not in msg.data.keys() or
+                 "end_time" not in msg.data.keys()) and
+                "area" not in msg.data.keys()):
+                logger.warning("Missing field, not creating record from "
+                            + str(msg))
+                return
+            #required_fields = ["start_time", "end_time"]
+            # for field in required_fields:
+            #     if field not in msg.data.keys():
+            #         logger.warning("Missing required " + field
+            #                     + ", not creating record from "
+            #                     + str(msg))
+            #         return
 
             try:
                 file_obj = File(msg.data["filename"], self.dbm,
                                 filetype=msg.data.get("type", None),
                                 fileformat=msg.data.get("format", None))
             except NoResultFound:
-                LOG.warning("Cannot process: " + str(msg))
+                logger.warning("Cannot process: " + str(msg))
                 return
             
-            LOG.debug("adding :" + str(msg))
+            logger.debug("adding :" + str(msg))
 
             for key, val in msg.data.items():
                 if key in ["filename", "type"]:
@@ -123,36 +136,55 @@ class DBRecorder(object):
                 try:
                     file_obj[key] = val
                 except NoResultFound:
-                    LOG.warning("Cannot add: " + str((key, val)))
+                    logger.warning("Cannot add: " + str((key, val)))
 
 
-            # compute sub_satellite_track
-            satname = msg.data["satellite"]
-            sat = Orbital(sat_lookup.get(satname, satname))
-            dt_ = timedelta(seconds=10)
-            current_time = msg.data["start_time"] 
-            lonlat_list = []
-            while current_time <= msg.data["end_time"]:
-                pos = sat.get_lonlatalt(current_time)
-                lonlat_list.append(pos[:2])
-                current_time += dt_
+            if ("start_time" in msg.data.keys() and
+                "end_time" in msg.data.keys()):
+                # compute sub_satellite_track
+                satname = msg.data["satellite"]
+                sat = Orbital(sat_lookup.get(satname, satname))
+                dt_ = timedelta(seconds=10)
+                current_time = msg.data["start_time"] 
+                lonlat_list = []
+                while current_time <= msg.data["end_time"]:
+                    pos = sat.get_lonlatalt(current_time)
+                    lonlat_list.append(pos[:2])
+                    current_time += dt_
 
-            LOG.debug("Computed sub-satellite track")
+                logger.debug("Computed sub-satellite track")
 
-            file_obj["sub_satellite_track"] = lonlat_list
+                file_obj["sub_satellite_track"] = lonlat_list
 
-            LOG.debug("Added sub-satellite track")
+                logger.debug("Added sub-satellite track")
+
+            if "area" in msg.data.keys():
+                logger.debug("Add area definition to the data")
+                area_def = get_area_def(str(msg.data["area"]["id"]),
+                                        str(msg.data["area"]["name"]),
+                                        str(msg.data["area"]["proj_id"]),
+                                        str(msg.data["area"]["proj4"]),
+                                        msg.data["area"]["shape"][0],
+                                        msg.data["area"]["shape"][1],
+                                        msg.data["area"]["area_extent"])
+                logger.debug("Adding boundary...")
+                file_obj["area"] = area_def
+                logger.debug("Boundary added.")
 
 
     def record(self):
         """Log stuff.
         """
-        for msg in self.subscriber.recv(1):
-            if msg:
-                self.insert_line(msg)
-            if not self.loop:
-                LOG.info("Stop recording")
-                break
+        try:
+            for msg in self.subscriber.recv(1):
+                if msg:
+                    self.insert_line(msg)
+                if not self.loop:
+                    logger.info("Stop recording")
+                    break
+        except:
+            logger.exception("Something went wrong in record")
+            raise
     
     def stop(self):
         """Stop the machine.
@@ -163,15 +195,18 @@ if __name__ == '__main__':
     import time
     from logger import ColoredFormatter
 
-    LOG = logging.getLogger("db_recorder")
-    LOG.setLevel(logging.DEBUG)
+    logger = logging.getLogger("db_recorder")
+    logger.setLevel(logging.DEBUG)
 
-    ch = logging.StreamHandler()
+    #ch = logging.StreamHandler()
+    ch = logging.handlers.TimedRotatingFileHandler(
+        "/var/log/satellit/db_recorder.log",
+        'midnight', backupCount=30, utc=True)
     ch.setLevel(logging.DEBUG)
 
     formatter = ColoredFormatter("[%(asctime)s %(levelname)-19s] %(message)s")
     ch.setFormatter(formatter)
-    LOG.addHandler(ch)
+    logger.addHandler(ch)
 
     try:
         recorder = DBRecorder()
@@ -183,19 +218,4 @@ if __name__ == '__main__':
         print "Thanks for using pytroll/db_recorder. See you soon on www.pytroll.org!"
 
 
-### insert a line
 
-# pytroll://oper/polar/direct_readout/norrköping file safusr.u@lxserv248.smhi.se 2013-01-15T14:19:19.135161 {u'satellite': u'NOAA 15', u'format': u'HRPT', u'start_time': 2013-01-15T14:03:55, u'level': u'0', u'orbit_number': 76310, u'uri': u'ssh://pps.smhi.se//san1/polar_in/direct_readout/hrpt/20130115140355_NOAA_15.hmf', u'filename': u'20130115140355_NOAA_15.hmf', u'end_time': 2013-01-15T14:19:07), u'type': u'binary'} 
-
-# from db_recorder import DBRecorder
-# rec = DBRecorder()
-# rec.start()
-
-
-# mystr = """pytroll://oper/polar/direct_readout/norrköping file safusr.u@lxserv248.smhi.se 2013-01-15T14:19:19.135161 v1.01 application/json "{'satellite': 'NOAA 15', 'format': 'HRPT', 'start_time': datetime.datetime(2013, 1, 15, 14, 3, 55), 'level': '0', 'orbit_number': 76310, 'uri': 'ssh://pps.smhi.se//san1/polar_in/direct_readout/hrpt/20130115140355_NOAA_15.hmf', 'filename': '20130115140355_NOAA_15.hmf', 'end_time': datetime.datetime(2013, 1, 15, 14, 19, 7), 'type': 'binary'}" """
-
-# from posttroll.message import Message
-# m = Message(rawstr=mystr)
-# m.data = eval(m.data)
-
-# rec.insert_line(m)

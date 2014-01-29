@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2011, 2012.
+# Copyright (c) 2011, 2012, 2014.
 
 # Author(s):
  
@@ -28,6 +28,6 @@ setup(name="pytroll",
       description='Sandbox for pytroll',
       author='The pytroll team',
       author_email='team@pytroll.org',
-      packages=['np', 'db'],
+      packages=['db'],
       zip_safe=False,
       )

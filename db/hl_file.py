@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2010-2012.
+# Copyright (c) 2010-2012, 2014.
 
 # Author(s):
  
@@ -25,6 +25,25 @@ import pytroll_db as db
 from sqlalchemy.orm.exc import NoResultFound
 from datetime import datetime
 import shapely
+import numpy as np
+
+def area_def2boundary(area_def, boundary_id):
+    """Convert a pyresample *area_def* to a db Boundary object
+    """
+
+
+    lon_bound, lat_bound = area_def.get_boundary_lonlats()
+    lons = np.concatenate((lon_bound.side1[:-1],
+                           lon_bound.side2[:-1],
+                           lon_bound.side3[:-1],
+                           lon_bound.side4[:-1]))
+    lats = np.concatenate((lat_bound.side1[:-1],
+                           lat_bound.side2[:-1],
+                           lat_bound.side3[:-1],
+                           lat_bound.side4[:-1]))
+    poly = shapely.geometry.asPolygon(np.vstack((lons, lats)).T)
+    return db.Boundary(boundary_id, area_def.name, poly)
+
 
 class File(object):
 
@@ -41,6 +60,18 @@ class File(object):
                                               creation_time=datetime.utcnow())
             self.dbm.session.commit()
             
+    def add_bound(self, area_def):
+        # find if the boundary is already there
+        try:
+            bound = self.dbm.session.query(db.Boundary).filter(db.Boundary.boundary_name == area_def.name).one()
+        except NoResultFound:
+            try:
+                bid = self.dbm.session.query(db.Boundary).order_by(db.Boundary.boundary_id.desc()).first().boundary_id
+            except AttributeError:
+                bid = 1        
+            bound = area_def2boundary(area_def, bid)
+        self._file.boundary.append(bound)
+
     def __setitem__(self, key, val):
 
         if key == "URIs":
@@ -64,6 +95,9 @@ class File(object):
         elif key == "type":
             filetype = self.dbm.get_file_format(val)
             self._file.file_type = filetype
+
+        elif key == "area":
+            self.add_bound(val)
 
         elif key == "sub_satellite_track":
             value = 'LINESTRING ('
