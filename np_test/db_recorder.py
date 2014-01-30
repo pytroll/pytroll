@@ -206,7 +206,7 @@ if __name__ == '__main__':
         'midnight', backupCount=30, utc=True)
     ch.setLevel(logging.DEBUG)
 
-    formatter = ColoredFormatter("[%(asctime)s %(name) %(levelname)-19s] %(message)s")
+    formatter = ColoredFormatter("[%(asctime)s %(name)s %(levelname)-19s] %(message)s")
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
