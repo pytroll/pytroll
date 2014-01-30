@@ -147,10 +147,12 @@ class DBRecorder(object):
                 dt_ = timedelta(seconds=10)
                 current_time = msg.data["start_time"] 
                 lonlat_list = []
-                while current_time <= msg.data["end_time"]:
+                while current_time < msg.data["end_time"]:
                     pos = sat.get_lonlatalt(current_time)
                     lonlat_list.append(pos[:2])
                     current_time += dt_
+                pos = sat.get_lonlatalt(msg.data["end_time"])
+                lonlat_list.append(pos[:2])
 
                 logger.debug("Computed sub-satellite track")
 
