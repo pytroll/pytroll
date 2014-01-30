@@ -21,7 +21,7 @@
 # pytroll.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import pytroll_db as db
+import db.pytroll_db as db
 from sqlalchemy.orm.exc import NoResultFound
 from datetime import datetime
 import shapely
@@ -66,11 +66,13 @@ class File(object):
             bound = self.dbm.session.query(db.Boundary).filter(db.Boundary.boundary_name == area_def.name).one()
         except NoResultFound:
             try:
-                bid = self.dbm.session.query(db.Boundary).order_by(db.Boundary.boundary_id.desc()).first().boundary_id
+                bid = self.dbm.session.query(db.Boundary).order_by(db.Boundary.boundary_id.desc()).first().boundary_id + 1
             except AttributeError:
                 bid = 1        
             bound = area_def2boundary(area_def, bid)
+            self.dbm.session.add(bound)
         self._file.boundary.append(bound)
+        self.dbm.session.commit()
 
     def __setitem__(self, key, val):
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2012, 2013 Martin Raspaud
+# Copyright (c) 2012, 2013, 2014 Martin Raspaud
 
 # Author(s):
 
@@ -24,7 +24,7 @@
 """
 
 
-from pytroll_db import DCManager
+from db.pytroll_db import DCManager
 dbm = DCManager('postgresql://safusr.u:NWCsaf22@postgresutv01/sat_db')
 dbm.create_file_format(1, 'HRPT', 'HRPT level 0 data')
 dbm.create_file_format(2, 'EOS', 'EOS data')
@@ -32,11 +32,15 @@ dbm.create_file_format(3, 'RDR', 'RDR data')
 dbm.create_file_format(4, 'SDR', 'SDR data')
 dbm.create_file_format(5, 'PDS', 'TERRA/AQUA file format')
 dbm.create_file_format(6, 'CF', 'Climate and forcast conventions')
+dbm.create_file_format(7, 'EPS', 'EPS Native Format')
+dbm.create_file_format(8, 'GeoTIFF', 'GeoTIFF data')
+dbm.create_file_format(9, 'PNG', 'PiNG format')
 
 dbm.create_file_type(1, 'binary', 'binary')
 dbm.create_file_type(2, 'NetCDF4', 'NetCDF4')
 dbm.create_file_type(3, 'HDF4', 'HDF4')
 dbm.create_file_type(4, 'HDF5', 'HDF5')
+dbm.create_file_type(5, 'image', 'image')
 
 dbm.create_parameter_type(1, "normal_parameter", "")
 

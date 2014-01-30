@@ -128,7 +128,7 @@ class DBRecorder(object):
             logger.debug("adding :" + str(msg))
 
             for key, val in msg.data.items():
-                if key in ["filename", "type"]:
+                if key in ["filename", "type", "area"]:
                     continue
                 if key == "uri":
                     file_obj["URIs"] += [val]
@@ -204,7 +204,7 @@ if __name__ == '__main__':
         'midnight', backupCount=30, utc=True)
     ch.setLevel(logging.DEBUG)
 
-    formatter = ColoredFormatter("[%(asctime)s %(levelname)-19s] %(message)s")
+    formatter = ColoredFormatter("[%(asctime)s %(name) %(levelname)-19s] %(message)s")
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
