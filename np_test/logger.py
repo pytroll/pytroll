@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2012 Martin Raspaud
+# Copyright (c) 2012, 2014 Martin Raspaud
 
 # Author(s):
 
@@ -103,7 +103,8 @@ LOG = logging.getLogger("pytroll")
 LOG.setLevel(logging.DEBUG)
 
 #ch = logging.StreamHandler()
-ch = logging.handlers.TimedRotatingFileHandler("pytroll.log", "midnight")
+ch = logging.handlers.TimedRotatingFileHandler("/var/log/satellit/pytroll.log",
+                                               "midnight")
 ch.setLevel(logging.DEBUG)
 
 formatter = ColoredFormatter("[%(asctime)s %(levelname)-19s] %(message)s")
