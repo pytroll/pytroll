@@ -463,9 +463,13 @@ class ViirsSdrProcessor(object):
 
         # Check if the file exists:
         if not os.path.exists(rdr_filename):
-            raise IOError("File is reported to be dispatched " + 
-                          "but is not there! File = " + 
-                          rdr_filename)
+            # raise IOError("File is reported to be dispatched " + 
+            #               "but is not there! File = " + 
+            #               rdr_filename)
+            LOG.error("File is reported to be dispatched " + 
+                      "but is not there! File = " + 
+                      rdr_filename)
+            return True
 
         # Do processing:
         LOG.info("RDR to SDR processing on npp/viirs with CSPP start!" + 
