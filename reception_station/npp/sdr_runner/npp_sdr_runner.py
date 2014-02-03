@@ -456,7 +456,7 @@ class ViirsSdrProcessor(object):
             orbnum = None
 
         rdr_filename = urlobj.path
-        path, fname =  os.path.split(rdr_filename)
+        dummy, fname =  os.path.split(rdr_filename)
         if not fname.endswith('.h5'):
             LOG.warning("Not an rdr file! Continue")
             return True
