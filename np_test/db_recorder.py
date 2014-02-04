@@ -156,9 +156,11 @@ class DBRecorder(object):
 
                 logger.debug("Computed sub-satellite track")
 
-                file_obj["sub_satellite_track"] = lonlat_list
-
-                logger.debug("Added sub-satellite track")
+                if len(lonlat_list) < 2:
+                    logger.info("Sub satellite track to short, skipping it.")
+                else:
+                    file_obj["sub_satellite_track"] = lonlat_list
+                    logger.debug("Added sub-satellite track")
 
             if "area" in msg.data.keys():
                 logger.debug("Add area definition to the data")
