@@ -396,10 +396,10 @@ class GMCSubscriber(object):
             finally:
                 self._sock.close()
 
-def receive_from_zmq(host, port, days=1):
+def receive_from_zmq(host, port, station, environment, days=1):
     """Receive 2met! messages from zeromq.
     """
-    
+
     #socket = Subscriber(["tcp://localhost:9331"], ["2met!"])
     sock = GMCSubscriber(host, port)
     msg_rec = MessageReceiver(host)
@@ -413,8 +413,11 @@ def receive_from_zmq(host, port, days=1):
             to_send = msg_rec.receive(string)
             if to_send is None:
                 continue
-            msg = Message('/' + to_send['format']
-                          + '/oper/polar/direct_readout/norrköping',
+            subject = "/".join((to_send['format'], to_send['level'],
+                                station, environment,
+                                "polar", "direct_readout"))
+
+            msg = Message(subject,
                           "file",
                           to_send).encode()
             logger.debug("publishing " + str(msg))
@@ -429,6 +432,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("host", help="GMC host")
     parser.add_argument("port", help="Port to listen to", type=int)
+    parser.add_argument("-s", "--station", help="Name of the station",
+                        default="unknown")
+    parser.add_argument("-e", "--environment",
+                        help="Name of the environment (e.g. dev, test, oper)",
+                        default="dev")
     parser.add_argument("-d", "--daemon", help="Run as a daemon",
                         choices=["start", "stop", "status", "restart"])
     parser.add_argument("-l", "--log", help="File to log to", default=None)
@@ -452,7 +460,8 @@ if __name__ == '__main__':
 
     if opts.daemon is None:
         try:
-            receive_from_zmq(opts.host, opts.port, 1)
+            receive_from_zmq(opts.host, opts.port,
+                             opts.station, opts.environment, 1)
         except KeyboardInterrupt:
             pass
         except:
