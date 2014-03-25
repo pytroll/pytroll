@@ -28,25 +28,19 @@ from posttroll.message import Message
 import time
 from datetime import datetime, timedelta
 
-data_type1 = "HRPT 1b"
+data_type1 = "EOS/1"
 data_type2 = "HRPT 1c"
+
 
 try:
     counter = 0
-    with Publish("l1prod", [data_type1, data_type2] , '9002') as PUB:
+    with Publish("l1prod", 0, [data_type1]) as PUB:
         while True:
-            counter += 1
-            msg1 = Message('/oper/hrpt', 'file', {"type": data_type1,
-                                                "source": "dummy",
-                                                "timestamp": str(datetime.utcnow())})
-            msg2 = Message('/oper/hrpt', 'file', {"type": data_type2,
-                                                "source": "dummy",
-                                                "timestamp": str(datetime.utcnow())})
-            print "publishing " + str(msg1)
-            PUB.send(str(msg1))
-            print "publishing " + str(msg2)
-            PUB.send(str(msg2))
             time.sleep(5)
+            msg = 'pytroll://EOS/1/norrkoping/oper/polar/direct_readout file safusr.u@lxserv248.smhi.se 2012-10-15T08:22:09.098804 v1.01 application/json {"satellite": "TERRA", "format": "EOS", "start_time": "2012-10-15T09:40:19", "level": "1", "orbit_number": 68226, "uri": "ssh://safe.smhi.se//data/proj/safutv/data/polar_out/direct_readout/modis/MOD021km_A12289_094019_2012289095628.hdf", "filename": "MOD021km_A12289_094019_2012289095628.hdf", "instrument": "modis", "type": "HDF4"}'
+
+            print "publishing " + str(msg)
+            PUB.send(str(msg))
 
 except KeyboardInterrupt:
     print "terminating datasource..."

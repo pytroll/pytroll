@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2012 Martin Raspaud
+# Copyright (c) 2012, 2014 Martin Raspaud
 
 # Author(s):
 
@@ -26,7 +26,7 @@
 
 # TODO: remove old hanging subscriptions
 
-from posttroll.subscriber import Subscriber
+from posttroll.subscriber import Subscriber, Subscribe
 from posttroll.ns import get_pub_address
 from posttroll.message import Message
 from threading import Thread
@@ -102,8 +102,8 @@ class ColoredFormatter(logging.Formatter):
 LOG = logging.getLogger("pytroll")
 LOG.setLevel(logging.DEBUG)
 
-#ch = logging.StreamHandler()
-ch = logging.handlers.TimedRotatingFileHandler("pytroll.log", "midnight")
+ch = logging.StreamHandler()
+#ch = logging.handlers.TimedRotatingFileHandler("pytroll.log", "midnight", backupCount=7)
 ch.setLevel(logging.DEBUG)
 
 formatter = ColoredFormatter("[%(asctime)s %(levelname)-19s] %(message)s")
@@ -126,66 +126,44 @@ class Logger(object):
 
     def __init__(self,
                  (nameserver_address, nameserver_port)=("localhost", 16543)):
-        self.subscriber = Subscriber([], [])
-        address = "tcp://"+nameserver_address+":"+str(nameserver_port)
-        self.listener = Subscriber([address], [])
-        self.listener_thread = Thread(target=self.listen)
         self.log_thread = Thread(target=self.log)
         self.loop = True
 
     def start(self):
         """Starts the logging.
         """
-        self.listener_thread.start()
         self.log_thread.start()
-        
-    def listen(self):
-        """Listen to incomming messages.
-        """
-        for addr in get_pub_address(""):
-            LOG.info("Listening to " + str(addr["URI"]) +
-                         " (" + str(addr["type"]) + ")")
-            self.subscriber.add(addr["URI"], addr["type"])
-        
-        for msg in self.listener.recv(1):
-            if msg:
-                LOG.info("Now listening to " + str(msg.data["URI"]) +
-                             " (" + str(msg.data["type"]) + ")")
-                # add new address to subscriber
-                self.subscriber.add(msg.data["URI"], msg.data["type"])
-            if not self.loop:
-                break
-        LOG.info("Stop listening")
 
     def log(self):
         """Log stuff.
         """
-        for msg in self.subscriber.recv(1):
-            if msg:
-                if msg.type in ["log.debug", "log.info",
-                                "log.warning", "log.error",
-                                "log.critical"]:
-                    getattr(LOG, msg.type[4:])(msg.subject + " " +
-                                               msg.sender + " " +
-                                               str(msg.data) + " " +
-                                               str(msg.time))
-                    
-                elif msg.binary:
-                    LOG.debug(msg.subject + " " +
-                              msg.sender + " " +
-                              msg.type + " " +
-                              "[binary] " +
-                              str(msg.time))
-                else:
-                    LOG.debug(msg.subject + " " +
-                              msg.sender + " " +
-                              msg.type + " " +
-                              str(msg.data) + " " +
-                              str(msg.time))
-            if not self.loop:
-                LOG.info("Stop logging")
-                break
-    
+        with Subscribe(services=[""], addr_listener=True) as sub:
+            for msg in sub.recv(1):
+                if msg:
+                    if msg.type in ["log.debug", "log.info",
+                                    "log.warning", "log.error",
+                                    "log.critical"]:
+                        getattr(LOG, msg.type[4:])(msg.subject + " " +
+                                                   msg.sender + " " +
+                                                   str(msg.data) + " " +
+                                                   str(msg.time))
+
+                    elif msg.binary:
+                        LOG.debug(msg.subject + " " +
+                                  msg.sender + " " +
+                                  msg.type + " " +
+                                  "[binary] " +
+                                  str(msg.time))
+                    else:
+                        LOG.debug(msg.subject + " " +
+                                  msg.sender + " " +
+                                  msg.type + " " +
+                                  str(msg.data) + " " +
+                                  str(msg.time))
+                if not self.loop:
+                    LOG.info("Stop logging")
+                    break
+
     def stop(self):
         """Stop the machine.
         """
