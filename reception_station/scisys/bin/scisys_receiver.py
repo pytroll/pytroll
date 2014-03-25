@@ -500,7 +500,8 @@ if __name__ == '__main__':
             """
             del args
             try:
-                receive_from_zmq(opts.host, opts.port, 1)
+                receive_from_zmq(opts.host, opts.port,
+                                 opts.station, opts.environment, 1)
             except:
                 logger.exception("Crashed.")
                 raise
