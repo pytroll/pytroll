@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2012, 2013 Martin Raspaud
+# Copyright (c) 2012, 2013, 2014 Martin Raspaud
 
 # Author(s):
 
@@ -51,7 +51,7 @@ dbm.create_parameter(8, 1, "sub_satellite_track", "")
 dbm.create_parameter(9, 1, "instrument", "")
 dbm.create_parameter(10, 1, "level", "")
 dbm.create_parameter(11, 1, "number", "")
-
+dbm.create_parameter(12, 1, "product_name", "")
 
 
 dbm.session.commit()
