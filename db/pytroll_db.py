@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2010-2013.
+# Copyright (c) 2010-2014.
 
 # Author(s):
 

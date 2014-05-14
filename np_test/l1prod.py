@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2010-2011.
+# Copyright (c) 2010-2011, 2014.
 
 # Author(s):
  
@@ -29,12 +29,12 @@ import time
 from datetime import datetime, timedelta
 
 data_type1 = "EOS/1"
-data_type2 = "HRPT 1c"
+data_type2 = "HRPT/1b"
 
 
 try:
     counter = 0
-    with Publish("l1prod", 0, [data_type1]) as PUB:
+    with Publish("l1prod", 0, [data_type2]) as PUB:
         while True:
             time.sleep(5)
             msg = 'pytroll://EOS/1/norrkoping/oper/polar/direct_readout file safusr.u@lxserv248.smhi.se 2012-10-15T08:22:09.098804 v1.01 application/json {"satellite": "TERRA", "format": "EOS", "start_time": "2012-10-15T09:40:19", "level": "1", "orbit_number": 68226, "uri": "ssh://safe.smhi.se//data/proj/safutv/data/polar_out/direct_readout/modis/MOD021km_A12289_094019_2012289095628.hdf", "filename": "MOD021km_A12289_094019_2012289095628.hdf", "instrument": "modis", "type": "HDF4"}'

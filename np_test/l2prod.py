@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2010-2012.
+# Copyright (c) 2010-2012, 2014.
 
 # Author(s):
  
@@ -34,14 +34,14 @@ logger = logging.getLogger("hrpt2")
 logger.setLevel(logging.DEBUG)
 
 try:
-    with Publish("l2prod", "HRPT 2", 9003) as pub:
+    with Publish("l2prod", 0, ["HRPT/2"]) as pub:
         ch = PytrollHandler(pub)
         ch.setLevel(logging.DEBUG)
         formatter = PytrollFormatter("/oper/polar/gds")
         ch.setFormatter(formatter)
         # add ch to logger
         logger.addHandler(ch)
-        with Subscribe("HRPT 1b") as sub1:
+        with Subscribe("HRPT/1b", "EOS/1") as sub1:
             for msg in sub1.recv():
                 
                 ##data = msg.data
