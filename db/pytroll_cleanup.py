@@ -141,7 +141,11 @@ class SSHChecker(Thread):
         self.loop = True
         self.ssh = paramiko.SSHClient()
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        username, password = logins[hostname]
+        try:
+            username, password = logins[hostname]
+        except KeyError:
+            print "unknown hostname", hostname
+            raise
         try:
             self.ssh.connect(hostname,
                              username=username,
@@ -178,6 +182,9 @@ returnqueue = Queue()
 def check_file_threaded(uri):
     global connexions
     parsed = urlparse(uri)
+    if parsed.scheme == "file":
+        print "skipping", uri
+        return
     if parsed.scheme != "ssh":
         raise ValueError("Protocol should be ssh, not " + str(parsed.scheme))
     if parsed.hostname not in connexions:
