@@ -53,6 +53,8 @@ to have a look and give us a hand):
 * pydecorate_ to simplify the drawing of logos, text labels, color scales and legends onto images
 * trollimage_ the new image packagse for pytroll (replaces and enhances the image.py module in mpop)
 * trollsift_ for the formatting, parsing and filtering of satellite granule file names
+* pygranules_ for validating, fetching and scheduling satellite data granules
+* trollduction_ a framework for satellite batch processing
 
 .. _DMI: http://www.dmi.dk
 .. _SMHI: http://www.smhi.se
@@ -70,7 +72,8 @@ to have a look and give us a hand):
 .. _pydecorate: http://code.google.com/p/pydecorate
 .. _trollimage: https://github.com/mraspaud/trollimage
 .. _trollsift: https://github.com/pnuu/trollsift
-
+.. _pygranules: http://pygranule.readthedocs.org/en/latest
+.. _trollduction: https://github.com/mraspaud/trollduction
 
 Satellites supported (imager instruments) at the moment by the reader/processor
 modules include: 
