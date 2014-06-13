@@ -27,10 +27,10 @@ and in 24/7 operational production.
 If you want to contact us, you can use the following mailing list:
 https://groups.google.com/group/pytroll
 
-.. note::
-   The two day open Pytroll workshop held in Norrköping, Sweden November 25-26,
-   2013 is now over. Please check the :doc:`workshop2013` page for
-   presentations and more.
+%.. note::
+%   The two day open Pytroll workshop held in Norrköping, Sweden November 25-26,
+%   2013 is now over. Please check the :doc:`workshop2013` page for
+%   presentations and more.
 
 
 The available pytroll python packages at the moment are:
@@ -46,13 +46,13 @@ Some more packages are in the process of being developed (you're very welcome
 to have a look and give us a hand):
 
 * python-geotiepoints_ for interpolating (and extrapolation) geographic tiepoints
-* posttroll_ for a higher-level messaging library for pytroll
+* posttroll_ a higher-level messaging library for pytroll
 * pykdtree_ for really fast nearest neighbour search
 * trollcast_ for realtime sharing of weather satellite data
 * pyspectral_ to read and manipulate satellite sensor spectral responses and solar irradiance spectra
 * pydecorate_ to simplify the drawing of logos, text labels, color scales and legends onto images
 * trollimage_ the new image packagse for pytroll (replaces and enhances the image.py module in mpop)
-
+* trollsift_ for the formatting, parsing and filtering of satellite granule file names
 
 .. _DMI: http://www.dmi.dk
 .. _SMHI: http://www.smhi.se
@@ -69,6 +69,8 @@ to have a look and give us a hand):
 .. _pyspectral: https://github.com/adybbroe/pyspectral
 .. _pydecorate: http://code.google.com/p/pydecorate
 .. _trollimage: https://github.com/mraspaud/trollimage
+.. _trollsift: https://github.com/pnuu/trollsift
+
 
 Satellites supported (imager instruments) at the moment by the reader/processor
 modules include: 
