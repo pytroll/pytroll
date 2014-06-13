@@ -95,6 +95,7 @@ Here is an example making a true color RGB with the VIIRS bands:
 
 .. image:: images/viirs_truecolor.png
 
+.. include:: viirs_geoloc.rst
 
 Map projection
 ==============
