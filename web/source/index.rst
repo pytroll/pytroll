@@ -27,10 +27,9 @@ and in 24/7 operational production.
 If you want to contact us, you can use the following mailing list:
 https://groups.google.com/group/pytroll
 
-%.. note::
-%   The two day open Pytroll workshop held in Norrköping, Sweden November 25-26,
-%   2013 is now over. Please check the :doc:`workshop2013` page for
-%   presentations and more.
+..   The two day open Pytroll workshop held in Norrköping, Sweden November 25-26,
+..   2013 is now over. Please check the :doc:`workshop2013` page for
+..   presentations and more.
 
 
 The available pytroll python packages at the moment are:
