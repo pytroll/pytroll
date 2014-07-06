@@ -1,0 +1,28 @@
+<!doctype html>
+<title>Dagplan for {{ station }}</title>
+
+<style>
+.floated_img
+{
+    float: left;
+    width: 190px;
+    margin-left: 32px;
+}
+</style>
+
+<big><b>Latest passages for {{ station }}</b></big> <small>(in reverse order)</small>
+
+<br><br>
+
+<hr size=1><br>
+
+{% for thumb in thumbs %}
+    {% if thumb.id %}
+    <div class="floated_img">
+        <a href={{ thumb.item_url }}>
+        <img src={{ thumb.image }} alt="{{ id }}">
+        </a>
+        <p><small>{{ thumb.id }}</small></p>
+    </div>
+    {% endif %}
+{% endfor %}

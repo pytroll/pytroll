@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset='utf-8'/>
+	<title>Dagplan for {{ station }}</title>
+	<script src='/static/lib/jquery-1.8.3.min.js'></script>
+	<script src='/static/lib/jquery.elevateZoom-3.0.8.min.js'></script>
+<body>
+
+<big><b>{{ images.passid }}</b></big>
+
+<br><br>
+<hr size=1>
+
+<table border=0>
+<tr>
+
+<td>
+<img id="{{ images[0].id }}"
+     src="{{ images[0].small }}"
+     data-zoom-image="{{ images[0].large }}" title="{{ images[0].name }}"/>
+</td>
+
+<td valign="bottom">
+<div id="gal_1" align="left">
+
+{% for i in images %} 
+   <a href="#" data-image="{{ i.small }}"
+      data-zoom-image="{{ i.large }}">
+     <img id="{{ i.id }}" src="{{ i.thumb }}" title="{{ i.name }}"/>
+   </a>
+{% endfor %}
+      
+</div>
+</td>
+
+</tr>
+</table>
+
+<hr size=1>
+
+&nbsp;&nbsp;
+<small><i>Powered by ElevateZoom</i></small>
+
+<script>
+    $('#{{ images[0].id }}').elevateZoom({
+    zoomWindowWidth: 300,
+    zoomWindowHeight: 331,
+    cursor: "crosshair",
+    zoomWindowFadeIn: 150,
+    zoomWindowFadeOut: 150,
+    scrollZoom : true,
+    gallery: 'gal_1', 
+    }); 
+</script>
+
+</body>
+</html>

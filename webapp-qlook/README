@@ -1,0 +1,15 @@
+Flask + ElevateZoom example
+===========================
+Flask: http://flask.pocoo.org/
+ElevateZoom: http://www.elevateweb.co.uk/image-zoom
+
+This is an example of using ElevateZoom to display satellite images
+and using Flask as webapp framework. You only need to install Flask
+(see website).
+
+After installing Flask:
+> python ./qlook.py
+and point your browser at: http://127.0.0.1:5000/qlook
+
+The images in this example is not very big, so I have included an image
+of the setup here at DMI (qlook_at_dmi.png).
