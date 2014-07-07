@@ -7,12 +7,10 @@ Created on Sun Jul  6 12:02:36 2014
 @author: ras
 """
 import os
-import json
 import glob
-from datetime import datetime
 
 from flask import Flask
-from flask import request, render_template
+from flask import render_template
 
 home = os.path.abspath(os.path.dirname(__file__))
 
