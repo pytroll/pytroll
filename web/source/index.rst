@@ -25,7 +25,7 @@ The provided python packages are designed to be used both in R&D environments
 and in 24/7 operational production.
 
 If you want to contact us, you can use the following mailing list:
-https://groups.google.com/group/pytroll
+https://groups.google.com/group/pytroll or the pytroll IRC channel on freenode: irc://irc.freenode.net/pytroll
 
 ..   The two day open Pytroll workshop held in Norrköping, Sweden November 25-26,
 ..   2013 is now over. Please check the :doc:`workshop2013` page for
