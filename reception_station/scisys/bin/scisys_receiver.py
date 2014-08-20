@@ -32,8 +32,7 @@ from time import sleep
 from urlparse import urlsplit, urlunsplit, SplitResult
 from posttroll.publisher import Publish
 from posttroll.message import Message
-#from lxml import etree
-import xml.etree.Elementree as etree
+import xml.etree.ElementTree as etree
 import logging
 import socket
 
