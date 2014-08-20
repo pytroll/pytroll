@@ -32,7 +32,8 @@ from time import sleep
 from urlparse import urlsplit, urlunsplit, SplitResult
 from posttroll.publisher import Publish
 from posttroll.message import Message
-from lxml import etree
+#from lxml import etree
+import xml.etree.Elementree as etree
 import logging
 import socket
 
@@ -40,10 +41,12 @@ logger = logging.getLogger(__name__)
 
 LOOP = True
 
+
 class TwoMetMessage(object):
+
     """Interperter for 2met! messages.
     """
-    
+
     def __init__(self, mstring=None):
         self._id = 0
         self._type = ""
@@ -60,7 +63,8 @@ class TwoMetMessage(object):
         content = content.rsplit("]", 1)[0]
         dic = dict((item.split("=", 1) for item in content.split(", ", 3)))
         self._id = eval(dic["ID"])
-        self._time = datetime.strptime(eval(dic["time"]), "%d %m %Y - %H:%M:%S")
+        self._time = datetime.strptime(
+            eval(dic["time"]), "%d %m %Y - %H:%M:%S")
         try:
             self.body = eval(dic["body"])
         except SyntaxError:
@@ -81,8 +85,6 @@ class TwoMetMessage(object):
             if child.tag == "body":
                 self.body = child.text
 
-
-
     def _decode(self, mstring):
         """Decode 2met! messages.
         """
@@ -96,14 +98,17 @@ class TwoMetMessage(object):
                 logger.exception("Spurious message! " + str(mstring))
         else:
             logger.warning("Don't know how to decode message: " + str(mstring))
-        
+
+
 def pass_name(utctime, satellite):
     """Construct a unique pass name from a risetime and a satellite name.
     """
-    #return utctime.strftime("%Y%m%dT%H%M%S") + "_".join(satellite.split(" "))
+    # return utctime.strftime("%Y%m%dT%H%M%S") + "_".join(satellite.split(" "))
     return utctime, "_".join(satellite.split(" "))
 
+
 class PassRecorder(dict):
+
     def get(self, key, default=None):
         utctime, satellite = key
         for (rectime, recsat), val in self.iteritems():
@@ -112,9 +117,10 @@ class PassRecorder(dict):
                (abs(rectime - utctime)).days == 0):
                 return val
         return default
-            
-            
+
+
 class MessageReceiver(object):
+
     """Interprets received messages between stop reception and file dispatch.
     """
 
@@ -133,7 +139,7 @@ class MessageReceiver(object):
             pass_info[key.lower()] = val
 
         pass_info["start_time"] = datetime.strptime(pass_info["risetime"],
-                                                  "%Y-%m-%d %H:%M:%S")
+                                                    "%Y-%m-%d %H:%M:%S")
         del pass_info['risetime']
         pass_info["end_time"] = datetime.strptime(pass_info["falltime"],
                                                   "%Y-%m-%d %H:%M:%S")
@@ -145,7 +151,6 @@ class MessageReceiver(object):
         else:
             logger.warning("No 'orbit number' in message!")
 
-        
         pname = pass_name(pass_info["start_time"], pass_info["satellite"])
         self._received_passes[pname] = pass_info
 
@@ -182,7 +187,6 @@ class MessageReceiver(object):
                 swath["format"] = "HRPT"
                 swath["instrument"] = ("avhrr/3", "mhs", "amsu")
             swath["level"] = "0"
-            
 
         elif filename.startswith("P042") or filename.startswith("P154"):
             pds = {}
@@ -199,7 +203,8 @@ class MessageReceiver(object):
             elif pds["apid1"][:3] == "154":
                 satellite = "AQUA"
             else:
-                raise ValueError("Unrecognized satellite ID: " + pds["apid1"][:3])
+                raise ValueError(
+                    "Unrecognized satellite ID: " + pds["apid1"][:3])
             risetime = pds["time"]
             pname = pass_name(risetime, satellite)
             swath = self._received_passes.get(pname, {"satellite": satellite,
@@ -248,21 +253,22 @@ class MessageReceiver(object):
                 elif filename.startswith("RCRIS_npp"):
                     mda["instrument"] = "cris"
                 else:
-                    logger.warning("Seems to be a NPP/JPSS RDR " + 
+                    logger.warning("Seems to be a NPP/JPSS RDR " +
                                    "file but name is not standard!")
                     logger.warning("filename = " + filename)
                     return None
                 idx_start = -6
 
-            mda["start_time"] = datetime.strptime(filename[idx_start+16:idx_start+33], 
+            mda["start_time"] = datetime.strptime(filename[idx_start + 16:idx_start + 33],
                                                   "d%Y%m%d_t%H%M%S")
-            end_time = datetime.strptime(filename[idx_start+16:idx_start+25] + 
-                                         " " + 
-                                         filename[idx_start+35:idx_start+42],
+            end_time = datetime.strptime(filename[idx_start + 16:idx_start + 25] +
+                                         " " +
+                                         filename[
+                                             idx_start + 35:idx_start + 42],
                                          "d%Y%m%d e%H%M%S")
-            mda["orbit"] = filename[idx_start+45:idx_start+50]
+            mda["orbit"] = filename[idx_start + 45:idx_start + 50]
             # FIXME: swath start and end time is granule dependent.
-            # Get the end time as well! - Adam 2013-06-03:            
+            # Get the end time as well! - Adam 2013-06-03:
             satellite = "NPP"
             start_time = mda["start_time"]
             pname = pass_name(start_time, satellite)
@@ -332,7 +338,7 @@ class MessageReceiver(object):
                                          url.path,
                                          url.query,
                                          url.fragment))
-        swath["filename"] = os.path.split(url.path)[1] 
+        swath["filename"] = os.path.split(url.path)[1]
         swath["uri"] = uri
         return swath
 
@@ -344,9 +350,10 @@ class MessageReceiver(object):
         if message.body.startswith(metadata_prefix):
             self.add_pass(message.body[len(metadata_prefix):])
             return None
-        
+
         elif message.body.startswith(dispatch_prefix):
             return self.handle_distrib(message.body[len(dispatch_prefix):])
+
 
 class GMCSubscriber(object):
 
@@ -357,7 +364,7 @@ class GMCSubscriber(object):
         self.msg = ""
         self._bufsize = 256
         self.loop = True
-        
+
     def recv(self):
         """Receive messages.
         """
@@ -396,6 +403,7 @@ class GMCSubscriber(object):
             finally:
                 self._sock.close()
 
+
 def receive_from_zmq(host, port, station, environment, days=1):
     """Receive 2met! messages from zeromq.
     """
@@ -413,10 +421,10 @@ def receive_from_zmq(host, port, station, environment, days=1):
             to_send = msg_rec.receive(string)
             if to_send is None:
                 continue
-            subject = "/".join((to_send['format'], to_send['level'],
+            subject = "/".join(("", to_send['format'], to_send['level'],
                                 station, environment,
                                 "polar", "direct_readout"))
-
+            subject = "/" + subject
             msg = Message(subject,
                           "file",
                           to_send).encode()
@@ -441,18 +449,18 @@ if __name__ == '__main__':
                         choices=["start", "stop", "status", "restart"])
     parser.add_argument("-l", "--log", help="File to log to", default=None)
     opts = parser.parse_args()
-    
+
     if opts.log:
         import logging.handlers
         handler = logging.handlers.TimedRotatingFileHandler(opts.log,
                                                             "midnight",
-                                                            backupCount = 7)
+                                                            backupCount=7)
     else:
         handler = logging.StreamHandler()
 
     handler.setFormatter(logging.Formatter("[%(levelname)s: %(asctime)s :"
-                                                " %(name)s] %(message)s",
-                                                '%Y-%m-%d %H:%M:%S'))
+                                           " %(name)s] %(message)s",
+                                           '%Y-%m-%d %H:%M:%S'))
     handler.setLevel(logging.DEBUG)
     logging.getLogger('').setLevel(logging.DEBUG)
     logging.getLogger('').addHandler(handler)
@@ -470,11 +478,11 @@ if __name__ == '__main__':
             print ("Thank you for using pytroll/receiver."
                    " See you soon on pytroll.org!")
 
-    else: # Running as a daemon
+    else:  # Running as a daemon
         import sys
         #pidfile = '/tmp/pytroll.receiver.pid'
         pidfile = '/var/run/satellit/pytroll.receiver.pid'
-        
+
         if opts.daemon == "status":
             if os.path.exists(pidfile):
                 with open(pidfile) as fd_:
@@ -511,6 +519,7 @@ if __name__ == '__main__':
             import signal
 
             class App(object):
+
                 """App object for running the nameserver as daemon.
                 """
                 stdin_path = "/dev/null"
@@ -520,9 +529,7 @@ if __name__ == '__main__':
                 pidfile_path = pidfile
                 pidfile_timeout = 90
 
-                
             signal.signal(signal.SIGTERM, _terminate)
-
 
             APP = App()
             sys.argv = [sys.argv[0], opts.daemon]
@@ -532,5 +539,3 @@ if __name__ == '__main__':
             sys.exit(angel.do_action())
         except ImportError:
             print "Cannot run as a daemon, you need python-daemon installed."
-
-
