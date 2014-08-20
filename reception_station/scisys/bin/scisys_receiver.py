@@ -423,7 +423,6 @@ def receive_from_zmq(host, port, station, environment, days=1):
             subject = "/".join(("", to_send['format'], to_send['level'],
                                 station, environment,
                                 "polar", "direct_readout"))
-            subject = "/" + subject
             msg = Message(subject,
                           "file",
                           to_send).encode()
