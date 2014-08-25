@@ -210,7 +210,7 @@ def update_utcpole_and_leapsec_files():
         # TODO!
 
         # Update the symlinks (assuming the files are okay):
-        if os.path.exists(linkfile):
+        if os.path.islink(linkfile):
             os.unlink(linkfile)
 
         os.symlink(outfile, linkfile)
