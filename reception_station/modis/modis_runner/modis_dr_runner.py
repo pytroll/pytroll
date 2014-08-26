@@ -79,8 +79,6 @@ LOG.setLevel(logging.DEBUG)
 LOG.addHandler(handler)
 
 
-LEVEL1_PUBLISH_PORT = 9010
-
 packetfile_aqua_prfx = "P154095715409581540959"
 modisfile_aqua_prfx = "P1540064AAAAAAAAAAAAAA"
 modisfile_terra_prfx = "P0420064AAAAAAAAAAAAAA"
@@ -507,16 +505,16 @@ def run_aqua_l0l1(pdsfile):
     return retv
 
 
-def send_message(this_publisher, msg):
+def send_message(this_publisher, msg, environment=MODE):
     """Send a message for down-stream processing"""
 
-    message = Message('/oper/polar/direct_readout/norrköping',
+    message = Message('/' + str(msg['format']) + '/' + str(msg['level']) +
+                      '/norrköping/' + environment + '/polar/direct_readout/',
                       "file", msg).encode()
+    LOG.debug("sending: " + str(message))
     this_publisher.send(message)
 
     return
-
-# ---------------------------------------------------------------------------
 
 
 def start_modis_lvl1_processing(level1b_home, aqua_files,
@@ -703,9 +701,7 @@ def modis_runner():
     except AttributeError:
         LOG.warning("No log rotation supported for this handler...")
     LOG.info("*** Start the MODIS level-1 runner:")
-    # with posttroll.subscriber.Subscribe('receiver', ['PDS/0', ], True) as
-    # subscr:
-    with posttroll.subscriber.Subscribe('', ['PDS/0', ], True) as subscr:
+    with posttroll.subscriber.Subscribe('receiver', ['PDS/0', ], True) as subscr:
         with Publish('modis_dr_runner', 0) as publisher:
             aquafiles = {}
             for msg in subscr.recv():
