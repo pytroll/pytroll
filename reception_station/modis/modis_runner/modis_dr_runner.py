@@ -539,6 +539,12 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
         LOG.warning("No start time in message!")
         start_time = None
 
+    if 'end_time' in message.data:
+        end_time = message.data['end_time']
+    else:
+        LOG.warning("No end time in message!")
+        end_time = None
+
     if (message.data['satellite'] == "TERRA" and
             message.data['instrument'] == 'modis'):
         try:
@@ -590,6 +596,7 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
                 to_send['level'] = '1'
                 to_send['type'] = 'HDF4'
                 to_send['start_time'] = start_time
+                to_send['end_time'] = end_time
 
                 send_message(mypublisher, to_send)
 
