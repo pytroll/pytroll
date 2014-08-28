@@ -517,18 +517,18 @@ def send_message(this_publisher, msg, environment=MODE):
     return
 
 
-def start_modis_lvl1_processing(level1b_home, aqua_files,
+def start_modis_lvl1_processing(level1b_home, eos_files,
                                 mypublisher, message):
     """From a posttroll message start the modis lvl1 processing"""
 
     LOG.info("")
-    LOG.info("Aqua files: " + str(aqua_files))
+    LOG.info("Aqua/Terra files: " + str(eos_files))
     LOG.info("\tMessage:")
     LOG.info(message)
     urlobj = urlparse(message.data['uri'])
     LOG.info("Server = " + str(urlobj.netloc))
     if urlobj.netloc != SERVERNAME:
-        return aqua_files
+        return eos_files
     LOG.info("Ok... " + str(urlobj.netloc))
     LOG.info("Sat and Instrument: " + str(message.data['satellite']) + " "
              + str(message.data['instrument']))
@@ -559,7 +559,7 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
                 LOG.warning("File is reported to be dispatched " +
                             "but is not there! File = " +
                             urlobj.path)
-                return aqua_files
+                return eos_files
 
             # Do processing:
             LOG.info("Level-0 to lvl1 processing on terra start!" +
@@ -612,7 +612,7 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
             scene_id = start_time.strftime('%Y%m%d%H%M')
         else:
             LOG.warning("No start time!!!")
-            return aqua_files
+            return eos_files
 
         path, fname = os.path.split(urlobj.path)
         if ((fname.find(modisfile_aqua_prfx) == 0 or
@@ -623,32 +623,32 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
                 LOG.warning("File is reported to be dispatched " +
                             "but is not there! File = " +
                             urlobj.path)
-                return aqua_files
+                return eos_files
 
-            if not scene_id in aqua_files:
-                aqua_files[scene_id] = []
-            if len(aqua_files[scene_id]) == 0:
-                aqua_files[scene_id] = [urlobj.path]
+            if not scene_id in eos_files:
+                eos_files[scene_id] = []
+            if len(eos_files[scene_id]) == 0:
+                eos_files[scene_id] = [urlobj.path]
             else:
-                if not urlobj.path in aqua_files[scene_id]:
-                    aqua_files[scene_id].append(urlobj.path)
+                if not urlobj.path in eos_files[scene_id]:
+                    eos_files[scene_id].append(urlobj.path)
 
-        if scene_id in aqua_files and len(aqua_files[scene_id]) == 2:
+        if scene_id in eos_files and len(eos_files[scene_id]) == 2:
             LOG.info("aqua files with scene-id = %r :" % scene_id +
-                     str(aqua_files[scene_id]))
+                     str(eos_files[scene_id]))
 
-            aquanames = [os.path.basename(s) for s in aqua_files[scene_id]]
+            aquanames = [os.path.basename(s) for s in eos_files[scene_id]]
             LOG.info('aquanames: ' + str(aquanames))
 
             if (aquanames[0].find(modisfile_aqua_prfx) == 0 and
                     aquanames[1].find(packetfile_aqua_prfx) == 0):
-                modisfile = aqua_files[scene_id][0]
+                modisfile = eos_files[scene_id][0]
             elif (aquanames[1].find(modisfile_aqua_prfx) == 0 and
                   aquanames[0].find(packetfile_aqua_prfx) == 0):
-                modisfile = aqua_files[scene_id][1]
+                modisfile = eos_files[scene_id][1]
             else:
                 LOG.error("Either MODIS file or packet file not there!?")
-                return aqua_files
+                return eos_files
 
             # Do processing:
             LOG.info("Level-0 to lvl1 processing on aqua start! " +
@@ -671,7 +671,7 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
 
             # Clean register: aqua_files dict
             LOG.info('Clean the internal aqua_files register')
-            aqua_files = {}
+            eos_files = {}
 
             # Now publish:
             for resfile in result_files:
@@ -691,9 +691,9 @@ def start_modis_lvl1_processing(level1b_home, aqua_files,
                 send_message(mypublisher, to_send)
 
     else:
-        return aqua_files
+        return eos_files
 
-    return aqua_files
+    return eos_files
 
 # ---------------------------------------------------------------------------
 
