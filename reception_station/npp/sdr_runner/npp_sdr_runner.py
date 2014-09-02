@@ -586,9 +586,9 @@ def npp_rolling_runner():
     LOG.info("Will use %d CPUs when running CSPP instances" % ncpus)
     viirs_proc = ViirsSdrProcessor(ncpus)
 
-    with posttroll.subscriber.Subscribe('RDR') as subscr:
-        with Publish('npp_dr_runner', 'SDR',
-                     LEVEL1_PUBLISH_PORT) as publisher:
+    with posttroll.subscriber.Subscribe('receiver',
+                                        ['RDR', ], True) as subscr:
+        with Publish('npp_dr_runner', 0) as publisher:
             while True:
                 viirs_proc.initialise()
                 for msg in subscr.recv(timeout=90):
