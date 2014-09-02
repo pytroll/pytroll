@@ -43,17 +43,17 @@ APPL_HOME = os.environ.get('NPP_SDRPROC', '')
 
 import ConfigParser
 CONFIG_PATH = os.environ.get('NPP_SDRPROC_CONFIG_DIR', _CONFIG_PATH)
-print "CONFIG_PATH: ", CONFIG_PATH 
+print "CONFIG_PATH: ", CONFIG_PATH
 
 CONF = ConfigParser.ConfigParser()
 CONF.read(os.path.join(CONFIG_PATH, "npp_sdr_config.cfg"))
 
 MODE = os.getenv("SMHI_MODE")
 if MODE is None:
-    MODE = "offline"
+    MODE = "dev"
 
 OPTIONS = {}
-for option, value in CONF.items(MODE, raw = True):
+for option, value in CONF.items(MODE, raw=True):
     OPTIONS[option] = value
 
 LEVEL1_PUBLISH_PORT = 9020
@@ -65,7 +65,8 @@ URL_JPSS_REMOTE_ANC_DIR = OPTIONS['url_jpss_remote_anc_dir']
 LUT_DIR = OPTIONS.get('lut_dir', CSPP_RT_SDR_LUTS)
 LUT_UPDATE_STAMPFILE_RPEFIX = OPTIONS['lut_update_stampfile_prefix']
 ANC_UPDATE_STAMPFILE_RPEFIX = OPTIONS['anc_update_stampfile_prefix']
-URL_DOWNLOAD_TRIAL_FREQUENCY_HOURS = OPTIONS['url_download_trial_frequency_hours']
+URL_DOWNLOAD_TRIAL_FREQUENCY_HOURS = OPTIONS[
+    'url_download_trial_frequency_hours']
 
 from urlparse import urlparse
 import posttroll.subscriber
@@ -73,8 +74,8 @@ from posttroll.publisher import Publish
 from posttroll.message import Message
 
 from sdr_runner import get_datetime_from_filename
-from sdr_runner.post_cspp import (get_sdr_files, 
-                                  create_subdirname, 
+from sdr_runner.post_cspp import (get_sdr_files,
+                                  create_subdirname,
                                   pack_sdr_files, make_okay_files,
                                   cleanup_cspp_workdir)
 from sdr_runner.pre_cspp import fix_rdrfile
@@ -85,7 +86,8 @@ _DEFAULT_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 #: Default log format
 _DEFAULT_LOG_FORMAT = '[%(levelname)s: %(asctime)s : %(name)s] %(message)s'
 
-import os, sys
+import os
+import sys
 _NPP_SDRPROC_LOG_FILE = os.environ.get('NPP_SDRPROC_LOG_FILE', None)
 import logging
 
@@ -112,7 +114,8 @@ def check_lut_files(thr_days=14):
 
     now = datetime.utcnow()
 
-    tdelta = timedelta(seconds=float(URL_DOWNLOAD_TRIAL_FREQUENCY_HOURS)*3600.)
+    tdelta = timedelta(
+        seconds=float(URL_DOWNLOAD_TRIAL_FREQUENCY_HOURS) * 3600.)
     # Get the time of the last update trial:
     files = glob(LUT_UPDATE_STAMPFILE_RPEFIX + '*')
     # Can we count on glob sorting the most recent file first. In case we can,
@@ -121,7 +124,8 @@ def check_lut_files(thr_days=14):
     # FIXME!
     update_it = True
     for filename in files:
-        tslot = datetime.strptime(os.path.basename(filename).split('.')[-1], '%Y%m%d%H%M')
+        tslot = datetime.strptime(
+            os.path.basename(filename).split('.')[-1], '%Y%m%d%H%M')
         if now - tslot < tdelta:
             update_it = False
             break
@@ -152,6 +156,7 @@ def check_lut_files(thr_days=14):
 
     return files_ok
 
+
 def update_lut_files():
     """
     Function to update the ancillary LUT files 
@@ -160,7 +165,8 @@ def update_lut_files():
     achieve the best possible SDR processing.
 
     """
-    import os, sys
+    import os
+    import sys
     from datetime import datetime
     from subprocess import Popen, PIPE, STDOUT
 
@@ -169,14 +175,14 @@ def update_lut_files():
 
     LOG.info("Start downloading....")
     # lftp -c "mirror --verbose --only-newer --parallel=2 $JPSS_REMOTE_ANC_DIR $CSPP_RT_SDR_LUTS"
-    # cmdstr = ('lftp -c "mirror --verbose --only-newer --parallel=2 ' + 
+    # cmdstr = ('lftp -c "mirror --verbose --only-newer --parallel=2 ' +
     #           URL_JPSS_REMOTE_ANC_DIR + ' ' + LUT_DIR + '"')
     cmdstr = OPTIONS['mirror_jpss_luts']
     LOG.info("Download command: " + cmdstr)
 
     lftp_proc = Popen(cmdstr, shell=True, env=my_env,
                       stderr=PIPE, stdout=PIPE)
-    
+
     while True:
         line = lftp_proc.stdout.readline()
         if not line:
@@ -207,6 +213,7 @@ def update_lut_files():
 
     return
 
+
 def update_ancillary_files():
     """
     Function to update the dynamic ancillary data.
@@ -219,22 +226,23 @@ def update_ancillary_files():
     option) and thus the files need to be updated outside the script.
 
     """
-    import os, sys
+    import os
+    import sys
     from datetime import datetime
     from subprocess import Popen, PIPE, STDOUT
 
     my_env = os.environ.copy()
     my_env['JPSS_REMOTE_ANC_DIR'] = URL_JPSS_REMOTE_ANC_DIR
 
-    LOG.info("Start downloading dynamic ancillary data " + 
+    LOG.info("Start downloading dynamic ancillary data " +
              "(TLE and Polar Wander files)....")
 
     cmdstr = OPTIONS['mirror_jpss_ancillary']
     LOG.info("Download command: " + cmdstr)
 
     mirror_proc = Popen(cmdstr, shell=True, env=my_env,
-                      stderr=PIPE, stdout=PIPE)
-    
+                        stderr=PIPE, stdout=PIPE)
+
     while True:
         line = mirror_proc.stdout.readline()
         if not line:
@@ -267,6 +275,8 @@ def update_ancillary_files():
     return
 
 # ---------------------------------------------------------------------------
+
+
 def run_cspp(*viirs_rdr_files):
     """Run CSPP on VIIRS RDR files"""
     from subprocess import Popen, PIPE, STDOUT
@@ -312,24 +322,27 @@ def run_cspp(*viirs_rdr_files):
     viirs_sdr_proc.poll()
     return working_dir
 
+
 def get_sdr_times(filename):
     """Get the start and end times from the SDR file name
     """
     bname = os.path.basename(filename)
     sll = bname.split('_')
-    start_time = datetime.strptime(sll[2] + sll[3][:-1], 
+    start_time = datetime.strptime(sll[2] + sll[3][:-1],
                                    "d%Y%m%dt%H%M%S")
-    end_time = datetime.strptime(sll[2] + sll[4][:-1], 
+    end_time = datetime.strptime(sll[2] + sll[4][:-1],
                                  "d%Y%m%de%H%M%S")
     if end_time < start_time:
         end_time += timedelta(days=1)
-    
+
     return start_time, end_time
+
 
 def publish_sdr(publisher, result_files):
     """Publish the messages that SDR files are ready
     """
     # Now publish:
+    environment = MODE
     for result_file in result_files:
         filename = os.path.split(result_file)[1]
         to_send = {}
@@ -337,14 +350,19 @@ def publish_sdr(publisher, result_files):
         to_send['filename'] = filename
         to_send['instrument'] = 'viirs'
         to_send['satellite'] = 'NPP'
-        to_send['format'] = 'HDF5'
-        to_send['type'] = 'SDR'
-        
+        to_send['format'] = 'SDR'
+        to_send['type'] = 'HDF5'
+        to_send['level'] = '1'
         to_send['start_time'], to_send['end_time'] = get_sdr_times(filename)
-        msg = Message('/oper/polar/direct_readout/norrkoping',
+
+        msg = Message('/' + to_send['format'] + '/' + to_send['level'] +
+                      '/norrköping/' + environment + '/polar/direct_readout/',
                       "file", to_send).encode()
+        # msg = Message('/oper/polar/direct_readout/norrkoping',
+        #              "file", to_send).encode()
         LOG.debug("sending: " + str(msg))
         publisher.send(msg)
+
 
 def spawn_cspp(current_granule, *glist):
     """Spawn a CSPP run on the set of RDR files given"""
@@ -361,21 +379,22 @@ def spawn_cspp(current_granule, *glist):
     LOG.info("current_granule = " + str(current_granule))
     LOG.info("glist = " + str(glist))
     if current_granule in glist and len(glist) == 1:
-        LOG.info("Current granule is identical to the 'list of granules'" + 
+        LOG.info("Current granule is identical to the 'list of granules'" +
                  " No sdr result files will be skipped")
         return working_dir, new_result_files
-        
+
     # Only bother about the "current granule" - skip the rest
     start_time = get_datetime_from_filename(current_granule)
     start_str = start_time.strftime("d%Y%m%d_t%H%M%S")
     result_files = [new_file
                     for new_file in new_result_files
                     if start_str in new_file]
-    
+
     return working_dir, result_files
 
 
 class ViirsSdrProcessor(object):
+
     """
     Container for the VIIRS SDR processing based on CSPP
 
@@ -386,7 +405,7 @@ class ViirsSdrProcessor(object):
         self.pool = ThreadPool(ncpus)
         self.ncpus = ncpus
 
-        self.orbit = 1 # Initialised orbit number
+        self.orbit = 1  # Initialised orbit number
         self.fullswath = False
         self.cspp_results = []
         self.working_dirs = []
@@ -407,10 +426,9 @@ class ViirsSdrProcessor(object):
     def pack_sdr_files(self, subd):
         return pack_sdr_files(self.result_files, self.sdr_home, subd)
 
-
     def run(self, msg):
         """Start the VIIRS SDR processing using CSPP on one rdr granule"""
-        
+
         LOG.debug("Received message: " + str(msg))
         if self.glist and len(self.glist) > 0:
             LOG.debug("glist: " + str(self.glist))
@@ -420,10 +438,10 @@ class ViirsSdrProcessor(object):
             del self.glist[0]
             keeper = self.glist[1]
             LOG.info("Start CSPP: RDR files = " + str(self.glist))
-            self.cspp_results.append(self.pool.apply_async(spawn_cspp, 
+            self.cspp_results.append(self.pool.apply_async(spawn_cspp,
                                                            [keeper] + self.glist))
             return False
-        elif msg and not (msg.data['satellite'] == "NPP" and 
+        elif msg and not (msg.data['satellite'] == "NPP" and
                           msg.data['instrument'] == 'viirs'):
             LOG.info("Not a Suomi NPP VIIRS scene. Continue...")
             return True
@@ -436,18 +454,19 @@ class ViirsSdrProcessor(object):
         urlobj = urlparse(msg.data['uri'])
         LOG.debug("Server = " + str(urlobj.netloc))
         if urlobj.netloc != SERVERNAME:
-            LOG.warning("Server %s not the current one: %s" %(str(urlobj.netloc), 
-                                                              SERVERNAME))
+            LOG.warning("Server %s not the current one: %s" % (str(urlobj.netloc),
+                                                               SERVERNAME))
             return True
         LOG.info("Ok... " + str(urlobj.netloc))
-        LOG.info("Sat and Instrument: " + str(msg.data['satellite']) 
+        LOG.info("Sat and Instrument: " + str(msg.data['satellite'])
                  + " " + str(msg.data['instrument']))
-                    
+
         start_time = msg.data['start_time']
         try:
             end_time = msg.data['end_time']
         except KeyError:
-            LOG.warning("No end_time in message! Guessing start_time + 86 seconds...")
+            LOG.warning(
+                "No end_time in message! Guessing start_time + 86 seconds...")
             end_time = msg.data['start_time'] + timedelta(seconds=86)
         try:
             orbnum = int(msg.data['orbit_number'])
@@ -456,23 +475,23 @@ class ViirsSdrProcessor(object):
             orbnum = None
 
         rdr_filename = urlobj.path
-        dummy, fname =  os.path.split(rdr_filename)
+        dummy, fname = os.path.split(rdr_filename)
         if not fname.endswith('.h5'):
             LOG.warning("Not an rdr file! Continue")
             return True
 
         # Check if the file exists:
         if not os.path.exists(rdr_filename):
-            # raise IOError("File is reported to be dispatched " + 
-            #               "but is not there! File = " + 
+            # raise IOError("File is reported to be dispatched " +
+            #               "but is not there! File = " +
             #               rdr_filename)
-            LOG.error("File is reported to be dispatched " + 
-                      "but is not there! File = " + 
+            LOG.error("File is reported to be dispatched " +
+                      "but is not there! File = " +
                       rdr_filename)
             return True
 
         # Do processing:
-        LOG.info("RDR to SDR processing on npp/viirs with CSPP start!" + 
+        LOG.info("RDR to SDR processing on npp/viirs with CSPP start!" +
                  " Start time = " + str(start_time))
         LOG.info("File = %s" % str(rdr_filename))
         # Fix orbit number in RDR file:
@@ -480,12 +499,12 @@ class ViirsSdrProcessor(object):
         try:
             rdr_filename, orbnum = fix_rdrfile(rdr_filename)
         except IOError:
-            LOG.error('Failed to fix orbit number in RDR file = ' + 
+            LOG.error('Failed to fix orbit number in RDR file = ' +
                       str(urlobj.path))
             import traceback
             traceback.print_exc(file=sys.stderr)
         except sdr_runner.orbitno.NoTleFile:
-            LOG.error('Failed to fix orbit number in RDR file = ' + 
+            LOG.error('Failed to fix orbit number in RDR file = ' +
                       str(urlobj.path))
             LOG.error('No TLE file...')
             import traceback
@@ -513,13 +532,13 @@ class ViirsSdrProcessor(object):
             # Check start and end time and check if the RDR file
             # contains several granules (a full local swath):
             tdiff = end_time - start_time
-            if tdiff.seconds > 4*60:
-                LOG.info("RDR file contains 3 or more granules. " + 
+            if tdiff.seconds > 4 * 60:
+                LOG.info("RDR file contains 3 or more granules. " +
                          "We assume it is a full local swath!")
                 keeper = self.glist[0]
                 self.fullswath = True
             else:
-                LOG.info("Only one granule. This is not enough for CSPP" + 
+                LOG.info("Only one granule. This is not enough for CSPP" +
                          " Continue")
                 return True
 
@@ -527,9 +546,9 @@ class ViirsSdrProcessor(object):
         if self.pass_start_time is None:
             self.pass_start_time = start_time
 
-        LOG.info("Before call to spawn_cspp. Argument list = " + 
+        LOG.info("Before call to spawn_cspp. Argument list = " +
                  str([keeper] + self.glist))
-        self.cspp_results.append(self.pool.apply_async(spawn_cspp, 
+        self.cspp_results.append(self.pool.apply_async(spawn_cspp,
                                                        [keeper] + self.glist))
         if self.fullswath:
             LOG.info("Full swath. Break granules loop")
@@ -538,6 +557,8 @@ class ViirsSdrProcessor(object):
         return True
 
 # ---------------------------------------------------------------------------
+
+
 def npp_rolling_runner():
     """The NPP/VIIRS runner. Listens and triggers processing on RDR granules."""
     from multiprocessing import cpu_count
@@ -548,7 +569,7 @@ def npp_rolling_runner():
     fresh = check_lut_files(THR_LUT_FILES_AGE_DAYS)
     if fresh:
         LOG.info("Files in the LUT dir are fresh...")
-        LOG.info("...or download has been attempted recently! " + 
+        LOG.info("...or download has been attempted recently! " +
                  "No url downloading....")
     else:
         LOG.warning("Files in the LUT dir are non existent or old. " +
@@ -559,7 +580,6 @@ def npp_rolling_runner():
              "Start url fetch...")
     update_ancillary_files()
 
-
     ncpus_available = cpu_count()
     LOG.info("Number of CPUs available = " + str(ncpus_available))
     ncpus = int(OPTIONS.get('ncpus', 1))
@@ -567,15 +587,15 @@ def npp_rolling_runner():
     viirs_proc = ViirsSdrProcessor(ncpus)
 
     with posttroll.subscriber.Subscribe('RDR') as subscr:
-        with Publish('npp_dr_runner', 'SDR', 
+        with Publish('npp_dr_runner', 'SDR',
                      LEVEL1_PUBLISH_PORT) as publisher:
             while True:
                 viirs_proc.initialise()
                 for msg in subscr.recv(timeout=90):
                     status = viirs_proc.run(msg)
                     if not status:
-                        break # end the loop and reinitialize !
-                        
+                        break  # end the loop and reinitialize !
+
                 LOG.info("Get the results from the multiptocessing pool-run")
                 for res in viirs_proc.cspp_results:
                     working_dir, tmp_result_files = res.get()
@@ -583,7 +603,7 @@ def npp_rolling_runner():
                     viirs_proc.result_files.extend(tmp_result_files)
 
                 tobj = viirs_proc.pass_start_time
-                LOG.info("Time used in sub-dir name: " + 
+                LOG.info("Time used in sub-dir name: " +
                          str(tobj.strftime("%Y-%m-%d %H:%M")))
                 subd = create_subdirname(tobj, orbit=viirs_proc.orbit)
                 LOG.info("Create sub-directory for sdr files: %s" % str(subd))
@@ -591,20 +611,20 @@ def npp_rolling_runner():
                 make_okay_files(viirs_proc.sdr_home, subd)
 
                 publish_sdr(publisher, sdr_files)
-                
+
                 for working_dir in viirs_proc.working_dirs:
                     LOG.info("Cleaning up directory %s" % working_dir)
                     cleanup_cspp_workdir(working_dir)
 
-                LOG.info("Now that SDR processing has completed, " + 
+                LOG.info("Now that SDR processing has completed, " +
                          "check for new LUT files...")
                 fresh = check_lut_files(THR_LUT_FILES_AGE_DAYS)
                 if fresh:
                     LOG.info("Files in the LUT dir are fresh...")
-                    LOG.info("...or download has been attempted recently! " + 
+                    LOG.info("...or download has been attempted recently! " +
                              "No url downloading....")
                 else:
-                    LOG.warning("Files in the LUT dir are " + 
+                    LOG.warning("Files in the LUT dir are " +
                                 "non existent or old. " +
                                 "Start url fetch...")
                     update_lut_files()
@@ -625,13 +645,13 @@ if __name__ == "__main__":
         ndays = int(OPTIONS["log_rotation_days"])
         ncount = int(OPTIONS["log_rotation_backup"])
         handler = handlers.TimedRotatingFileHandler(_NPP_SDRPROC_LOG_FILE,
-                                                    when='midnight', 
-                                                    interval=ndays, 
-                                                    backupCount=ncount, 
-                                                    encoding=None, 
-                                                    delay=False, 
+                                                    when='midnight',
+                                                    interval=ndays,
+                                                    backupCount=ncount,
+                                                    encoding=None,
+                                                    delay=False,
                                                     utc=True)
-        
+
         handler.doRollover()
     else:
         handler = logging.StreamHandler(sys.stderr)
