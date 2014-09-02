@@ -662,6 +662,7 @@ if __name__ == "__main__":
     handler.setFormatter(formatter)
     logging.getLogger('').addHandler(handler)
     logging.getLogger('').setLevel(logging.DEBUG)
+    logging.getLogger('posttroll').setLevel(logging.INFO)
 
     LOG = logging.getLogger('npp_sdr_runner')
 
