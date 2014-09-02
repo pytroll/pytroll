@@ -338,7 +338,7 @@ def get_sdr_times(filename):
     return start_time, end_time
 
 
-def publish_sdr(publisher, result_files):
+def publish_sdr(publisher, result_files, orbit):
     """Publish the messages that SDR files are ready
     """
     # Now publish:
@@ -349,6 +349,7 @@ def publish_sdr(publisher, result_files):
         to_send['uri'] = ('ssh://%s/%s' % (SERVERNAME, result_file))
         to_send['filename'] = filename
         to_send['instrument'] = 'viirs'
+        to_send['orbit_number'] = orbit
         to_send['satellite'] = 'NPP'
         to_send['format'] = 'SDR'
         to_send['type'] = 'HDF5'
@@ -610,7 +611,8 @@ def npp_rolling_runner():
                 sdr_files = viirs_proc.pack_sdr_files(subd)
                 make_okay_files(viirs_proc.sdr_home, subd)
 
-                publish_sdr(publisher, sdr_files)
+                publish_sdr(publisher, sdr_files,
+                            viirs_proc.orbit)
 
                 for working_dir in viirs_proc.working_dirs:
                     LOG.info("Cleaning up directory %s" % working_dir)
