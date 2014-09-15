@@ -105,6 +105,7 @@ Contents:
    workshop2012
    workshop2013
    manifest
+   shop
 
 Contact us: https://groups.google.com/group/pytroll
 
