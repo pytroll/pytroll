@@ -32,6 +32,11 @@ https://groups.google.com/group/pytroll or the pytroll IRC channel on freenode: 
 ..   presentations and more.
 
 
+.. note:: Five years with Pytroll!
+
+   https://www.youtube.com/watch?v=Sxphky9vwGc
+
+
 The available pytroll python packages at the moment are:
 
 * pyresample_ for resampling satellite data
@@ -73,6 +78,7 @@ to have a look and give us a hand):
 .. _trollsift: https://github.com/pnuu/trollsift
 .. _pygranules: http://pygranule.readthedocs.org/en/latest
 .. _trollduction: https://github.com/mraspaud/trollduction
+.. _pytroll5years: https://www.youtube.com/watch?v=Sxphky9vwGc
 
 Satellites supported (imager instruments) at the moment by the reader/processor
 modules include: 
