@@ -25,16 +25,27 @@ The provided python packages are designed to be used both in R&D environments
 and in 24/7 operational production.
 
 If you want to contact us, you can use the following mailing list:
-https://groups.google.com/group/pytroll or the pytroll IRC channel on freenode: irc://irc.freenode.net/pytroll
-
-..   The two day open Pytroll workshop held in Norrköping, Sweden November 25-26,
-..   2013 is now over. Please check the :doc:`workshop2013` page for
-..   presentations and more.
+https://groups.google.com/group/pytroll or the pytroll IRC channel on 
+freenode: irc://irc.freenode.net/pytroll
 
 
-.. note:: Five years with Pytroll!
+.. note:: Pytroll workshop Norrköping 2015
 
-   https://www.youtube.com/watch?v=Sxphky9vwGc
+          +--------------+
+          |   |pict1|    |
+          +--------------+
+          | |figuretext| |
+          +--------------+
+
+.. |pict1| image:: _static/workshop2015june_small.png
+    :height: 356px
+
+.. |figuretext| replace:: 
+
+   A one week workshop was held in Norrköping June 8 to 12, 2015.  We were 12
+   developers from different corners of the world (Switzerland, Denmark,
+   Sweden, Finland, USA, Romania, Italy and Slovakia) working on enhancements
+   to the Pytroll software.
 
 
 The available pytroll python packages at the moment are:
@@ -45,20 +56,22 @@ The available pytroll python packages at the moment are:
 * python-bufr_ for reading bufr files
 * pycoast_ for putting coastlines, borders and rivers on an image 
 * pyorbital_ for computing satellite orbital parameters and reading TLE's
+* posttroll_ a higher-level messaging library for pytroll
+* pykdtree_ for really fast nearest neighbour search
+* python-geotiepoints_ for interpolating (and extrapolation) geographic tiepoints
+* trollimage_ the new image packagse for pytroll (replaces and enhances the image.py module in mpop)
+* trollsift_ for the formatting, parsing and filtering of satellite granule file names
+* pyspectral_ to read and manipulate satellite sensor spectral responses and solar irradiance spectra
+* pydecorate_ to simplify the drawing of logos, text labels, color scales and legends onto images
 
 Some more packages are in the process of being developed (you're very welcome
 to have a look and give us a hand):
 
-* python-geotiepoints_ for interpolating (and extrapolation) geographic tiepoints
-* posttroll_ a higher-level messaging library for pytroll
-* pykdtree_ for really fast nearest neighbour search
 * trollcast_ for realtime sharing of weather satellite data
-* pyspectral_ to read and manipulate satellite sensor spectral responses and solar irradiance spectra
-* pydecorate_ to simplify the drawing of logos, text labels, color scales and legends onto images
-* trollimage_ the new image packagse for pytroll (replaces and enhances the image.py module in mpop)
-* trollsift_ for the formatting, parsing and filtering of satellite granule file names
 * pygranules_ for validating, fetching and scheduling satellite data granules
 * trollduction_ a framework for satellite batch processing
+* pytroll-schedule_ to generate optimized satellite schedules for polar reception stations
+
 
 .. _DMI: http://www.dmi.dk
 .. _SMHI: http://www.smhi.se
@@ -78,6 +91,7 @@ to have a look and give us a hand):
 .. _trollsift: https://github.com/pnuu/trollsift
 .. _pygranules: http://pygranule.readthedocs.org/en/latest
 .. _trollduction: https://github.com/mraspaud/trollduction
+.. _pytroll-schedule: https://github.com/mraspaud/pytroll-schedule
 .. _pytroll5years: https://www.youtube.com/watch?v=Sxphky9vwGc
 
 Satellites supported (imager instruments) at the moment by the reader/processor
@@ -94,6 +108,7 @@ modules include:
  - TerraSAR-X
  - Radarsat-2 SAR
  - COSMO-SkyMed SAR
+ - Sentinel-1 SAR
 
 Contents:
 
@@ -111,6 +126,7 @@ Contents:
    workshop2012
    workshop2013
    manifest
+   five_year_anniversary
    shop
 
 Contact us: https://groups.google.com/group/pytroll
