@@ -127,6 +127,7 @@ Contents:
    workshop2012
    workshop2013
    manifest
+   guidelines
    five_year_anniversary
    shop
 
