@@ -11,10 +11,12 @@ Pytroll coding guidelines
     but when there is nothing more to take away.” 
     Antoine de Saint Exupéry
 
+Coding guidelines
+=================
 
 Language is US English.
 
-We generally follow the pep-8
+We generally follow the PEP 8
 
 Max line length is set to 120 chars, 80 chars is ok too.
 
@@ -22,9 +24,9 @@ Indentation is 4 spaces (no tabs!)
 
 Global constants are written in capital letters, eg. PLANK_CONSTANT if they are not modified in the module.
 
-About docstrings, pep 257 https://www.python.org/dev/peps/pep-0257/
+About docstrings, PEP 257 https://www.python.org/dev/peps/pep-0257/
 
-Versionning: http://semver.org/
+Versioning: http://semver.org/
 
 Prepare to be Python3 compatible.
 
@@ -33,7 +35,7 @@ http://chris.beams.io/posts/git-commit/
 http://who-t.blogspot.de/2009/12/on-commit-messages.html
 
 
-The Zen of Python (PEP20)
+The Zen of Python (PEP 20)
 -------------------------
 * Beautiful is better than ugly.
 * Explicit is better than implicit.
