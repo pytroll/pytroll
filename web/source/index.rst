@@ -30,7 +30,7 @@ freenode: irc://irc.freenode.net/pytroll
 
 
 
-.. note:: Pytroll workshop Norrköping 2015
+.. note:: Pytroll workshop Locarno 2015
 
           +--------------+
           |   |pict1|    |
@@ -39,7 +39,7 @@ freenode: irc://irc.freenode.net/pytroll
           +--------------+
 
 .. |pict1| image:: _static/workshop2015december_small.png
-    :height: 356px
+    :width: 800px
 
 .. |figuretext| replace:: 
 
