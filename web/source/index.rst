@@ -30,7 +30,7 @@ freenode: irc://irc.freenode.net/pytroll
 
 
 
-.. note:: Pytroll workshop Norrköping 2015
+.. note:: Pytroll workshop Locarno 2015
 
           +--------------+
           |   |pict1|    |
@@ -38,14 +38,13 @@ freenode: irc://irc.freenode.net/pytroll
           | |figuretext| |
           +--------------+
 
-.. |pict1| image:: _static/workshop2015june_small.png
-    :height: 356px
+.. |pict1| image:: _static/workshop2015december_small.png
+    :width: 800px
 
 .. |figuretext| replace:: 
 
-   A one week workshop was held in Norrköping June 8 to 12, 2015.  We were 12
-   developers from different corners of the world (Switzerland, Denmark,
-   Sweden, Finland, USA, Romania, Italy and Slovakia) working on enhancements
+   A one week workshop was held in Locarno November 30th to December 4th, 2015.  We were 15 developers from different corners of the world (Switzerland, Norway,
+   Sweden, Finland, Russia, Germany, Netherlands) working on enhancements
    to the Pytroll software.
 
 
@@ -101,8 +100,9 @@ modules include:
  - Meteosat series (tested with 7, 8, 9, 10)
  - GOES series, in HRIT/LRIT format (tested with 11, 12, 13, 15)
  - MTSAT series, in HRIT/LRIT format (tested with 1R, 2)
+ - Himawari 8, in HRIT/LRIT format (tested with 1R, 2)
  - Electro L, in HRIT/LRIT format (tested with N1)
- - NOAA series, in AAPP format (tested with 15, 16, 17, 18, 19)
+ - NOAA series, in AAPP, GAC and LAC format (tested with 15, 16, 17, 18, 19)
  - Metop-A/B, in EPS 1a and 1b format
  - Aqua and Terra, in hdf-eos format
  - Suomi NPP, in SDR hdf5 format
