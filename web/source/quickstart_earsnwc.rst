@@ -155,7 +155,17 @@ and the *filename* argument like this:
     >>> gbd.load(['CMA', 'CT', 'CTTH'], filename=filenames)
 
     >>> lcd = gbd.project('ease_nh')
-    >>> img = lcd.image.cma_rgb()
+
+    >>> from mpop.imageo import geo_image
+    >>> cma = lcd["CMA"].cma.data
+    >>> palette = lcd['CMA'].mda["cma_pal"]
+    >>> img = geo_image.GeoImage(cma,
+                                 lcd.area,
+                                 lcd.time_slot,
+                                 fill_value=None,
+                                 mode="P",
+                                 palette=palette / 255.0)
+
     >>> img.show()
 
 .. image:: images/earsnwc_demo5.png
