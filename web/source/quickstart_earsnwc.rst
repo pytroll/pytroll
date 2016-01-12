@@ -76,7 +76,15 @@ transparent to the user:
 Now let's visualise the cloudtype data using the Nowcasting SAF palette read
 from the file:
 
-    >>> img = gbd.image.pge02()
+    >>> from mpop.imageo import geo_image
+    >>> palette = gbd['CT'].mda["ct_pal"]
+    >>> ctype = gbd["CT"].ct.data
+    >>> img = geo_image.GeoImage(ctype, 
+                                 gbd.area, 
+                                 gbd.time_slot, 
+                                 fill_value=(255), 
+                                 mode="P", 
+                                 palette=palette / 255.0)
     >>> img.show()
 
 .. image:: images/earsnwc_demo1.png
@@ -100,7 +108,17 @@ using the *time_interval* argument:
                 "Metop-B", "", "avhrr/3", starttime, orbit, variant='EARS')
     >>> gbd.load(['CTTH'], time_interval=(starttime, endtime))
     >>> lcd = gbd.project('ease_nh')
-    >>> img = lcd.image.ctth_h_rgb()
+
+    >>> from mpop.imageo import geo_image
+    >>> import numpy as np
+    >>> height = lcd["CTTH"].ctth_alti.data
+    >>> palette = lcd['CTTH'].mda["ctth_alti_pal"]
+    >>> img = geo_image.GeoImage((height / 500 + 1).astype(np.uint8), 
+                                 lcd.area, 
+                                 lcd.time_slot, 
+                                 fill_value=(0), 
+                                 mode="P", 
+                                 palette=palette / 255.0)
     >>> img.show()
 
 .. image:: images/earsnwc_demo3.png
