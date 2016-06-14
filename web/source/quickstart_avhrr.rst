@@ -129,7 +129,7 @@ Add the dir containing *my_composites.py* to your PYTHONPATH. Now your new :attr
     
 .. image:: images/avhrr_red_clouds.png
 
-.. _AAPP: http://research.metoffice.gov.uk/research/interproj/nwpsaf/
+.. _AAPP: http://nwpsaf.eu/site/software/aapp/
 .. _`NWC SAF`: http://www.nwcsaf.org/HD/MainNS.jsp
 .. _`NWC SAF homepage`: http://www.nwcsaf.org/HD/MainNS.jsp
 .. _mpop: http://www.github.com/mraspaud/mpop
