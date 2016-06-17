@@ -30,7 +30,19 @@ freenode: irc://irc.freenode.net/pytroll
 
 
 
-.. note:: Pytroll workshop Locarno 2015
+..
+   .. note:: Pytroll workshop Locarno 2015
+
+             +--------------+
+             |   |pict1|    |
+             +--------------+
+             | |figuretext| |
+             +--------------+
+
+   .. |pict1| image:: _static/workshop2015december_small.png
+       :width: 800px
+
+.. note:: Pytroll workshop Offenbach 2016
 
           +--------------+
           |   |pict1|    |
@@ -38,14 +50,18 @@ freenode: irc://irc.freenode.net/pytroll
           | |figuretext| |
           +--------------+
 
-.. |pict1| image:: _static/workshop2015december_small.png
+.. |pict1| image:: _static/Group2_small.JPG
     :width: 800px
 
 .. |figuretext| replace:: 
 
-   A one week workshop was held in Locarno November 30th to December 4th, 2015.  We were 15 developers from different corners of the world (Switzerland, Norway,
-   Sweden, Finland, Russia, Germany, Netherlands) working on enhancements
-   to the Pytroll software.
+   A pytroll developers workshop was held at the Head Quarters of Deutcher
+   Wetterdienst (DWD) in Offenbach between June 13 and 17, 2016. With the
+   paticipation of 18 developers from the national Met Services of Switzerland,
+   Norway, Denmark, Sweden, Finland and Germany, as well as EUMETSAT it was the
+   largest to date.
+
+   
 
 
 The available pytroll python packages at the moment are:
