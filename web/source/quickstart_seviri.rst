@@ -9,23 +9,33 @@
  Quickstart with MSG SEVIRI
 ===========================
 
-For this tutorial, we will use the Meteosat data in the uncompressed EUMETSAT HRIT format, read it through mipp_ into
-mpop_, resample it with pyresample_ and process it a bit. Install theses packages first.
+For this tutorial, we will use the Meteosat data in the uncompressed EUMETSAT
+HRIT format, read it through mipp_ into mpop_, resample it with pyresample_ and
+process it a bit. Install theses packages first.
 
-Software to uncompress HRIT can be obtained from EUMETSAT (register and download the `Public Wavelet Transform Decompression Library Software`_)
+Software to uncompress HRIT can be obtained from EUMETSAT (register and
+download the `Public Wavelet Transform Decompression Library Software`_)
 
-For this tutorial template config files (see :doc:`install`) can be used. These are located in the *etc* dir of the mpop_ source. Copy *mpop.cfg.template*, *areas.def.template* and *meteosat09.cfg.template* to another dir and remove the *.template* extension. In the config file *meteosat09.cfg* locate the section :attr:`severi-level1` and modify the defined :attr:`dir` to point to the dir of your uncompressed HRIT data. 
+For this tutorial template config files (see :doc:`install`) can be used. These
+are located in the *etc* dir of the mpop_ source. Copy *mpop.cfg.template*,
+*areas.def.template* and *Meteosat-9.cfg.template* to another dir and remove
+the *.template* extension. In the config file *Meteosat-9.cfg* locate the
+section :attr:`severi-level1` and modify the defined :attr:`dir` to point to
+the dir of your uncompressed HRIT data.
 
 Set PPP_CONFIG_DIR to the directory containing your modified mpop_ config files.
 
-.. tip:: Using wildcards in the *meteosat09.cfg* file allows mpop to adapt to
+.. tip:: Using wildcards in the *Meteosat-9.cfg* file allows mpop to adapt to
    any changes on the operation satellite for the 0 degree service (for exemple
    in case of satellite switch, for maintenance or when the successor satellite
    comes in).
 
 First example: Loading data
 ===========================
-This example assumes uncompressed EUMETSAT HRIT data for 8/10-2009 14:30 exists in the :attr:`dir` defined in the :attr:`severi-level1` section of your meteosat09 configuration file. Change the arguments to the creation of :attr:`time_slot` in the code example to match the time slot of your HRIT data.  
+This example assumes uncompressed EUMETSAT HRIT data for 8/10-2009 14:30 exists
+in the :attr:`dir` defined in the :attr:`severi-level1` section of your
+Meteosat-9 configuration file. Change the arguments to the creation of
+:attr:`time_slot` in the code example to match the time slot of your HRIT data.
 
 Ok, let's get it on::
 
@@ -33,7 +43,7 @@ Ok, let's get it on::
     >>> from mpop.projector import get_area_def
     >>> import datetime
     >>> time_slot = datetime.datetime(2009, 10, 8, 14, 30)
-    >>> global_data = GeostationaryFactory.create_scene("meteosat", "09", "seviri", time_slot)
+    >>> global_data = GeostationaryFactory.create_scene("Meteosat-9", "", "seviri", time_slot)
     >>> europe = get_area_def("EuropeCanary")
     >>> global_data.load([0.6, 0.8, 10.8], area_extent=europe.area_extent)
     >>> print global_data
@@ -51,11 +61,21 @@ Ok, let's get it on::
     'HRV: (0.500,0.700,0.900)μm, resolution 1000.13434887m, not loaded'
 
 
-In this example, we create an mpop_ scene object (:attr:`global_data`) for the seviri instrument
-onboard meteosat 9, specifying the time of the scene of interest. The time
-is defined as a datetime object.
+.. note:: In earlier versions of mpop_ you would create the scene object by
+          specifying *"meteosat"* as the first argument and *"09"*
+          as the second in :meth:`GeostationaryFactory.create_scene`. However,
+          now we have standardised the naming of satellites to follow the WMO
+          naming conventions and thus skipping the second argument.
 
-The :meth:`get_area_def` function reads an area definition from the configuration file  *area.def* in the PPP_CONFIG_DIR. The area definition is read into the variable :attr:`europe` which then gives access information about the area like projection and extent. 
+
+In this example, we create an mpop_ scene object (:attr:`global_data`) for the
+seviri instrument onboard Meteosat-9, specifying the time of the scene of
+interest. The time is defined as a datetime object.
+
+The :meth:`get_area_def` function reads an area definition from the
+configuration file *area.def* in the PPP_CONFIG_DIR. The area definition is
+read into the variable :attr:`europe` which then gives access information about
+the area like projection and extent.
 
 The next step is loading the data. This is done using mipp_, which takes care of
 reading the HRIT data, and slicing the data so that we read just what is
@@ -291,7 +311,7 @@ replace this by::
   meteosat09seviri = [overview,
                       hr_visual]
 
-then the composites will only be available for the Meteosat 9 satellite scenes.
+then the composites will only be available for the Meteosat-9 satellite scenes.
 
 In *my_composites.py* we have now defined 2 custom composites using the HRV channel. 
 :attr:`hr_visual` makes an enhanced black and white image from the HRV channel alone. 
@@ -303,7 +323,7 @@ Add the dir containing *my_composites.py* to your PYTHONPATH. Now your new compo
     >>> from mpop.projector import get_area_def
     >>> import datetime
     >>> time_slot = datetime.datetime(2009, 10, 8, 14, 30)
-    >>> global_data = GeostationaryFactory.create_scene("meteosat", "09", "seviri", time_slot)
+    >>> global_data = GeostationaryFactory.create_scene("Meteosat-9", "", "seviri", time_slot)
     >>> msghrvn = get_area_def("MSGHRVN")
     >>> global_data.load(global_data.image.hr_overview.prerequisites, area_extent=msghrvn.area_extent)   
     >>> local_data = global_data.project("euro_north")
