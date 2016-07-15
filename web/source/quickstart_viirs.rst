@@ -5,10 +5,10 @@
 ==================
 VIIRS with Pytroll
 ==================
-The NOAA/NASA weather satellite Suomi National Polar Partnership (NPP) satellite was 
-successfully launched October 28th, 2011. 
+The NOAA/NASA weather satellite Suomi National Polar Partnership (Suomi-NPP)
+satellite was successfully launched October 28th, 2011.
 
-Suomi NPP carries the Visible Infrared Imaging Radiometer Suite (VIIRS) which
+Suomi-NPP carries the Visible Infrared Imaging Radiometer Suite (VIIRS) which
 is a moderate resolution Imager with herritage from MODIS onboard the EOS
 satellites Aqua and Terra, the AVHRR onboard the NOAA and Metop platforms, and
 the OLS onboard the DMSP satellites. VIIRS has a nearly constant spatial
@@ -24,8 +24,8 @@ Package (CSPP) to go from RDR to SDR - see cspp_
 
 For this tutorial template config files (see :doc:`install`) can be used.
 These are located in the *etc* dir of the mpop_ source. Copy
-*mpop.cfg.template*, *areas.def.template* and *npp.cfg.template* to another dir
-and remove the *.template* extension. In the config file *npp.cfg* locate the
+*mpop.cfg.template*, *areas.def.template* and *Suomi-NPP.cfg.template* to another dir
+and remove the *.template* extension. In the config file *Suomi-NPP.cfg* locate the
 section :attr:`viirs-level2` and modify the defined :attr:`dir` to point to the
 directory where you keep the SDR data.
 
@@ -39,7 +39,7 @@ Loading
     >>> from datetime import datetime
     >>> time_slot = datetime(2013, 6, 25, 11, 15)
     >>> orbit = "08599"
-    >>> global_data = PolarFactory.create_scene("npp", "", "viirs", time_slot, orbit)
+    >>> global_data = PolarFactory.create_scene("Suomi-NPP", "", "viirs", time_slot, orbit)
     >>> global_data.load([1.38])
     >>> print global_data
      -------> print(global_data)
@@ -142,7 +142,7 @@ time interval that we think will cover the area of interest:
     >>> tslot = datetime(2013, 6, 25, 11, 11)
     >>> starttime = datetime(2013, 6, 25, 11, 11)
     >>> endtime = datetime(2013, 6, 25, 11, 18)
-    >>> glbd = PolarFactory.create_scene("npp", "", 
+    >>> glbd = PolarFactory.create_scene("Suomi-NPP", "", 
     ...                                  "viirs", tslot, 
     ...                                   orbit)
     >>> glbd.load(glbd.image.green_snow.prerequisites |
@@ -190,7 +190,7 @@ called *hr_overview*:
     >>> from datetime import datetime
     >>> orbit = "08599"
     >>> time_slot = datetime(2013, 6, 25, 11, 15)
-    >>> global_data = PolarFactory.create_scene("npp", "", "viirs", time_slot, orbit)
+    >>> global_data = PolarFactory.create_scene("Suomi-NPP", "", "viirs", time_slot, orbit)
     >>> global_data.load(global_data.image.hr_overview.prerequisites)
     >>> local_data = global_data.project("scan500m", mode="nearest")
     >>> img = local_data.image.hr_overview()
@@ -210,7 +210,7 @@ moonlight, and make a stretched black and white image for display:
 
     >>> time_slot = datetime(2012, 8, 31, 1, 8)
     >>> orbit = "04365"
-    >>> global_data = PolarFactory.create_scene("npp", "", "viirs", time_slot, orbit)
+    >>> global_data = PolarFactory.create_scene("Suomi-NPP", "", "viirs", time_slot, orbit)
     >>> global_data.load(['DNB'])
     >>> global_data.image.dnb().show()
 
@@ -265,7 +265,7 @@ covering Scandinavia:
     >>> starttime = datetime(2013, 10, 20, 1, 26)
     >>> endtime = datetime(2013, 10, 20, 1, 34)
     >>> orbit = "10252"
-    >>> global_data = PolarFactory.create_scene("npp", "", "viirs", time_slot, orbit)
+    >>> global_data = PolarFactory.create_scene("Suomi-NPP", "", "viirs", time_slot, orbit)
     >>> global_data.load(['DNB'], time_interval=(starttime, endtime))
     >>> local_data = global_data.project('scan500m', mode="nearest", radius=2000)
     >>> img = local_data.image.dnb(stretch='linear')

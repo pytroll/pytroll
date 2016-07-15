@@ -1,30 +1,38 @@
 ============================
  Quickstart with custom data
 ============================
-For this tutorial, we will use SSM/I data from custom netCDF files, make an mpop reader plugin, configure mpop to use it, implement an ice concentration algorithm and plot the result.
+For this tutorial, we will use SSM/I data from custom netCDF files, make an
+mpop reader plugin, configure mpop to use it, implement an ice concentration
+algorithm and plot the result.
 
-In order to follow this tutorial pyresample_ and mpop_ is needed as well as the python package netCDF4_. Install these packages first. 
+In order to follow this tutorial pyresample_ and mpop_ is needed as well as the
+python package netCDF4_. Install these packages first.
 
-For this tutorial template config files (see :doc:`install`) can be used. These are located in the *etc* dir of the mpop_ source. Copy *mpop.cfg.template* and *areas.def.template* to another dir and remove the *.template* extension. 
+For this tutorial template config files (see :doc:`install`) can be used. These
+are located in the *etc* dir of the mpop_ source. Copy *mpop.cfg.template* and
+*areas.def.template* to another dir and remove the *.template* extension.
 
 Set PPP_CONFIG_DIR to the directory containing your mpop_ config files.
 
 Making mpop read custom files
 =============================
-In this tutorial we will configure mpop to read swath data from custom netCDF files. The examples can be adapted to any kind of files as long as a reader is available that returns data sets as numpy arrays.
+In this tutorial we will configure mpop to read swath data from custom netCDF
+files. The examples can be adapted to any kind of files as long as a reader is
+available that returns data sets as numpy arrays.
 
-The netCDF files in this example is from DMSP f13 and have names of the type ssmi_<number>_YYYYmmmmHHMM_sncp.nc
+The netCDF files in this example is from DMSP-F13 and have names of the type
+ssmi_<number>_YYYYmmmmHHMM_sncp.nc
 
-The netCDF files have variables with the names: *lon_l*, *lat_l*, *tb19v*, *tb19h*, *tb22*, *tb37v* and *tb37h*.  
+The netCDF files have variables with the names: *lon_l*, *lat_l*, *tb19v*,
+*tb19h*, *tb22*, *tb37v* and *tb37h*.
 
-Create a new mpop config file in the config file dir called *dmspf13.cfg* with the content
+Create a new mpop config file in the config file dir called *DMSP-F13.cfg* with
+the content
 
 .. code-block:: ini
 
     [satellite]
-    satname = dmsp
     variant = 
-    number = 13
     instruments = ('ssmi',)
 
     [ssmi-level2]
@@ -110,12 +118,12 @@ Make sure *ssmi_nc.py* is in the PYTHONPATH
 Loading data
 ============
 in this example it's assumed the netCDF files *ssmi_f13_200509151935_sncp.nc*, *ssmi_f13_200509152117_sncp.nc* and 
-*ssmi_f13_200509152259_sncp.nc* are present in the :attr:`dir` defined in *dmspf13.cfg*
+*ssmi_f13_200509152259_sncp.nc* are present in the :attr:`dir` defined in *DMSP-F13.cfg*
 
     >>> from mpop.satellites import PolarFactory
     >>> from datetime import datetime
     >>> time_slot = datetime(2005, 9, 15, 19, 35)
-    >>> global_data = PolarFactory.create_scene("dmsp", "f13", "ssmi", time_slot)
+    >>> global_data = PolarFactory.create_scene("DMSP-F13", "", "ssmi", time_slot)
     >>> global_data.load(['tb19v'])
     >>> print global_data
     'tb19v: (-inf,-inf,-inf)μm, shape (30786,), resolution 0m'
@@ -135,8 +143,8 @@ The channel data can be retrieved as a numpy array:
 mpop has the capability to assemble swaths
 
     >>> from mpop import scene
-    >>> global_data2 = PolarFactory.create_scene("dmsp", "f13", "ssmi", datetime(2005, 9, 15, 21, 17))
-    >>> global_data3 = PolarFactory.create_scene("dmsp", "f13", "ssmi", datetime(2005, 9, 15, 22, 59))
+    >>> global_data2 = PolarFactory.create_scene("DMSP-F13", "", "ssmi", datetime(2005, 9, 15, 21, 17))
+    >>> global_data3 = PolarFactory.create_scene("DMSP-F13", "", "ssmi", datetime(2005, 9, 15, 22, 59))
     >>> global_data2.load(['tb19v'])
     >>> global_data3.load(['tb19v'])
     >>> global_all = scene.assemble_segments([global_data, global_data2, global_data3])
@@ -181,9 +189,9 @@ Now the data needed to calculate the ice concentration is loaded and assembled:
 
     >>> import ice_conc
     >>> time_slot = datetime(2005, 9, 15, 19, 35)
-    >>> global_data = PolarFactory.create_scene("dmsp", "f13", "ssmi", time_slot)
-    >>> global_data2 = PolarFactory.create_scene("dmsp", "f13", "ssmi", datetime(2005, 9, 15, 21, 17))
-    >>> global_data3 = PolarFactory.create_scene("dmsp", "f13", "ssmi", datetime(2005, 9, 15, 22, 59))
+    >>> global_data = PolarFactory.create_scene("DMSP-F13", "", "ssmi", time_slot)
+    >>> global_data2 = PolarFactory.create_scene("DMSP-F13", "", "ssmi", datetime(2005, 9, 15, 21, 17))
+    >>> global_data3 = PolarFactory.create_scene("DMSP-F13", "", "ssmi", datetime(2005, 9, 15, 22, 59))
     >>> global_data.load(ice_conc.nasa_team.prerequisites)
     >>> global_data2.load(ice_conc.nasa_team.prerequisites)
     >>> global_data3.load(ice_conc.nasa_team.prerequisites)

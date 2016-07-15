@@ -82,7 +82,7 @@ as output from AAPP.
 - Install mpop and pyresample
 - Don't forget to set up the PPP_CONFIG_DIR variable to point to your
   configuration files.
-- Edit the noaa19.cfg configuration file (a template is provided in case
+- Edit the *NOAA-19.cfg* configuration file (a template is provided in case
   you don't have one) with your data directory:
 
   .. code-block:: ini
@@ -122,7 +122,7 @@ as output from AAPP.
         time_string = sys.argv[1]
         orbit = sys.argv[2] 
         time_slot = strptime(time_string, "%Y%m%d%H%M")
-        global_data = PolarFactory.create_scene("noaa", "19",
+        global_data = PolarFactory.create_scene("NOAA-19", "",
                                                 "avhrr", time_slot, orbit)
 
         global_data.load()
@@ -143,13 +143,13 @@ as output from AAPP.
 Segmented data (Eumetcast) production
 =====================================
 
-We take the case of level 1b data (calibrated and geolocalized) from metop A,
-as received through the global data service of Eumetsat.
+We take the case of level 1b data (calibrated and geolocalized) from Metop-A,
+as received through the EUMETSAT global data service (GDS).
 
 - Install mpop and pyresample
 - Don't forget to set up the PPP_CONFIG_DIR variable to point to your
   configuration files.
-- Edit the gdsmetop02.cfg configuration file (a template is provided in case
+- Edit the *GDSMetop-B.cfg* configuration file (a template is provided in case
   you don't have one) with your data directory:
   
   .. code-block:: ini

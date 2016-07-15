@@ -17,7 +17,7 @@ should not normally notice that the interpolation and extrapolation is invoked.
 
 For this tutorial template config files (see :doc:`install`) can be used. These
 are located in the *etc* dir of the mpop_ source. Copy *mpop.cfg.template*,
-*areas.def.template* and *noaa19.cfg.template* to another dir and remove the
+*areas.def.template* and *NOAA-19.cfg.template* to another dir and remove the
 *.template* extension. In the config file *noaa19.cfg* locate the section
 :attr:`avhrr-level2` and modify the defined :attr:`dir` to point to the dir of
 your level1b AVHRR data.
@@ -26,13 +26,17 @@ Set PPP_CONFIG_DIR to the directory containing your modified mpop_ config files.
     
 First example: Loading data
 ===========================
-This example assumes AAPP level1b data from NOAA19 with the timestamp 29/8-2011 11:40 orbit 13173 exists in the :attr:`dir` defined in the :attr:`avhrr-level2` section of your noaa19 configuration file. Change the arguments to the creation of :attr:`time_slot` and the :attr:`create_scene` function in the code example to match your data.
+This example assumes AAPP level1b data from NOAA-19 with the timestamp 29/8-2011
+11:40 orbit 13173 exists in the :attr:`dir` defined in the :attr:`avhrr-level2`
+section of your noaa19 configuration file. Change the arguments to the creation
+of :attr:`time_slot` and the :attr:`create_scene` function in the code example
+to match your data.
 
     >>> from mpop.satellites import PolarFactory
     >>> from datetime import datetime
     >>> orbit = "13173"
     >>> time_slot = datetime(2011,8,29,11,40)
-    >>> global_data = PolarFactory.create_scene("noaa", "19", "avhrr", time_slot, orbit)
+    >>> global_data = PolarFactory.create_scene("NOAA-19", "", "avhrr", time_slot, orbit)
     >>> global_data.load([10.8])
     '1: (0.580,0.630,0.680)μm, resolution 1090m, not loaded'
     '2: (0.725,0.863,1.000)μm, resolution 1090m, not loaded'
@@ -41,11 +45,20 @@ This example assumes AAPP level1b data from NOAA19 with the timestamp 29/8-2011 
     '4: (10.300,10.800,11.300)μm, shape (5489, 2048), resolution 1090m'
     '5: (11.500,12.000,12.500)μm, resolution 1090m, not loaded'
     
-We have now loaded the 10.8 µm channel from the NOAA 19 swath.
+We have now loaded the 10.8 µm channel from the NOAA-19 swath.
+
+
+.. note:: In earlier versions of mpop_ you would create the scene object by
+          specifying *"noaa"* as the first argument and *"19"*
+          as the second in :meth:`PolarFactory.create_scene`. However,
+          now we have standardised the naming of satellites to follow the WMO
+          naming conventions and thus leaving the second argument empry.
 
 Handling data
 =============
-The :attr:`global_data` object supports the same operations when used for any type of satellite data. So the examples from the :doc:`quickstart_seviri` tutorial applies here as well.
+The :attr:`global_data` object supports the same operations when used for any
+type of satellite data. So the examples from the :doc:`quickstart_seviri`
+tutorial applies here as well.
 
 Showing a channel:
 
@@ -115,13 +128,15 @@ Assuming a *my_composites.py* file has been created as described in the :doc:`qu
         
     avhrr = [red_clouds]
     
-Add the dir containing *my_composites.py* to your PYTHONPATH. Now your new :attr:`red_clouds` composite will be accessible on the :attr:`scene.image` object for AVHRR like the builtin composites::
+Add the dir containing *my_composites.py* to your PYTHONPATH. Now your new
+:attr:`red_clouds` composite will be accessible on the :attr:`scene.image`
+object for AVHRR like the builtin composites::
 
     >>> from mpop.satellites import PolarFactory
     >>> from datetime import datetime
     >>> orbit = "13173"
     >>> time_slot = datetime(2011,8,29,11,40)
-    >>> global_data = PolarFactory.create_scene("noaa", "19", "avhrr", time_slot, orbit)
+    >>> global_data = PolarFactory.create_scene("NOAA-19", "", "avhrr", time_slot, orbit)
     >>> global_data.load(global_data.image.red_clouds.prerequisites)
     >>> local_data = global_data.project("euro_north", mode="nearest")
     >>> img = local_data.image.red_clouds()
