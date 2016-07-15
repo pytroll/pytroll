@@ -147,9 +147,9 @@ object for AVHRR like the builtin composites::
 .. _AAPP: http://nwpsaf.eu/site/software/aapp/
 .. _`NWC SAF`: http://www.nwcsaf.org/HD/MainNS.jsp
 .. _`NWC SAF homepage`: http://www.nwcsaf.org/HD/MainNS.jsp
-.. _mpop: http://www.github.com/mraspaud/mpop
+.. _mpop: http://www.github.com/pytroll/mpop
 .. _python-geotiepoints: http://www.github.com/adybbroe/python-geotiepoints
-.. _pyresample: http://pyresample.googlecode.com
+.. _pyresample: http://www.github.com/pytroll/pyresample
 .. _`Download the latest patched version of AHAMAP here`: _static/ahamap-pps-2010-patches_20110831-1.tgz
 .. _numpy: http://numpy.scipy.org/
 .. _proj4: http://trac.osgeo.org/proj/
