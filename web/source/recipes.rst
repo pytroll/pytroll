@@ -2,15 +2,22 @@
  Recipes: Operational Pytroll
 ==============================
 
+
+.. note:: These instructions are outdated. Please use trollduction_ for
+          operational processing with pytroll.
+
+
+
+
 Geostationary (Eumetcast) production
 ====================================
 
-We take the case of HRIT data from meteosat 9, as send through eumetcast.
+We take the case of HRIT data from Meteosat-9, as send through eumetcast.
 
 - Install mipp, mpop, and pyresample
 - Don't forget to set up the PPP_CONFIG_DIR variable to point to your
   configuration files.
-- Edit the meteosat09.cfg configuration file (a template is provided in case
+- Edit the Meteosat-9.cfg configuration file (a template is provided in case
   you don't have one) with your HRIT directory:
 
   .. code-block:: ini
@@ -55,7 +62,7 @@ We take the case of HRIT data from meteosat 9, as send through eumetcast.
 
         time_string = sys.argv[1]
         time_slot = strptime(time_string, "%Y%m%d%H%M")
-        global_data = GeostationaryFactory.create_scene("meteosat", "09",
+        global_data = GeostationaryFactory.create_scene("Meteosat-9", "",
                                                         "seviri", time_slot)
 
         global_data.load()
@@ -242,4 +249,8 @@ as received through the EUMETSAT global data service (GDS).
 
             # wait 60 seconds before restarting
             time.sleep(60)
+
+
+
+.. _trollduction: http://www.github.com/pytroll/trollduction
 
