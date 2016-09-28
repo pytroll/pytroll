@@ -1,12 +1,30 @@
-=============
-Workshop 2013
-=============
+=========
+Workshops
+=========
 
+Locarno, Switzerland, December 2015
+===================================
+
+             +--------------+
+             |   |pict0|    |
+             +--------------+
+             | |figtxt0|    |
+             +--------------+
+
+.. |pict0| image:: _static/workshop2015december_small.png
+       :width: 800px
+
+.. |figtxt0| replace:: 
+   Pytroll workshop Locarno 2015
+
+
+Workshop 2013, November, Norrköping
+===================================
 
   +---------+------------+
   | |pict1| |    |pict2| |
   +---------+------------+
-  |   |figuretext|       |
+  |   |figtxt1|          |
   +----------------------+
 
 .. |pict1| image:: _static/kuva_tiny.jpg
@@ -15,18 +33,20 @@ Workshop 2013
 .. |pict2| image:: _static/img_2022_tiny.jpg
     :height: 157px
 
-.. |figuretext| replace:: 
+.. |figtxt1| replace:: 
    After a two day open workshop we were 7 pytrollers from Finland, Iceland and
    Sweden staying till the end of week working together on some pressing
    issues. See below for a summary of achievements.  If you would like to
    contribute actively with the pytroll development, please let us know at the
-   mailing list (pytroll@googlegroups.com). We plan to have one or two pytroll
-   weeks (usually 3-4 days of dedicated programming) next year. Usually we will
-   identifiy a few specific topics that we think needs special attention.
+   mailing list (pytroll@googlegroups.com) or chat with us directly on the
+   pytroll slack: https://pytrollslackin.herokuapp.com/. We plan to have
+   two pytroll weeks (usually 4-5 days of dedicated programming) each
+   year. Usually we will identifiy a few specific topics that we think needs
+   special attention.
 
 
 Summary achievements
-====================
+--------------------
 
  * Extending the user community: Several new users have become more familiar
    with Pytroll and started contributing.
@@ -74,7 +94,7 @@ Summary achievements
 
 
 Presentations at the workshop
-=============================
+-----------------------------
 
 Watch all the presentations on youtube_ !
 
@@ -93,6 +113,58 @@ Watch all the presentations on youtube_ !
 * `Other pytroll projects`_
 * Tools_
 
+
+Workshop 2012
+=============
+
+The first open Pytroll workshop was held in Norrköping, Sweden, end of
+November, 2012. Nine programmers or satellite experts from Holland, Finland,
+Romania and EUMETSAT joined up with the pytroll teams at DMI and SMHI, to get
+more acquainted with the pytroll tools and how it can be used in their local
+environments for satellite data production.
+
+  +---------+---------+--------------+
+  | |pictA| | |pictB| | |figtxt2|    |
+  +---------+---------+--------------+
+
+.. |pictA| image:: _static/00004_tiny.jpg
+    :width: 230px
+
+.. |pictB| image:: _static/00008_tiny.jpg
+    :width: 230px
+
+.. |figtxt2| replace:: Hard work at the 2012 workshop in Norrköping, Sweden.
+
+
+Presentations at the workshop
+-----------------------------
+
+* `Rationale and motives`_
+* Pyresample_
+* Mpop_
+* Mipp_
+* Pyorbital_
+* Python-bufr_
+* Pycoast_
+* Geotiepoints_
+* Posttroll_
+* Trollcast_
+* `Other pytroll projects`_
+* Tools_
+
+
+.. _`Rationale and motives`: https://docs.google.com/presentation/d/1dLv5m56ETmr21HsjPTI_N5Ix-2zguUN2-5wKPZ0Z6Fk/edit
+.. _Pyresample: https://docs.google.com/presentation/d/1rkM-5HNqn0Wj5BlIQVFvyzCMYfS_DfnG-zw4OuzrRzU/edit
+.. _Mpop: https://docs.google.com/presentation/d/1drrlj97iNlETq-WNeUJF_01FWDuERyvWRJVTmg1_dd0/edit 
+.. _Mipp: https://docs.google.com/presentation/d/11077fLfpjWmJUi8mfGWeT7awXSeRF82jnFcIEDUFCZI/edit
+.. _Pyorbital: https://docs.google.com/presentation/d/10ZDJ8MiHu5-gpSAOUctvhVTxyqJn3VO8zJNSA2TGjKo/edit
+.. _Python-bufr: https://docs.google.com/presentation/d/166xxfcCW072YuHmz-u5C0CP559HUuH5lOYmQErdOjCU/edit
+.. _Pycoast: https://docs.google.com/presentation/d/1c9zrXutazOs8rXhItEiUlWb5K_lBhewHAlrnzmYxoBw/edit
+.. _Geotiepoints: https://docs.google.com/presentation/d/1AhdZhgOLlbHHNAAEQv1JflFTmPTV3ziOQLhBF2jQWr8/edit
+.. _Posttroll: https://docs.google.com/presentation/d/18emgrIlTxdz-r-c5UrG6M5Y2QQyJ70g34wKbhWFFsjM/edit
+.. _Trollcast: https://docs.google.com/presentation/d/1I7q6kgm4K2pEL8QP0SJkGsHDH5f3UHnDYe5GCA9NB_g/edit
+.. _`Other pytroll projects`: https://docs.google.com/presentation/d/1RL9nr2pvo9vG-WaNtckhRJWdO4bLBSPC53nYc3g3mjQ/edit
+.. _Tools: https://docs.google.com/presentation/d/1AMZt0jBMYem8g7tbNOvz9MEWRm-DbwNCBv9KJPA32cE/edit
 
 .. _youtube: http://www.youtube.com/watch?v=WEk95gxO8sE
 .. _`Pytroll history`: https://docs.google.com/presentation/d/1vrtn0kNEWPQE02sZmQwqSfk1Ax3NO9BW5sRZ8mN-x6w/edit

@@ -6,8 +6,9 @@
 .. meta::
    :description: Weather satellite data reading and processing with python
    :keywords: Meteosat, SEVIRI, AVHRR, Metop, NOAA, MODIS, Terra, Aqua, VIIRS,
-   NPP, SDR, AAPP, HRPT, TerraSAR-X, COSMO-SkyMed, Radarsat-2, read, reading,
-   reader, process, processing, python, pytroll, weather, satellite, data
+   NPP, SDR, AAPP, HRPT, TerraSAR-X, COSMO-SkyMed, Radarsat-2, Himawari, Sentinel,
+   read, reading, reader, process, processing, python, pytroll, 
+   weather, satellite, data
 
 
 Welcome to pytroll!
@@ -29,19 +30,6 @@ https://groups.google.com/group/pytroll or chat with us on the pytroll slack: ht
 freenode: irc://irc.freenode.net/pytroll
 
 
-
-..
-   .. note:: Pytroll workshop Locarno 2015
-
-             +--------------+
-             |   |pict1|    |
-             +--------------+
-             | |figuretext| |
-             +--------------+
-
-   .. |pict1| image:: _static/workshop2015december_small.png
-       :width: 800px
-
 .. note:: Pytroll workshop Offenbach 2016
 
           +--------------+
@@ -55,7 +43,7 @@ freenode: irc://irc.freenode.net/pytroll
 
 .. |figuretext| replace:: 
 
-   A pytroll developers workshop was held at the Head Quarters of Deutcher
+   A pytroll developers workshop was held at the Head Quarters of Deutscher
    Wetterdienst (DWD) in Offenbach between June 13 and 17, 2016. With the
    paticipation of 18 developers from the national Met Services of Switzerland,
    Norway, Denmark, Sweden, Finland and Germany, as well as EUMETSAT it was the
@@ -63,12 +51,11 @@ freenode: irc://irc.freenode.net/pytroll
 
    
 
-
 The available pytroll python packages at the moment are:
 
 * pyresample_ for resampling satellite data
-* mipp_ for reading weather satellite data
-* mpop_ for processing weather satellite data
+* mipp_ for reading (mostly HRIT/LRIT formated) weather satellite data
+* mpop_ for reading and processing weather satellite data
 * python-bufr_ for reading bufr files
 * pycoast_ for putting coastlines, borders and rivers on an image 
 * pyorbital_ for computing satellite orbital parameters and reading TLE's
@@ -79,35 +66,37 @@ The available pytroll python packages at the moment are:
 * trollsift_ for the formatting, parsing and filtering of satellite granule file names
 * pyspectral_ to read and manipulate satellite sensor spectral responses and solar irradiance spectra
 * pydecorate_ to simplify the drawing of logos, text labels, color scales and legends onto images
+* trollduction_ a framework for satellite batch processing
+* pytroll-schedule_ to generate optimized satellite schedules for polar reception stations
+* trollcast_ for realtime sharing of weather satellite data
 
 Some more packages are in the process of being developed (you're very welcome
 to have a look and give us a hand):
 
-* trollcast_ for realtime sharing of weather satellite data
+* satpy_ A refactored mpop_ (for reading and processing weather satellite data)
 * pygranules_ for validating, fetching and scheduling satellite data granules
-* trollduction_ a framework for satellite batch processing
-* pytroll-schedule_ to generate optimized satellite schedules for polar reception stations
 
 
 .. _DMI: http://www.dmi.dk
 .. _SMHI: http://www.smhi.se
-.. _pyresample: http://pyresample.googlecode.com
-.. _mipp: http://www.github.com/loerum/mipp
-.. _mpop: http://www.github.com/mraspaud/mpop
-.. _python-bufr: http://python-bufr.googlecode.com
-.. _pyorbital: http://www.github.com/mraspaud/pyorbital
-.. _pycoast: http://pycoast.googlecode.com
-.. _python-geotiepoints: http://www.github.com/adybbroe/python-geotiepoints
-.. _posttroll: http://github.com/mraspaud/posttroll
+.. _pyresample: http://github.com/pytroll/pyresample
+.. _mipp: http://github.com/pytroll/mipp
+.. _mpop: http://github.com/pytroll/mpop
+.. _satpy: https://github.com/pytroll/satpy
+.. _python-bufr: http://github.com/pytroll/python-bufr
+.. _pyorbital: http://github.com/pytroll/pyorbital
+.. _pycoast: http://github.com/pytroll/pycoast
+.. _python-geotiepoints: http://github.com/pytroll/python-geotiepoints
+.. _posttroll: http://github.com/pytroll/posttroll
 .. _pykdtree: https://github.com/storpipfugl/pykdtree
-.. _trollcast: http://github.com/mraspaud/trollcast
-.. _pyspectral: https://github.com/adybbroe/pyspectral
+.. _trollcast: http://github.com/pytroll/trollcast
+.. _pyspectral: https://github.com/pytroll/pyspectral
 .. _pydecorate: http://code.google.com/p/pydecorate
-.. _trollimage: https://github.com/mraspaud/trollimage
-.. _trollsift: https://github.com/pnuu/trollsift
+.. _trollimage: https://github.com/pytroll/trollimage
+.. _trollsift: https://github.com/pytroll/trollsift
 .. _pygranules: http://pygranule.readthedocs.org/en/latest
-.. _trollduction: https://github.com/mraspaud/trollduction
-.. _pytroll-schedule: https://github.com/mraspaud/pytroll-schedule
+.. _trollduction: https://github.com/pytroll/trollduction
+.. _pytroll-schedule: https://github.com/pytroll/pytroll-schedule
 .. _pytroll5years: https://www.youtube.com/watch?v=Sxphky9vwGc
 
 Satellites supported (imager instruments) at the moment by the reader/processor
@@ -116,7 +105,8 @@ modules include:
  - Meteosat series (tested with 7, 8, 9, 10)
  - GOES series, in HRIT/LRIT format (tested with 11, 12, 13, 15)
  - MTSAT series, in HRIT/LRIT format (tested with 1R, 2)
- - Himawari 8, in HRIT/LRIT format (tested with 1R, 2)
+ - Himawari 8, in HRIT/LRIT format
+ - Himawari 8, standard format (satpy_ only)
  - Electro L, in HRIT/LRIT format (tested with N1)
  - NOAA series, in AAPP, GAC and LAC format (tested with 15, 16, 17, 18, 19)
  - Metop-A/B, in EPS 1a and 1b format
@@ -126,6 +116,8 @@ modules include:
  - Radarsat-2 SAR
  - COSMO-SkyMed SAR
  - Sentinel-1 SAR
+ - Sentinel-2 MSI
+ - FY-3 viir
 
 Contents:
 
@@ -140,8 +132,7 @@ Contents:
    quickstart_bufr
    quickstart_earsnwc
    recipes
-   workshop2012
-   workshop2013
+   past_workshops
    manifest
    guidelines
    five_year_anniversary
