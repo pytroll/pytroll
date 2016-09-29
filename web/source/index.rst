@@ -19,7 +19,7 @@ Welcome to pytroll!
    Martin Raspaud, gave a `Pytroll tutorial`_ at the 2016 Eumetsat
    conference in Darmstadt Wednesday September 28
 
-   .. image:: images/pytroll_light_tiny.png
+   .. image:: images/pytroll_light_big.png
     :width: 217px
 
 
