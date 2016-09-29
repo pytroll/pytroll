@@ -14,6 +14,15 @@
 Welcome to pytroll!
 ===================
 
+.. note:: Pytroll at the 2016 Eumetsat Conference
+
+   Martin Raspaud, gave a `Pytroll tutorial`_ at the 2016 Eumetsat
+   conference in Darmstadt Wednesday September 28
+
+   .. image:: images/pytroll_light_tiny.png
+    :width: 217px
+
+
 This is the home of the pytroll project. The pytroll project started out in
 2009 as a collaboration on weather satellite data processing between DMI_ and
 SMHI_. Pytroll now has a growing international user base and is used
@@ -29,27 +38,6 @@ If you want to contact us, you can use the following mailing list:
 https://groups.google.com/group/pytroll or chat with us on the pytroll slack: https://pytrollslackin.herokuapp.com/ or on the pytroll IRC channel on 
 freenode: irc://irc.freenode.net/pytroll
 
-
-.. note:: Pytroll workshop Offenbach 2016
-
-          +--------------+
-          |   |pict1|    |
-          +--------------+
-          | |figuretext| |
-          +--------------+
-
-.. |pict1| image:: _static/Group2_small.JPG
-    :width: 800px
-
-.. |figuretext| replace:: 
-
-   A pytroll developers workshop was held at the Head Quarters of Deutscher
-   Wetterdienst (DWD) in Offenbach between June 13 and 17, 2016. With the
-   paticipation of 18 developers from the national Met Services of Switzerland,
-   Norway, Denmark, Sweden, Finland and Germany, as well as EUMETSAT it was the
-   largest to date.
-
-   
 
 The available pytroll python packages at the moment are:
 
@@ -77,6 +65,7 @@ to have a look and give us a hand):
 * pygranules_ for validating, fetching and scheduling satellite data granules
 
 
+.. _`Pytroll tutorial`: https://docs.google.com/presentation/d/1-ast62mC7X0z7504gSJCthRnQP-8LrU0Pz_CNxUx0Ag/edit#slide=id.p
 .. _DMI: http://www.dmi.dk
 .. _SMHI: http://www.smhi.se
 .. _pyresample: http://github.com/pytroll/pyresample

@@ -2,8 +2,30 @@
 Workshops
 =========
 
-Locarno, Switzerland, December 2015
-===================================
+
+DWD, Offenbach Germany, June 2016
+=================================
+
+          +--------------+
+          |   |pict3|    |
+          +--------------+
+          | |figtxt3|    |
+          +--------------+
+
+.. |pict3| image:: _static/Group2_small.JPG
+    :width: 740px
+
+.. |figtxt3| replace:: 
+
+   A pytroll developers workshop was held at the Head Quarters of Deutscher
+   Wetterdienst (DWD) in Offenbach between June 13 and 17, 2016. With the
+   paticipation of 18 developers from the national Met Services of Switzerland,
+   Norway, Denmark, Sweden, Finland and Germany, as well as EUMETSAT it was the
+   largest to date.
+
+
+MeteoSwiss, Locarno Switzerland, Dec 2015
+=========================================
 
              +--------------+
              |   |pict0|    |
@@ -12,7 +34,7 @@ Locarno, Switzerland, December 2015
              +--------------+
 
 .. |pict0| image:: _static/workshop2015december_small.png
-       :width: 800px
+       :width: 740px
 
 .. |figtxt0| replace:: 
    Pytroll workshop Locarno 2015
