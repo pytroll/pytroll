@@ -57,6 +57,7 @@ The available pytroll python packages at the moment are:
 * trollduction_ a framework for satellite batch processing
 * pytroll-schedule_ to generate optimized satellite schedules for polar reception stations
 * trollcast_ for realtime sharing of weather satellite data
+* pygac_ to read NOAA AVHRR Global Area Coverage (GAC) data and apply state of the art calibration and navigation
 
 Some more packages are in the process of being developed (you're very welcome
 to have a look and give us a hand):
@@ -85,6 +86,7 @@ to have a look and give us a hand):
 .. _trollsift: https://github.com/pytroll/trollsift
 .. _pygranules: http://pygranule.readthedocs.org/en/latest
 .. _trollduction: https://github.com/pytroll/trollduction
+.. _pygac: https://github.com/pytroll/pygac
 .. _pytroll-schedule: https://github.com/pytroll/pytroll-schedule
 .. _pytroll5years: https://www.youtube.com/watch?v=Sxphky9vwGc
 
