@@ -6,9 +6,10 @@
 .. meta::
    :description: Weather satellite data reading and processing with python
    :keywords: Meteosat, SEVIRI, AVHRR, Metop, NOAA, MODIS, Terra, Aqua, VIIRS,
-   NPP, SDR, AAPP, HRPT, TerraSAR-X, COSMO-SkyMed, Radarsat-2, Himawari, Sentinel,
-   read, reading, reader, process, processing, python, pytroll, 
-   weather, satellite, data
+   Suomi-NPP, NPP, JPSS, SDR, AAPP, CSPP, HRPT, TerraSAR-X, COSMO-SkyMed,
+   Radarsat-2, Himawari, Sentinel, SLSTR, OLCI, Sentinel-1, Sentinel-2,
+   Sentinel-3, GOES-R, ABI, GOES-16, read, reading, reader, process,
+   processing, python, pytroll, weather, satellite, data
 
 
 Welcome to pytroll!
@@ -115,6 +116,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   gallery
    install
    quickstart_seviri
    quickstart_avhrr
