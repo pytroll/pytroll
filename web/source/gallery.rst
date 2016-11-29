@@ -17,13 +17,38 @@ Click on the images below to get full scale image and code.
 
 .. figure:: images/myoverview.png
    :alt: SEVIRI overview RGB
-   :align: center
+   :target: `seviri_code1`_
    :scale: 20%
-   :target: `myoverview_code`_
-   :figclass: align-center
+   :align: left
 
-   SEVIRI RGB overview composite
+   SEVIRI RGB *overview* - mpop
 
-.. _myoverview_code: myoverview_code.html
+.. figure:: images/mynaturalcolors.png
+   :alt: SEVIRI natural color RGB
+   :target: `seviri_code2`_
+   :scale: 20%
+   :align: left
+
+   SEVIRI RGB *natural colors* - mpop
+
+.. figure:: images/ch6.png
+   :alt: SEVIRI natural color RGB
+   :target: `seviri_code3`_
+   :scale: 20%
+   :align: left
+
+   SEVIRI single channel image - mpop
+
+.. figure:: images/seviri_green_snow_euro4.png
+   :alt: Reprojected SEVIRI RGB
+   :target: `seviri_code4`_
+   :scale: 20%
+   :align: left
+
+   Reproject SEVIRI data and add coastlines - mpop
 
 
+.. _seviri_code1: seviri_example1.html
+.. _seviri_code2: seviri_example2.html
+.. _seviri_code3: seviri_example3.html
+.. _seviri_code4: seviri_example4.html
