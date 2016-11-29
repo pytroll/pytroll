@@ -334,9 +334,9 @@ Add the dir containing *my_composites.py* to your PYTHONPATH. Now your new compo
 
 
 .. _GeoTiff: http://trac.osgeo.org/geotiff/
-.. _mpop: http://www.github.com/mraspaud/mpop
-.. _mipp: http://www.github.com/loerum/mipp
-.. _pyresample: http://pyresample.googlecode.com
+.. _mpop: http://www.github.com/pytroll/mpop
+.. _mipp: http://www.github.com/pytroll/mipp
+.. _pyresample: http://www.github.com/pytroll/pyresample
 .. _numexpr: http://code.google.com/p/numexpr/
 .. _Public Wavelet Transform Decompression Library Software: http://www.eumetsat.int/website/home/Data/DataDelivery/SupportSoftwareandTools/index.html
 .. _MSG Interpretation Guide: http://oiswww.eumetsat.org/WEBOPS/msg_interpretation/index.php 

@@ -47,8 +47,17 @@ Click on the images below to get full scale image and code.
 
    Reproject SEVIRI data and add coastlines - mpop
 
+.. figure:: images/seviri_snow_euro4.png
+   :alt: SEVIRI RGB with 3.9 micron reflectance
+   :target: `seviri_code5`_
+   :scale: 20%
+   :align: left
+
+   Special RGB using the derived 3.9 micron reflectance with *pyspectral* - mpop
+
 
 .. _seviri_code1: seviri_example1.html
 .. _seviri_code2: seviri_example2.html
 .. _seviri_code3: seviri_example3.html
 .. _seviri_code4: seviri_example4.html
+.. _seviri_code5: seviri_example5.html
