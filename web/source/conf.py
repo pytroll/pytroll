@@ -43,7 +43,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'pytroll'
-copyright = u'2011-2014, pytroll crew'
+copyright = u'2011-2016, pytroll crew'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
