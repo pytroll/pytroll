@@ -55,9 +55,18 @@ Click on the images below to get full scale image and code.
 
    Special RGB using the derived 3.9 micron reflectance with *pyspectral* - mpop
 
+.. figure:: images/osisaf_sst_viirs.png
+   :alt: 
+   :target: `osisaf_sst_code6`_
+   :scale: 20%
+   :align: left
+
+   OSISAF SSTs from Suomi-NPP with color scale and coastlines - mpop
+
 
 .. _seviri_code1: seviri_example1.html
 .. _seviri_code2: seviri_example2.html
 .. _seviri_code3: seviri_example3.html
 .. _seviri_code4: seviri_example4.html
 .. _seviri_code5: seviri_example5.html
+.. _osisaf_sst_code6: osisaf_sst_example6.html
