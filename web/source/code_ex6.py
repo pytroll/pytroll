@@ -50,10 +50,11 @@ data = data.round().astype('uint8')
 img = geo_image.GeoImage(data,
                          areaid,
                          glbd.time_slot,
-                         fill_value=(0),
+                         fill_value=None,
                          mode="P",
                          palette=palette)
+img.save('kurt.png')
 
-img.add_overlay(color=(220, 220, 220))
-img.show()
-img.save('osisaf_sst_viirs.png')
+#img.add_overlay(color=(220, 220, 220))
+# img.show()
+# img.save('osisaf_sst_viirs.png')
