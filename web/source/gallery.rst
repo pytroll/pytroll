@@ -77,7 +77,7 @@ Click on the images below to get full scale image and code.
    :scale: 20%
    :align: left
 
-   Decode BUFR containing METOP IASI CTP data and resample/plot - trollbufr
+   Decode BUFR containing Metop IASI CTP data and resample/plot - trollbufr
 
 
 .. _seviri_code1: seviri_example1.html
