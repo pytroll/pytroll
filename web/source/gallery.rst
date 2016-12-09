@@ -71,6 +71,14 @@ Click on the images below to get full scale image and code.
 
    OSISAF SSTs from Suomi-NPP with color scale and coastlines - satpy
 
+.. figure:: images/metopa_iasi_ctp_euro4.png
+   :alt: 
+   :target: `iasi_ctp_code1`_
+   :scale: 20%
+   :align: left
+
+   Decode BUFR containing METOP IASI CTP data and resample/plot - trollbufr
+
 
 .. _seviri_code1: seviri_example1.html
 .. _seviri_code2: seviri_example2.html
@@ -79,3 +87,4 @@ Click on the images below to get full scale image and code.
 .. _seviri_code5: seviri_example5.html
 .. _osisaf_sst_code6: osisaf_sst_example6.html
 .. _osisaf_sst_code7: osisaf_sst_example7.html
+.. _iasi_ctp_code1: trollbufr_iasi_ctp.html
