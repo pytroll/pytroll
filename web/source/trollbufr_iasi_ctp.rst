@@ -57,14 +57,6 @@ Full files to recreate
 
  - A `tar.gz container`_ with the BUFR file and the required set of BUFR-tables.
 
-Necessary configuration settings
---------------------------------
-
-For this tutorial template config files (see :doc:`install`) can be used. These
-are located in the *etc* dir of the mpop_ source. Copy *areas.def.template* 
-to another dir and remove the *.template* extension.
-
-Set PPP_CONFIG_DIR to the directory containing your modified mpop_ config files.
 
 .. _`Source code`: trollbufr_iasi_plot.py
 .. _`tar.gz container`: _static/iasi_ctp.tgz
