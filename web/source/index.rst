@@ -45,7 +45,6 @@ The available pytroll python packages at the moment are:
 * pyresample_ for resampling satellite data
 * mipp_ for reading (mostly HRIT/LRIT formated) weather satellite data
 * mpop_ for reading and processing weather satellite data
-* python-bufr_ for reading bufr files
 * pycoast_ for putting coastlines, borders and rivers on an image 
 * pyorbital_ for computing satellite orbital parameters and reading TLE's
 * posttroll_ a higher-level messaging library for pytroll
@@ -59,13 +58,15 @@ The available pytroll python packages at the moment are:
 * pytroll-schedule_ to generate optimized satellite schedules for polar reception stations
 * trollcast_ for realtime sharing of weather satellite data
 * pygac_ to read NOAA AVHRR Global Area Coverage (GAC) data and apply state of the art calibration and navigation
+..
+   * python-bufr_ for reading bufr files
 
 Some more packages are in the process of being developed (you're very welcome
 to have a look and give us a hand):
 
 * satpy_ A refactored mpop_ (for reading and processing weather satellite data)
 * pygranules_ for validating, fetching and scheduling satellite data granules
-
+* trollbufr_ for reading BUFR files
 
 .. _`Pytroll tutorial`: https://docs.google.com/presentation/d/1-ast62mC7X0z7504gSJCthRnQP-8LrU0Pz_CNxUx0Ag/edit#slide=id.p
 .. _DMI: http://www.dmi.dk
@@ -88,6 +89,7 @@ to have a look and give us a hand):
 .. _pygranules: http://pygranule.readthedocs.org/en/latest
 .. _trollduction: https://github.com/pytroll/trollduction
 .. _pygac: https://github.com/pytroll/pygac
+.. _trollbufr: https://github.com/alexmaul/trollbufr
 .. _pytroll-schedule: https://github.com/pytroll/pytroll-schedule
 .. _pytroll5years: https://www.youtube.com/watch?v=Sxphky9vwGc
 
@@ -122,7 +124,8 @@ Contents:
    quickstart_avhrr
    quickstart_viirs
    quickstart_custom
-   quickstart_bufr
+   ..
+      quickstart_bufr
    quickstart_earsnwc
    recipes
    past_workshops

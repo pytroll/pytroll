@@ -1,7 +1,14 @@
 Plot IASI CTP from BUFR with *trollbufr*
 ========================================
 
-Required Imports for *trollbufr*:
+First install *trollbufr*
+
+.. code::
+
+   $> pip install git+https://github.com/alexmaul/trollbufr.git
+
+
+Required imports for *trollbufr*:
 
 	>>> from trollbufr.bufr import Bufr
 	>>> from trollbufr import load_file
