@@ -3,9 +3,9 @@ Plot IASI CTP from BUFR with *trollbufr*
 
 First install *trollbufr*
 
-.. code::
+.. code-block:: bash
 
-   $> pip install git+https://github.com/alexmaul/trollbufr.git
+    pip install git+https://github.com/alexmaul/trollbufr.git
 
 
 Required imports for *trollbufr*:
