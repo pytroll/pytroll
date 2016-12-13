@@ -48,7 +48,7 @@ freenode: irc://irc.freenode.net/pytroll
 
 .. |figtxt| replace:: 
 
-   A pytroll developers workshop was held at the Finish Meteorological
+   A pytroll developers workshop was held at the Finnish Meteorological
    Institute (FMI) in Helsinki between November 28th and December
    2nd, 2016. We were 14 developers from various National
    Meteorological Institutes and companies around Europe.
