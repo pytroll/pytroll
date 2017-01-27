@@ -12,32 +12,55 @@
    processing, python, pytroll, weather, satellite, data
 
 
+
 Welcome to pytroll!
 ===================
-
-.. note:: Pytroll at the 2016 Eumetsat Conference
-
-   Martin Raspaud, gave a `Pytroll tutorial`_ at the 2016 Eumetsat
-   conference in Darmstadt Wednesday September 28
-
-   .. image:: images/pytroll_light_big.png
-    :width: 217px
-
 
 This is the home of the pytroll project. The pytroll project started out in
 2009 as a collaboration on weather satellite data processing between DMI_ and
 SMHI_. Pytroll now has a growing international user base and is used
 operationally at several National Met Services.
 
-Its objective is provide different free and open source python modules for the
-reading, interpretation, and writing of weather satellite data.
+The objective is to provide different free and open source python modules for
+the reading, interpretation, and writing of weather satellite data. The
+provided python packages are designed to be used both in R&D environments and
+in 24/7 operational production.
 
-The provided python packages are designed to be used both in R&D environments
-and in 24/7 operational production.
+For a quick and easy overview of what Pytroll can possibly offer for you have a
+look at the `Pytroll tutorial`_ which was shown at the 2016 Eumetsat conference
+in Darmstadt Wednesday September 28
 
 If you want to contact us, you can use the following mailing list:
 https://groups.google.com/group/pytroll or chat with us on the pytroll slack: https://pytrollslackin.herokuapp.com/ or on the pytroll IRC channel on 
 freenode: irc://irc.freenode.net/pytroll
+
+
+.. note:: Pytroll workshop in Helsinki 2016
+
+          +-------------+
+          |   |pict|    |
+          +-------------+
+          | |figtxt|    |
+          +-------------+
+
+.. |pict| image:: _static/DSC_4983_small.JPG
+    :width: 770px
+
+.. |figtxt| replace:: 
+
+   A pytroll developers workshop was held at the Finnish Meteorological
+   Institute (FMI) in Helsinki between November 28th and December
+   2nd, 2016. We were 14 developers from various National
+   Meteorological Institutes and companies around Europe.
+
+..
+   .. note:: Pytroll at the 2016 Eumetsat Conference
+
+      Martin Raspaud, gave a `Pytroll tutorial`_ at the 2016 Eumetsat
+      conference in Darmstadt Wednesday September 28
+
+      .. image:: images/pytroll_light_big.png
+       :width: 217px
 
 
 The available pytroll python packages at the moment are:
