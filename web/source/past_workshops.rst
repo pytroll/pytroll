@@ -2,6 +2,25 @@
 Workshops
 =========
 
+FMI, Helsinki Finland, November 2016
+====================================
+
+          +-------------+
+          |   |pict|    |
+          +-------------+
+          | |figtxt|    |
+          +-------------+
+
+.. |pict| image:: _static/DSC_4983_small.JPG
+    :width: 770px
+
+.. |figtxt| replace:: 
+
+   A pytroll developers workshop was held at the Finnish Meteorological
+   Institute (FMI) in Helsinki between November 28th and December
+   2nd, 2016. We were 14 developers from various National
+   Meteorological Institutes and companies around Europe.
+
 
 DWD, Offenbach Germany, June 2016
 =================================

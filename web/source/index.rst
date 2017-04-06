@@ -35,7 +35,7 @@ https://groups.google.com/group/pytroll or chat with us on the pytroll slack: ht
 freenode: irc://irc.freenode.net/pytroll
 
 
-.. note:: Pytroll workshop in Helsinki 2016
+.. note:: RSHU, Saint Petersburg, Russia, March 2017
 
           +-------------+
           |   |pict|    |
@@ -43,15 +43,13 @@ freenode: irc://irc.freenode.net/pytroll
           | |figtxt|    |
           +-------------+
 
-.. |pict| image:: _static/DSC_4983_small.JPG
+.. |pict| image:: _static/PyTROLL29_small.JPG
     :width: 770px
 
 .. |figtxt| replace:: 
 
-   A pytroll developers workshop was held at the Finnish Meteorological
-   Institute (FMI) in Helsinki between November 28th and December
-   2nd, 2016. We were 14 developers from various National
-   Meteorological Institutes and companies around Europe.
+   A pytroll developers workshop was held at the Russian State Hydrometeorological University (RSHU) in Saint Petersburg, Russia, between March 27th and 31st, 2017. We were around 20 participants from various National
+   Meteorological Institutes, universities and companies.
 
 ..
    .. note:: Pytroll at the 2016 Eumetsat Conference
