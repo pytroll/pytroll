@@ -16,15 +16,19 @@
 Welcome to pytroll!
 ===================
 
-This is the home of the pytroll project. The pytroll project started out in
-2009 as a collaboration on weather satellite data processing between DMI_ and
-SMHI_. Pytroll now has a growing international user base and is used
-operationally at several National Met Services.
+.. This is the home of the pytroll project. The pytroll project started out in
+   2009 as a collaboration on weather satellite data processing between DMI_ and
+   SMHI_. Pytroll now has a growing international user base and is used
+   operationally at several National Met Services.
 
-The objective is to provide different free and open source python modules for
-the reading, interpretation, and writing of weather satellite data. The
-provided python packages are designed to be used both in R&D environments and
-in 24/7 operational production.
+The objective is to provide a modualar free and open source python framework
+for the processing of earth observation satellite data. The provided python
+packages are designed to be used both in R&D environments and in 24/7
+operational production.
+
+The focus is on atmospheric applications and imaging sensors, but as seen from
+the list of supported satellite sensors below the data that can be handled py
+Pytroll allows the usage in a wide range of earth sciences.
 
 For a quick and easy overview of what Pytroll can possibly offer for you have a
 look at the `Pytroll tutorial`_ which was shown at the 2016 Eumetsat conference
@@ -35,7 +39,7 @@ https://groups.google.com/group/pytroll or chat with us on the pytroll slack: ht
 freenode: irc://irc.freenode.net/pytroll
 
 
-.. note:: RSHU, Saint Petersburg, Russia, March 2017
+.. note:: Céntre Météorologie Spatiale, Météo France, Lannion, September 2017
 
           +-------------+
           |   |pict|    |
@@ -43,13 +47,17 @@ freenode: irc://irc.freenode.net/pytroll
           | |figtxt|    |
           +-------------+
 
-.. |pict| image:: _static/PyTROLL29_small.JPG
+.. |pict| image:: _static/PytrollGroupLannion20170914_small.JPG
     :width: 770px
 
 .. |figtxt| replace:: 
 
-   A pytroll developers workshop was held at the Russian State Hydrometeorological University (RSHU) in Saint Petersburg, Russia, between March 27th and 31st, 2017. We were around 20 participants from various National
-   Meteorological Institutes, universities and companies.
+   A pytroll developers workshop took place at the Céntre Météorologie Spatiale
+   in Lannion, Brittany, France, from 11-15 of September 2017. 15 participants
+   from several national Meteorological Institutes in Europe, incldung
+   Switzerland, Germany, Denmark, Iceland, Finland, Sweden, and France, worked
+   concentrated during one week improving and enhancing the Pytroll software.
+
 
 ..
    .. note:: Pytroll at the 2016 Eumetsat Conference
@@ -64,8 +72,9 @@ freenode: irc://irc.freenode.net/pytroll
 The available pytroll python packages at the moment are:
 
 * pyresample_ for resampling satellite data
-* mipp_ for reading (mostly HRIT/LRIT formated) weather satellite data
 * mpop_ for reading and processing weather satellite data
+* satpy_ A refactored mpop_ (for reading and processing weather satellite data)
+* mipp_ for reading (mostly HRIT/LRIT formated) weather satellite data
 * pycoast_ for putting coastlines, borders and rivers on an image 
 * pyorbital_ for computing satellite orbital parameters and reading TLE's
 * posttroll_ a higher-level messaging library for pytroll
@@ -79,16 +88,15 @@ The available pytroll python packages at the moment are:
 * pytroll-schedule_ to generate optimized satellite schedules for polar reception stations
 * trollcast_ for realtime sharing of weather satellite data
 * pygac_ to read NOAA AVHRR Global Area Coverage (GAC) data and apply state of the art calibration and navigation
-..
-   * python-bufr_ for reading bufr files
+
 
 Some more packages are in the process of being developed (you're very welcome
 to have a look and give us a hand):
 
-* satpy_ A refactored mpop_ (for reading and processing weather satellite data)
 * pygranules_ for validating, fetching and scheduling satellite data granules
 * trollbufr_ for reading BUFR files
 
+  
 .. _`Pytroll tutorial`: https://docs.google.com/presentation/d/1-ast62mC7X0z7504gSJCthRnQP-8LrU0Pz_CNxUx0Ag/edit#slide=id.p
 .. _DMI: http://www.dmi.dk
 .. _SMHI: http://www.smhi.se

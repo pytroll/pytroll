@@ -2,6 +2,29 @@
 Workshops
 =========
 
+
+
+RSHU, Saint Petersburg, Russia, March 2017
+==========================================
+
+          +-------------+
+          |   |pict|    |
+          +-------------+
+          | |figtxt|    |
+          +-------------+
+
+.. |pict| image:: _static/PyTROLL29_small.JPG
+    :width: 770px
+
+.. |figtxt| replace:: 
+
+   A pytroll developers workshop was held at the Russian State
+   Hydrometeorological University (RSHU) in Saint Petersburg, Russia, between
+   March 27th and 31st, 2017. We were around 20 participants from various
+   National Meteorological Institutes, universities and companies.
+
+   
+
 FMI, Helsinki Finland, November 2016
 ====================================
 
