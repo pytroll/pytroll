@@ -21,10 +21,10 @@ Welcome to pytroll!
    SMHI_. Pytroll now has a growing international user base and is used
    operationally at several National Met Services.
 
-The objective is to provide a modualar free and open source python framework
-for the processing of earth observation satellite data. The provided python
-packages are designed to be used both in R&D environments and in 24/7
-operational production.
+The objective of Pytroll is to provide an easy to use, modular, free and open
+source python framework for the processing of earth observation satellite
+data. The provided python packages are designed to be used both in R&D
+environments and in 24/7 operational production.
 
 The focus is on atmospheric applications and imaging sensors, but as seen from
 the list of supported satellite sensors below the data that can be handled py
@@ -39,7 +39,7 @@ https://groups.google.com/group/pytroll or chat with us on the pytroll slack: ht
 freenode: irc://irc.freenode.net/pytroll
 
 
-.. note:: Céntre Météorologie Spatiale, Météo France, Lannion, September 2017
+.. note:: Centre Météorologie Spatiale, Météo-France, Lannion, September 2017
 
           +-------------+
           |   |pict|    |
@@ -96,6 +96,31 @@ to have a look and give us a hand):
 * pygranules_ for validating, fetching and scheduling satellite data granules
 * trollbufr_ for reading BUFR files
 
+Satellites supported (imager instruments) at the moment by the reader/processor
+modules include: 
+
+ - Meteosat series (tested with 7, 8, 9, 10, 11)
+ - GOES series, in HRIT/LRIT format (tested with 11, 12, 13, 15, 16)
+ - MTSAT series, in HRIT/LRIT format (tested with 1R, 2)
+ - Himawari 8 & 9, in HRIT/LRIT format
+ - Himawari 8 & 9, standard format (satpy_ only)
+ - Electro L, in HRIT/LRIT format (tested with N1)
+ - NOAA series, in AAPP, GAC and LAC format (tested with TIROS-N to NOAA-19)
+ - Metop-A/B, in EPS 1a and 1b format
+ - Aqua and Terra MODIS, in hdf-eos format
+ - Suomi NPP, in SDR hdf5 format
+ - TerraSAR-X
+ - Radarsat-2 SAR
+ - COSMO-SkyMed SAR
+ - Sentinel-1 SAR
+ - Sentinel-2 MSI
+ - Sentinel-3 SLSTR & OLCI
+ - FY-3 viir
+ - GCOM-W1 AMSR2 in hdf5 format
+
+See also `satpy documentation pages`_ for a list of file formats supported by satpy_.
+
+
   
 .. _`Pytroll tutorial`: https://docs.google.com/presentation/d/1-ast62mC7X0z7504gSJCthRnQP-8LrU0Pz_CNxUx0Ag/edit#slide=id.p
 .. _DMI: http://www.dmi.dk
@@ -104,6 +129,7 @@ to have a look and give us a hand):
 .. _mipp: http://github.com/pytroll/mipp
 .. _mpop: http://github.com/pytroll/mpop
 .. _satpy: https://github.com/pytroll/satpy
+.. _satpy documentation pages: http://satpy.readthedocs.io/en/latest
 .. _python-bufr: http://github.com/pytroll/python-bufr
 .. _pyorbital: http://github.com/pytroll/pyorbital
 .. _pycoast: http://github.com/pytroll/pycoast
@@ -122,25 +148,8 @@ to have a look and give us a hand):
 .. _pytroll-schedule: https://github.com/pytroll/pytroll-schedule
 .. _pytroll5years: https://www.youtube.com/watch?v=Sxphky9vwGc
 
-Satellites supported (imager instruments) at the moment by the reader/processor
-modules include: 
 
- - Meteosat series (tested with 7, 8, 9, 10)
- - GOES series, in HRIT/LRIT format (tested with 11, 12, 13, 15)
- - MTSAT series, in HRIT/LRIT format (tested with 1R, 2)
- - Himawari 8, in HRIT/LRIT format
- - Himawari 8, standard format (satpy_ only)
- - Electro L, in HRIT/LRIT format (tested with N1)
- - NOAA series, in AAPP, GAC and LAC format (tested with 15, 16, 17, 18, 19)
- - Metop-A/B, in EPS 1a and 1b format
- - Aqua and Terra, in hdf-eos format
- - Suomi NPP, in SDR hdf5 format
- - TerraSAR-X
- - Radarsat-2 SAR
- - COSMO-SkyMed SAR
- - Sentinel-1 SAR
- - Sentinel-2 MSI
- - FY-3 viir
+
 
 Contents:
 
