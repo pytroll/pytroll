@@ -72,21 +72,24 @@ freenode: irc://irc.freenode.net/pytroll
 The available pytroll python packages at the moment are:
 
 * pyresample_ for resampling satellite data
+* pykdtree_ for really fast nearest neighbour search
+* python-geotiepoints_ for interpolating (and extrapolation) geographic tiepoints
 * mpop_ for reading and processing weather satellite data
 * satpy_ A refactored mpop_ (for reading and processing weather satellite data)
 * mipp_ for reading (mostly HRIT/LRIT formated) weather satellite data
 * pycoast_ for putting coastlines, borders and rivers on an image 
 * pyorbital_ for computing satellite orbital parameters and reading TLE's
 * posttroll_ a higher-level messaging library for pytroll
-* pykdtree_ for really fast nearest neighbour search
-* python-geotiepoints_ for interpolating (and extrapolation) geographic tiepoints
 * trollimage_ the new image packagse for pytroll (replaces and enhances the image.py module in mpop)
 * trollsift_ for the formatting, parsing and filtering of satellite granule file names
 * pyspectral_ to read and manipulate satellite sensor spectral responses and solar irradiance spectra
 * pydecorate_ to simplify the drawing of logos, text labels, color scales and legends onto images
 * trollduction_ a framework for satellite batch processing
+* trollflow_ a small workflow execution framework (eventually replacing trollduction_)
 * pytroll-schedule_ to generate optimized satellite schedules for polar reception stations
 * trollcast_ for realtime sharing of weather satellite data
+* pytroll-file-utils_ for moving files securely and efficiently in real time between nodes
+* pytroll-collectors_ e.g. to gather granules over an area interest for real time processing
 * pygac_ to read NOAA AVHRR Global Area Coverage (GAC) data and apply state of the art calibration and navigation
 
 
@@ -137,12 +140,15 @@ See also `satpy documentation pages`_ for a list of file formats supported by sa
 .. _posttroll: http://github.com/pytroll/posttroll
 .. _pykdtree: https://github.com/storpipfugl/pykdtree
 .. _trollcast: http://github.com/pytroll/trollcast
+.. _pytroll-file-utils: http://github.com/pytroll/pytroll-file-utils
 .. _pyspectral: https://github.com/pytroll/pyspectral
 .. _pydecorate: http://code.google.com/p/pydecorate
 .. _trollimage: https://github.com/pytroll/trollimage
 .. _trollsift: https://github.com/pytroll/trollsift
+.. _pytroll-collectors: https://github.com/pytroll/pytroll-collectors
 .. _pygranules: http://pygranule.readthedocs.org/en/latest
 .. _trollduction: https://github.com/pytroll/trollduction
+.. _trollflow: https://github.com/pytroll/trollflow
 .. _pygac: https://github.com/pytroll/pygac
 .. _trollbufr: https://github.com/alexmaul/trollbufr
 .. _pytroll-schedule: https://github.com/pytroll/pytroll-schedule
