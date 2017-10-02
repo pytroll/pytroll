@@ -3,20 +3,19 @@ Workshops
 =========
 
 
-
 RSHU, Saint Petersburg, Russia, March 2017
 ==========================================
 
-          +-------------+
-          |   |pict|    |
-          +-------------+
-          | |figtxt|    |
-          +-------------+
+          +-----------------+
+          |   |pict2017|    |
+          +-----------------+
+          | |figtxt2017|    |
+          +-----------------+
 
-.. |pict| image:: _static/PyTROLL29_small.JPG
+.. |pict2017| image:: _static/PyTROLL29_small.JPG
     :width: 770px
 
-.. |figtxt| replace:: 
+.. |figtxt2017| replace:: 
 
    A pytroll developers workshop was held at the Russian State
    Hydrometeorological University (RSHU) in Saint Petersburg, Russia, between
@@ -28,16 +27,16 @@ RSHU, Saint Petersburg, Russia, March 2017
 FMI, Helsinki Finland, November 2016
 ====================================
 
-          +-------------+
-          |   |pict|    |
-          +-------------+
-          | |figtxt|    |
-          +-------------+
+          +-----------------+
+          |   |pict2016|    |
+          +-----------------+
+          | |figtxt2016|    |
+          +-----------------+
 
-.. |pict| image:: _static/DSC_4983_small.JPG
+.. |pict2016| image:: _static/DSC_4983_small.JPG
     :width: 770px
 
-.. |figtxt| replace:: 
+.. |figtxt2016| replace:: 
 
    A pytroll developers workshop was held at the Finnish Meteorological
    Institute (FMI) in Helsinki between November 28th and December
