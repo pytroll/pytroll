@@ -88,7 +88,7 @@ The available pytroll python packages at the moment are:
 * trollflow_ a small workflow execution framework (eventually replacing trollduction_)
 * pytroll-schedule_ to generate optimized satellite schedules for polar reception stations
 * trollcast_ for realtime sharing of weather satellite data
-* pytroll-file-utils_ for moving files securely and efficiently in real time between nodes
+* pytroll-file-utils_ for moving files in real time between nodes using posttroll_ messaging
 * pytroll-collectors_ e.g. to gather granules over an area interest for real time processing
 * pygac_ to read NOAA AVHRR Global Area Coverage (GAC) data and apply state of the art calibration and navigation
 
