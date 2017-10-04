@@ -30,10 +30,22 @@ The focus is on atmospheric applications and imaging sensors, but as seen from
 the list of supported satellite sensors below the data that can be handled py
 Pytroll allows the usage in a wide range of earth sciences.
 
-For a quick and easy overview of what Pytroll can possibly offer for you have a
-look at the `Pytroll tutorial`_ which was shown at the 2016 Eumetsat conference
-in Darmstadt Wednesday September 28
 
+.. note:: Pytroll at the 2017 Eumetsat Conference
+
+      Dave and Adam gave a `Pytroll overview`_ at the 2017 Eumetsat conference
+      in Rome Tuesday 3rd. Thanks for attending the few who found the way to
+      the slightly remote small workshop room!
+
+      .. image:: images/pytroll_light_big.png
+       :width: 217px
+
+
+.. For a quick and easy overview of what Pytroll can possibly offer for you have a
+   look at the `Pytroll overview`_ which was given at the Eumetsat conference
+   in Rome Tuesday October 3.
+
+   
 If you want to contact us, you can use the following mailing list:
 https://groups.google.com/group/pytroll or chat with us on the pytroll slack: https://pytrollslackin.herokuapp.com/ or on the pytroll IRC channel on 
 freenode: irc://irc.freenode.net/pytroll
@@ -58,15 +70,6 @@ freenode: irc://irc.freenode.net/pytroll
    Switzerland, Germany, Denmark, Iceland, Finland, Sweden, and France, worked
    concentrated during one week improving and enhancing the Pytroll software.
 
-
-..
-   .. note:: Pytroll at the 2016 Eumetsat Conference
-
-      Martin Raspaud, gave a `Pytroll tutorial`_ at the 2016 Eumetsat
-      conference in Darmstadt Wednesday September 28
-
-      .. image:: images/pytroll_light_big.png
-       :width: 217px
 
 
 The available pytroll python packages at the moment are:
@@ -125,7 +128,7 @@ See also `satpy documentation pages`_ for a list of file formats supported by sa
 
 
   
-.. _`Pytroll tutorial`: https://docs.google.com/presentation/d/1-ast62mC7X0z7504gSJCthRnQP-8LrU0Pz_CNxUx0Ag/edit#slide=id.p
+.. _`Pytroll overview`: https://docs.google.com/presentation/d/10QSq6H0QL4WruEiY-1TU4Rk-f05QzZOZ1UoD9adx9ow/edit?usp=sharing
 .. _DMI: http://www.dmi.dk
 .. _SMHI: http://www.smhi.se
 .. _pyresample: http://github.com/pytroll/pyresample
