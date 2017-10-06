@@ -16,11 +16,17 @@
 Welcome to pytroll!
 ===================
 
-.. This is the home of the pytroll project. The pytroll project started out in
-   2009 as a collaboration on weather satellite data processing between DMI_ and
-   SMHI_. Pytroll now has a growing international user base and is used
-   operationally at several National Met Services.
+.. note:: Pytroll at the 2017 Eumetsat Conference, Rome 2-6 October.
 
+      Dave and Adam gave a `Pytroll overview`_ at the 2017 Eumetsat conference
+      in Rome Tuesday 3rd. Thanks for attending the few who found the way to
+      the slightly remote small workshop room!
+      And here the talk on `atmospheric correction with Pyspectral`_
+
+      .. image:: images/pytroll_light_big.png
+       :width: 217px
+
+   
 The objective of Pytroll is to provide an easy to use, modular, free and open
 source python framework for the processing of earth observation satellite
 data. The provided python packages are designed to be used both in R&D
@@ -30,15 +36,6 @@ The focus is on atmospheric applications and imaging sensors, but as seen from
 the list of supported satellite sensors below the data that can be handled py
 Pytroll allows the usage in a wide range of earth sciences.
 
-
-.. note:: Pytroll at the 2017 Eumetsat Conference
-
-      Dave and Adam gave a `Pytroll overview`_ at the 2017 Eumetsat conference
-      in Rome Tuesday 3rd. Thanks for attending the few who found the way to
-      the slightly remote small workshop room!
-
-      .. image:: images/pytroll_light_big.png
-       :width: 217px
 
 
 .. For a quick and easy overview of what Pytroll can possibly offer for you have a
@@ -129,6 +126,7 @@ See also `satpy documentation pages`_ for a list of file formats supported by sa
 
   
 .. _`Pytroll overview`: https://docs.google.com/presentation/d/10QSq6H0QL4WruEiY-1TU4Rk-f05QzZOZ1UoD9adx9ow/edit?usp=sharing
+.. _`atmospheric correction with Pyspectral`: https://docs.google.com/presentation/d/1EWxjM__ntdnqWIYUAIXFr_rSOLwGnNhRnSSktLZRrGY/edit?usp=sharing
 .. _DMI: http://www.dmi.dk
 .. _SMHI: http://www.smhi.se
 .. _pyresample: http://github.com/pytroll/pyresample
